@@ -97,6 +97,8 @@ typedef struct t_flipper {
 	Vec pos;
 	Flt angle;
 	Flt rvel;
+    //direction inverted
+    bool inverted;
 	//rotational velocity; gets added to angle every frame
 	int flipstate;
 	//0 - idle, 1 - going up, 2 - going down
@@ -126,6 +128,7 @@ void checkMouse(XEvent *e);
 void checkKeys(XEvent *e);
 void render(void);
 
+void drawFlipper(const Flipper &);
 void physics(void);
 void flipperMovement(Flipper &e);
 void flipperBallCollision(Flipper &, Ball &);
@@ -164,10 +167,14 @@ int main(void)
 	initXWindows();
 	initOpengl();
 	initBalls();
+
 	initFlipper(flipper);
-	initFlipper(flipper2);
+	flipper.inverted = false;
+    initFlipper(flipper2);
 	flipper2.pos[0] = 200;
 	flipper2.pos[1] = 100;
+    flipper2.inverted = true;
+
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
 	while(!done) {
@@ -556,6 +563,7 @@ void flipperBallCollision(Flipper &f, Ball &b)
 	Vec vert, horz;
 	MakeVector(0, 1, 0, vert);
 	MakeVector(1, 0, 0, horz);
+
 	//rotated
 	VecRotate(vert, f.angle, vert);
 	VecRotate(horz, f.angle, horz);
@@ -623,6 +631,23 @@ void drawBall(Flt rad)
 }
 
 
+void drawFlipper(const Flipper &f)
+{
+    float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
+    float angle = f.inverted ? -f.angle : f.angle;
+    glPushMatrix();
+	glColor3ub(1, 140, 0);
+	glTranslatef(f.pos[0], f.pos[1], f.pos[2]);
+	glRotatef(angle, 0, 0, 1);
+	glBegin(GL_QUADS);
+	glVertex2f(0, -20.0);
+	glVertex2f(length, -20.0);
+	glVertex2f(length, 0);
+	glVertex2f(0, 0);
+	glEnd();
+    glPopMatrix();
+}
+
 void render(void)
 {
 	Rect r;
@@ -636,37 +661,12 @@ void render(void)
 	glPopMatrix();
 
 
-
+    drawFlipper(flipper);
+    drawFlipper(flipper2);
 
 	//glPopMatrix();
 
-	glPushMatrix();
-	glColor3ub(1, 140, 0);
-	glTranslatef(flipper.pos[0], flipper.pos[1], flipper.pos[2]);
 
-	//draw flipper
-	glRotatef(flipper.angle, 0, 0, 1);
-	glBegin(GL_QUADS);
-	glVertex2f(0, -20.0);
-	glVertex2f(FLIPPER_LENGTH, -20.0);
-	glVertex2f(FLIPPER_LENGTH, 0);
-	glVertex2f(0, 0);
-	glEnd();
-	glPopMatrix();
-	
-
-	//flipper2
-	glPushMatrix();
-	glColor3ub(90, 150, 9);
-	glTranslatef(flipper2.pos[0], flipper2.pos[1], flipper2.pos[2]);
-	glRotatef(flipper2.angle, 0, 0, 4);
-	glBegin(GL_QUADS);
-	glVertex2f(0, -20.0);
-	glVertex2f(FLIPPER_LENGTH, -20.0);
-	glVertex2f(FLIPPER_LENGTH, 0);
-	glVertex2f(0, 0);
-	glEnd();
-	glPopMatrix();
 
 	//
 	r.bot = yres - 20;
