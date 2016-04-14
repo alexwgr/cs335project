@@ -559,14 +559,19 @@ void physics(void)
 
 void flipperBallCollision(Flipper &f, Ball &b)
 {
+    float angle = f.inverted ? -f.angle : f.angle;
 	//unit axis vectors
 	Vec vert, horz;
-	MakeVector(0, 1, 0, vert);
-	MakeVector(1, 0, 0, horz);
-
+    MakeVector(0, 1, 0, vert);
+    MakeVector(1, 0, 0, horz);
+    if (f.inverted)
+    {
+        VecScale(horz, -1, horz);
+    }
+    
 	//rotated
-	VecRotate(vert, f.angle, vert);
-	VecRotate(horz, f.angle, horz);
+	VecRotate(vert, angle, vert);
+	VecRotate(horz, angle, horz);
 
 	Vec between;
 	VecBtn(f.pos, b.pos, between);
