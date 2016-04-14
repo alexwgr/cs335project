@@ -38,6 +38,13 @@ extern "C" {
 #include "fonts.h"
 }
 
+
+#define FLIPPER_LENGTH 70.0
+#define FLIPPER_HEIGHT 15.0
+#define FLIPPER_SPEED 14.8
+#define FLIPPER_REST_ANGLE -50
+
+
 typedef double Flt;
 typedef Flt Vec[3];
 #define MakeVector(x,y,z,v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
@@ -110,9 +117,6 @@ typedef struct t_Ball {
 	double radius;
 	double mass;
 } Ball;
-#define FLIPPER_LENGTH 100.0
-#define FLIPPER_SPEED 10.8
-#define FLIPPER_REST_ANGLE -50
 
 //X Windows variables
 Display *dpy;
@@ -121,7 +125,7 @@ Window win;
 void initXWindows(void);
 void initOpengl(void);
 void initBalls(void);
-void initFlipper(Flipper &f);
+void initFlipper(Flipper &, float, float, bool);
 void cleanupXWindows(void);
 void checkResize(XEvent *e);
 void checkMouse(XEvent *e);
@@ -134,7 +138,7 @@ void flipperMovement(Flipper &e);
 void flipperBallCollision(Flipper &, Ball &);
 
 int done=0;
-int xres=640, yres=480;
+int xres=780, yres=480;
 int leftButtonDown=0;
 Vec leftButtonPos;
 
@@ -168,12 +172,8 @@ int main(void)
 	initOpengl();
 	initBalls();
 
-	initFlipper(flipper);
-	flipper.inverted = false;
-    initFlipper(flipper2);
-	flipper2.pos[0] = 200;
-	flipper2.pos[1] = 100;
-    flipper2.inverted = true;
+	initFlipper(flipper, 150, 100, false);
+    initFlipper(flipper2, xres - 150, 100, true);
 
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -227,7 +227,7 @@ void initXWindows(void)
 	Colormap cmap;
 	XSetWindowAttributes swa;
 
-	setupScreenRes(640, 480);
+	setupScreenRes(480, 700);
 	dpy = XOpenDisplay(NULL);
 	if (dpy == NULL) {
 		printf("\n\tcannot connect to X server\n\n");
@@ -292,25 +292,20 @@ void initBalls(void)
 	ball1.pos[1] = 200;
 	//ball1.vel[0] = 1.6;
 	//ball1.vel[1] = 0.0;
-	ball1.radius = 10.0;
+	ball1.radius = 7.0;
 	ball1.mass = 1.0;
 
-	ball2.pos[0] = 400;
-	ball2.pos[1] = 230;
-	ball2.vel[0] = -1.6;
-	ball2.vel[1] = 0.0;
-	ball2.radius = 10.0;
-	ball2.mass = 1.0;
 }
 
-void initFlipper(Flipper &f)
+void initFlipper(Flipper &f, float xpos, float ypos, bool inverted=false)
 {
-	f.pos[0] = 0;
-	f.pos[1] = 200;
+	f.pos[0] = xpos;
+	f.pos[1] = ypos;
 
 	f.angle = FLIPPER_REST_ANGLE;
 	f.flipstate = 0;
 	f.rvel = 0;
+    f.inverted = inverted;
 }
 
 void checkResize(XEvent *e)
@@ -482,61 +477,9 @@ void physics(void)
 	//flipper2 physics
 	flipperMovement(flipper2);
 	flipperBallCollision(flipper2, ball1);
-	/*
-	//check for collision here
-	Flt distance, speed;
-	Flt tx, ty;
-	Flt movi[2], movj[2];
-	Flt massFactor, massi, massj;
-	Vec vcontact[2];
-	Vec vmove[2];
-	Flt dot0,dot1;
-	tx = ball1.pos[0] - ball2.pos[0];
-	ty = ball1.pos[1] - ball2.pos[1];
-	distance = sqrt(tx * tx + ty * ty);
-	if (distance < (ball1.radius+ball2.radius)) {
-	//We have a collision!
-	//vector from center to center.
-	vcontact[0][0] = tx;
-	vcontact[0][1] = ty;
-	vcontact[0][2] = 0.0;
-	VecNormalize(vcontact[0]);
-	VecCopy(vcontact[0],vcontact[1]);
-	VecNegate(vcontact[1]);
-	movi[0] = ball1.vel[0];
-	movi[1] = ball1.vel[1];
-	movj[0] = ball2.vel[0];
-	movj[1] = ball2.vel[1];
-	vmove[0][0] = movi[0];
-	vmove[0][1] = movi[1];
-	vmove[0][2] = 0.0;
-	vmove[1][0] = movj[0];
-	vmove[1][1] = movj[1];
-	vmove[1][2] = 0.0;
-	VecNormalize(vmove[0]);
-	VecNormalize(vmove[1]);
-	//Determine how direct the hit was...
-	dot0 = VecDot(vcontact[0], vmove[0]);  //dot product
-	dot1 = VecDot(vcontact[1], vmove[1]);  //dot product
-	//Find the closing (relative) speed of the objects...
-	Flt speed0 = sqrtf( movi[0]*movi[0] + movi[1]*movi[1]) * dot0;
-	Flt speed1 = sqrtf( movj[0]*movj[0] + movj[1]*movj[1]) * dot1;
-	speed = speed0 + speed1;
-	if (speed < 0.0) {
-	//Normalize the mass of each object...
-	massFactor = 2.0 / (ball1.mass + ball2.mass);
-	massi = ball1.mass * massFactor;
-	massj = ball2.mass * massFactor;
-	ball2.vel[0] += vcontact[0][0] * speed * massi;
-	ball2.vel[1] += vcontact[0][1] * speed * massi;
-	ball1.vel[0] += vcontact[1][0] * speed * massj;
-	ball1.vel[1] += vcontact[1][1] * speed * massj;
-	}
-	}
-	 */
 
 	//gravity
-	ball1.vel[1] += -0.1;
+	ball1.vel[1] += -0.2;
 
 	//Update position
 	ball1.pos[0] += ball1.vel[0];
@@ -547,13 +490,21 @@ void physics(void)
 		ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
 	}
 	//Check for collision with window edges
-	if ((ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) ||
-			(ball1.pos[0] >= (Flt)xres-ball1.radius && ball1.vel[0] > 0.0)) {
-		ball1.vel[0] = -ball1.vel[0];
+	if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
+        ball1.pos[0] = ball1.radius;
+        ball1.vel[0] *= -0.2;
+    }
+	else if (ball1.pos[0] >= (Flt)xres-ball1.radius && ball1.vel[0] > 0.0) {
+		ball1.pos[0] = xres - ball1.radius;
+        ball1.vel[0] *= - 0.2;
 	}
-	if ((ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) ||
-			(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0)) {
-		ball1.vel[1] = -ball1.vel[1];
+	if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
+        ball1.pos[1] = ball1.radius;
+        ball1.vel[1] *= - 0.2;
+    }
+    else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
+		ball1.pos[1] = yres - ball1.radius;
+        ball1.vel[1] *= -0.2;
 	}
 }
 
@@ -580,10 +531,13 @@ void flipperBallCollision(Flipper &f, Ball &b)
 
 	//check collision
 	if (projectX > 0 && projectX < FLIPPER_LENGTH + b.radius
-			&& projectY > -(b.radius + 20) && projectY < b.radius) {
-		Vec dP;
+			&& projectY > -(b.radius + FLIPPER_HEIGHT) && projectY < b.radius) {
+		
+        //adjust position
+        Vec dP;
 		VecScale(vert, b.radius - projectY, dP);
-		VecAdd(b.pos, dP, b.pos);
+		VecAdd(b.pos, dP,b.pos);
+
 
 		Vec dV;
 		double speed;
@@ -600,11 +554,11 @@ void flipperBallCollision(Flipper &f, Ball &b)
 
 
 		//add horizontal velocity if at the tip of flipper
-		/* if (projectX > FLIPPER_LENGTH - 5.0)
-		   {
-		   VecScale(horz, speed * 0.4, dV);
+		if (projectX / FLIPPER_LENGTH > 0.20)
+		{
+		   VecScale(horz, speed * 0.2 * projectX / FLIPPER_LENGTH, dV);
 		   VecAdd(b.vel, dV, b.vel);
-		   }*/
+		}
 
 
 	}
@@ -645,8 +599,8 @@ void drawFlipper(const Flipper &f)
 	glTranslatef(f.pos[0], f.pos[1], f.pos[2]);
 	glRotatef(angle, 0, 0, 1);
 	glBegin(GL_QUADS);
-	glVertex2f(0, -20.0);
-	glVertex2f(length, -20.0);
+	glVertex2f(0, -FLIPPER_HEIGHT);
+	glVertex2f(length, -FLIPPER_HEIGHT);
 	glVertex2f(length, 0);
 	glVertex2f(0, 0);
 	glEnd();
