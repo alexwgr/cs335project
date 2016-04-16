@@ -34,6 +34,7 @@
 #include <GL/glx.h>
 //#include <GL/glu.h>
 //#include "log.h"
+#include "ppm.h"
 extern "C" {
 #include "fonts.h"
 }
@@ -43,7 +44,6 @@ extern "C" {
 #define FLIPPER_HEIGHT 15.0
 #define FLIPPER_SPEED 14.8
 #define FLIPPER_REST_ANGLE -50
-
 
 typedef double Flt;
 typedef Flt Vec[3];
@@ -147,7 +147,10 @@ Ball ball1;
 Ball ball2;
 Flipper flipper;
 Flipper flipper2;
-
+Ppmimage *flippers=NULL;
+Ppmimage *flippers2=NULL;
+GLuint flippersTexture;
+GLuint flippersTexture2;
 //-----------------------------------------------------------------------------
 //Setup timers
 const double physicsRate = 1.0 / 60.0;
@@ -284,6 +287,33 @@ void initOpengl(void)
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
+
+	flippers = ppm6GetImage("./images/flippers.ppm");
+	flippers2 = ppm6GetImage("./images/flippers2.ppm");
+
+	glGenTextures(1, &flippersTexture);
+	glGenTextures(1, &flippersTexture2);
+	
+	int w = flippers->width;
+	int h = flippers->height;
+
+	glBindTexture(GL_TEXTURE_2D, flippersTexture);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, 
+	    GL_RGB, GL_UNSIGNED_BYTE, flippers->data);
+
+	w = flippers2->width;
+	h = flippers2->height;
+
+	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, 
+	    GL_RGB, GL_UNSIGNED_BYTE, flippers2->data);
+	
 }
 
 void initBalls(void)
@@ -595,14 +625,19 @@ void drawFlipper(const Flipper &f)
     float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
     float angle = f.inverted ? -f.angle : f.angle;
     glPushMatrix();
-	glColor3ub(1, 140, 0);
+	glColor3f(1, 1, 1);
 	glTranslatef(f.pos[0], f.pos[1], f.pos[2]);
 	glRotatef(angle, 0, 0, 1);
+	//if (f.inverted) {
+		glBindTexture(GL_TEXTURE_2D, flippersTexture);
+	//} else {
+	//    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
+	//}
 	glBegin(GL_QUADS);
-	glVertex2f(0, -FLIPPER_HEIGHT);
-	glVertex2f(length, -FLIPPER_HEIGHT);
-	glVertex2f(length, 0);
-	glVertex2f(0, 0);
+	glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
+	glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
+	glVertex2f(length, 0); glTexCoord2f(0.0f, 1.0f); 
+	glVertex2f(0, 0); glTexCoord2f(1.0f, 1.0f); 
 	glEnd();
     glPopMatrix();
 }
@@ -636,6 +671,5 @@ void render(void)
 	ggprint8b(&r, 16, 0x0000000, "S - Slow down movement");
 	//
 }
-
 
 
