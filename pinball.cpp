@@ -117,10 +117,11 @@ int main(void)
 	initOpengl();
 	initBalls();
 
-    r.pos[0] = 200;
-    r.pos[1] = 500;
-    r.length = 100;
-    r.height = 100;
+    r.pos[0] = 200.0;
+    r.pos[1] = 500.0;
+    r.width = 100.0;
+    r.height = 100.0;
+    r.angle = -30.0;
 
 	initFlipper(flipper, 150, 100, false);
     initFlipper(flipper2, xres - 150, 100, true);
@@ -412,7 +413,11 @@ void flipperMovement(Flipper &f)
 
 void physics(void)
 {
-	//flipper physics
+	
+	//gravity
+	ball1.vel[1] += -0.2;
+    
+    //flipper physics
 	flipperMovement(flipper);
 	flipperBallCollision(flipper, ball1);
 	//flipper2 physics
@@ -422,8 +427,6 @@ void physics(void)
 
     rectangleBallCollision(r, ball1);
 
-	//gravity
-	ball1.vel[1] += -0.2;
 
 	//Update position
 	ball1.pos[0] += ball1.vel[0];
@@ -476,7 +479,8 @@ void flipperBallCollision(Flipper &f, Ball &b)
 	//check collision
 	if (projectX > 0 && projectX < FLIPPER_LENGTH + b.radius
 			&& projectY > -(b.radius + FLIPPER_HEIGHT) && projectY < b.radius) {
-		
+	
+        
         //adjust position
         Vec dP;
 		VecScale(vert, b.radius - projectY, dP);
@@ -528,7 +532,7 @@ void drawBall(Flt rad)
 	}
 	glBegin(GL_TRIANGLE_FAN);
 	for (i=0; i<n; i++) {
-		glVertex2f(verts[i][0]*rad, verts[i][1]*rad);
+		glVertex2d(verts[i][0]*rad, verts[i][1]*rad);
 	}
 	glEnd();
 }
@@ -540,7 +544,7 @@ void drawFlipper(Flipper &f)
     float angle = f.inverted ? -f.angle : f.angle;
     glPushMatrix();
 	glColor3f(1, 1, 1);
-	glTranslatef(f.pos[0], f.pos[1], f.pos[2]);
+	glTranslated(f.pos[0], f.pos[1], f.pos[2]);
 	glRotatef(angle, 0, 0, 1);
 	//if (f.inverted) {
 		glBindTexture(GL_TEXTURE_2D, flippersTexture);
@@ -561,24 +565,25 @@ void render(void)
 	Rect re;
 	glClear(GL_COLOR_BUFFER_BIT);
 
-    glColor3ub(10, 10, 10);
+    glColor3ub(150, 10, 10);
     glPushMatrix();
-    glTranslatef(r.pos[0], r.pos[1], r.pos[2]);
+    glTranslated(r.pos[0], r.pos[1], r.pos[2]);
+	glRotatef(r.angle, 0, 0, 1);
     glBegin(GL_QUADS);
-    glVertex2f(-r.length, -r.height);
-    glVertex2f(-r.length, r.height);
-    glVertex2f(r.length, r.height);
-    glVertex2f(r.length, - r.height);
+    glBegin(GL_QUADS);
+    glVertex2i(-r.width, -r.height);
+    glVertex2i(-r.width, r.height);
+    glVertex2i(r.width, r.height);
+    glVertex2i(r.width, - r.height);
     glEnd();
     glPopMatrix();
 
 	//draw balls
 	glColor3ub(30,60,90);
 	glPushMatrix();
-	glTranslatef(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
+	glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
 	drawBall(ball1.radius);
 	glPopMatrix();
-
 
     drawFlipper(flipper);
     drawFlipper(flipper2);

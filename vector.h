@@ -16,7 +16,8 @@ struct Vec
 double RadiansToDegrees(double);
 double DegreesToRadians(double); 
 
-void VecNormalize(Vec &);
+void MakeVector(double, double, double, Vec&);
+void VecNormalize(Vec &, Vec &);
 double VecDot(Vec &, Vec &);
 double VecProject(Vec &, Vec &);
 double VecAngleBtn(Vec &, Vec &);
