@@ -42,6 +42,7 @@ extern "C" {
 #include "vector.h"
 #include "gameObjects.h"
 #include "alexR.h"
+#include "omarO.h"
 
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
@@ -92,6 +93,15 @@ Ppmimage *flippers=NULL;
 Ppmimage *flippers2=NULL;
 GLuint flippersTexture;
 GLuint flippersTexture2;
+//------------------------OPENAL-----------------//
+//variables below are for AL sound
+ALuint alBuffer;
+ALuint alSource;
+/* functions for openAL:
+   clean_sound(alBuffer, alSource);//cleans/deletes sound//use at end of program
+   //play_sound(alSource)//plays sound, use whenever playing sound
+ //init_sounds(alBuffer, alSource)// initialize
+*/
 //-----------------------------------------------------------------------------
 //Setup timers
 const double physicsRate = 1.0 / 60.0;
@@ -115,6 +125,7 @@ int main(void)
 	initXWindows();
 	initOpengl();
 	initBalls();
+	init_sound(alBuffer, alSource);
 
     r.pos[0] = 200;
     r.pos[1] = 500;
@@ -147,6 +158,7 @@ int main(void)
 	}
 	cleanupXWindows();
 	cleanup_fonts();
+	clean_sound(alBuffer, alSource);
 	return 0;
 }
 
@@ -361,15 +373,18 @@ void checkKeys(XEvent *e)
 			case XK_f:
 				//press s to slow the balls
 				flipper.flipstate = 1;
+				play_sound(alSource);
 				break;
 			case XK_k:
 				//flipper 2
 				flipper2.flipstate = 1;
+				play_sound(alSource);
 				break;
 			case XK_Escape:
 				done=1;
 				break;
 		}
+	
 	}
 	else if (e->type == KeyRelease)
 	{
