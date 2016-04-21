@@ -10,6 +10,13 @@ double VecMagnitude(Vec &vec)
 
 }
 
+void MakeVector(double x, double y, double z, Vec &v)
+{
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+    
+}
 double VecDot(Vec &vec1, Vec &vec2)
 {
     return vec1[0] * vec2[0] + vec1[1] * vec2[1];
@@ -52,13 +59,13 @@ void VecBtn(Vec &a, Vec &b, Vec &out)
     out[2] = b[2] - a[2];
 }
 
-void VecNormalize(Vec &v)
+void VecNormalize(Vec &v, Vec &out)
 {
     double dist = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
     if (dist==0.0)
         return;
     double len = 1.0 / sqrt(dist);
-    v[0] *= len;
-    v[1] *= len;
-    v[2] *= len;
+    out[0] = v[0] * len;
+    out[1] = v[1] * len;
+    out[2] = v[2] * len;
 }

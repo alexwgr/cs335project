@@ -26,7 +26,7 @@ struct Ball {
 //Collision objects
 struct Rectangle {
     Vec pos;
-    double length, height;
+    double width, height, angle;
 };
 
 #endif
