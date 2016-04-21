@@ -4,6 +4,6 @@
 #include <cmath>
 #include <iostream>
 
-void flippertexture();
-
+void flipperstexture();
+void pinballTextureInit();
 #endif

@@ -90,11 +90,12 @@ Flipper flipper;
 Flipper flipper2;
 Rectangle r;
 
-Ppmimage *pinballTexture;
+Ppmimage *pinballImage;
 Ppmimage *flippers;
 Ppmimage *flippers2;
 GLuint flippersTexture;
 GLuint flippersTexture2;
+GLuint pinballTexture;
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
 ALuint alBuffer;
@@ -248,7 +249,8 @@ void initOpengl(void)
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
-	flippertexture();	
+	flipperstexture();
+	pinballTextureInit();	
 }
 
 void initBalls(void)
@@ -536,6 +538,7 @@ void drawBall(Flt rad)
 	static int firsttime=1;
 	static Flt verts[32][2];
 	static int n=32;
+	float angle, radian, x, y;
 	if (firsttime) {
 		Flt ang=0.0;
 		Flt inc = 3.14159 * 2.0 / (Flt)n;
@@ -546,9 +549,23 @@ void drawBall(Flt rad)
 		}
 		firsttime=0;
 	}
-	glBegin(GL_TRIANGLE_FAN);
-	for (i=0; i<n; i++) {
-		glVertex2d(verts[i][0]*rad, verts[i][1]*rad);
+
+	//glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, pinballTexture);
+	glBegin(GL_POLYGON);
+	//for (i=0; i<n; i++) {
+	//	glVertex2d(verts[i][0]*rad, verts[i][1]*rad);
+//	}
+
+	for(angle = 0.0; angle < 360.0; angle+= 2.0)
+	{
+	    radian = angle * (M_PI/100.0f);
+
+	    x = (float)cos(radian) * ball1.radius;
+	    y = (float)sin(radian) * ball1.radius;
+
+	    glTexCoord2f(x, y);
+	    glVertex2f(x, y);
 	}
 	glEnd();
 }
