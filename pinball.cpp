@@ -89,6 +89,7 @@ Flipper flipper;
 Flipper flipper2;
 Rectangle r;
 
+Ppmimage *pinballTexture;
 Ppmimage *flippers;
 Ppmimage *flippers2;
 GLuint flippersTexture;
