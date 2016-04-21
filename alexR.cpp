@@ -77,7 +77,6 @@ void rectangleBallCollision(Rectangle &r, Ball &b)
 	VecBtn(r.pos, b.pos, between);
 	double projectX = VecProject(between, horz);
 	double projectY = VecProject(between, vert);
-    double projectGravity = VecProject(b.vel, gravity);
     double currentSpeed = VecMagnitude(b.vel);
     
 	//check collision

@@ -45,10 +45,10 @@ extern "C" {
 #include "omarO.h"
 #include "hseid.h"
 
-#define FLIPPER_LENGTH 70.0
-#define FLIPPER_HEIGHT 15.0
-#define FLIPPER_SPEED 14.8
-#define FLIPPER_REST_ANGLE -50
+const double FLIPPER_LENGTH = 70.0;
+const double FLIPPER_HEIGHT = 15.0;
+const double FLIPPER_SPEED = 14.8;
+const double FLIPPER_REST_ANGLE = -50;
 
 typedef double Flt;
 //typedef Flt Vec[3];
@@ -136,8 +136,8 @@ int main(void)
     r.height = 100.0;
     r.angle = -30.0;
 
-	initFlipper(flipper, 150, 100, false);
-    initFlipper(flipper2, xres - 150, 100, true);
+	initFlipper(flipper, 170, 100, false);
+    initFlipper(flipper2, xres - 170, 100, true);
 
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -532,66 +532,6 @@ void flipperBallCollision(Flipper &f, Ball &b)
 
 }
 
-void drawBall(Flt rad)
-{
-	int i;
-	static int firsttime=1;
-	static Flt verts[32][2];
-	static int n=32;
-	float angle, radian, x, y;
-	if (firsttime) {
-		Flt ang=0.0;
-		Flt inc = 3.14159 * 2.0 / (Flt)n;
-		for (i=0; i<n; i++) {
-			verts[i][0] = sin(ang);
-			verts[i][1] = cos(ang);
-			ang += inc;
-		}
-		firsttime=0;
-	}
-
-	//glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, pinballTexture);
-	glBegin(GL_POLYGON);
-	//for (i=0; i<n; i++) {
-	//	glVertex2d(verts[i][0]*rad, verts[i][1]*rad);
-//	}
-
-	for(angle = 0.0; angle < 360.0; angle+= 2.0)
-	{
-	    radian = angle * (M_PI/100.0f);
-
-	    x = (float)cos(radian) * ball1.radius;
-	    y = (float)sin(radian) * ball1.radius;
-
-	    glTexCoord2f(x, y);
-	    glVertex2f(x, y);
-	}
-	glEnd();
-}
-
-
-void drawFlipper(Flipper &f)
-{
-    float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
-    float angle = f.inverted ? -f.angle : f.angle;
-    glPushMatrix();
-	glColor3f(1, 1, 1);
-	glTranslated(f.pos[0], f.pos[1], f.pos[2]);
-	glRotatef(angle, 0, 0, 1);
-	//if (f.inverted) {
-		glBindTexture(GL_TEXTURE_2D, flippersTexture);
-	//} else {
-	//    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
-	//}
-	glBegin(GL_QUADS);
-	glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
-	glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(length, 0); glTexCoord2f(0.0f, 1.0f); 
-	glVertex2f(0, 0); glTexCoord2f(1.0f, 1.0f); 
-	glEnd();
-    glPopMatrix();
-}
 
 void render(void)
 {
@@ -612,10 +552,10 @@ void render(void)
     glPopMatrix();
 
 	//draw balls
-	glColor3ub(30,60,90);
+	glColor3f(1,1,1);
 	glPushMatrix();
 	glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
-	drawBall(ball1.radius);
+	drawBall();
 	glPopMatrix();
 
     drawFlipper(flipper);
