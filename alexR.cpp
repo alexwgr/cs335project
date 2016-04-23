@@ -3,9 +3,74 @@
 #include "alexR.h"
 #include <iostream>
 #include <cmath>
-
+#include <GL/glx.h>
 
 #define MAX_VELOCITY 30.0
+
+void initGameBoard(GameBoard &g)
+{
+    g.num_rectangles = 0;
+}
+
+void drawRectangle(Rectangle &r)
+{
+
+    glColor3ub(150, 10, 10);
+    glPushMatrix();
+    glTranslated(r.pos[0], r.pos[1], r.pos[2]);
+	glRotatef(r.angle, 0, 0, 1);
+    glBegin(GL_QUADS);
+    glVertex2i(-r.width, -r.height);
+    glVertex2i(-r.width, r.height);
+    glVertex2i(r.width, r.height);
+    glVertex2i(r.width, - r.height);
+    glEnd();
+    glPopMatrix();
+}
+
+void addCurve(Curve &c, GameBoard &g)
+{
+//uses beizer curves
+    double t = 0.0;
+    double tStep = 1.0 / c.npoints;
+    double x0, y0, x1, y1;
+    Vec point1, point2, btn, horz, zero;
+    MakeVector(1, 0, 0, horz);
+    MakeVector(0, 0, 0, zero);
+    
+    
+    for (int i = 0; i <= c.npoints; i++) {
+
+        x0 = (1.0 - t) * (1.0 - t) * c.points[0][0] +
+            2.0 * (1.0 - t) * t * c.points[1][0] + 
+            t * t * c.points[2][0];
+
+        y0 = (1.0 - t) * (1.0 - t) * c.points[0][1] +
+            2.0 * (1.0 - t) * t * c.points[1][1] + 
+            t * t * c.points[2][1];
+
+        if (i > 0) {
+        //for each segment of the curve, draw a rectangle
+            Rectangle *r = &(g.rectangles[g.num_rectangles]);
+            MakeVector(x0, y0, 0, point1);
+            MakeVector(x1, y1, 0, point2);
+            VecBtn(point1, point2, btn);
+            r->pos[0] = (x0 + x1) / 2.0;
+            r->pos[1] = (y0 + y1) / 2.0;
+            //rotate the rectangle based on the angle its horizontal edge and the x-axis
+            r->angle = (isLeft(zero, horz, btn) ? -1 : 1) * VecAngleBtn(horz, btn);
+            r->width = VecMagnitude(btn) / 2.0;
+            r->width += r->width * .05;
+            r->height = c.width;
+            g.num_rectangles++;
+        }
+        x1 = x0;
+        y1 = y0;
+
+        t += tStep;
+
+    }
+}
 
 bool isLeft(Vec &a, Vec &b, Vec &p)
 {
@@ -17,7 +82,7 @@ bool isLeft(Vec &a, Vec &b, Vec &p)
 }
 
 void getRectangleCorners(Rectangle &r,
-    Vec &corner1, Vec &corner2, Vec &corner3, Vec &corner4)
+        Vec &corner1, Vec &corner2, Vec &corner3, Vec &corner4)
 {
     Vec vert, horz, neg_vert, neg_horz;
     MakeVector(0,1,0,vert);
@@ -40,7 +105,7 @@ void getRectangleCorners(Rectangle &r,
     VecAdd(horz, neg_vert, corner3);
     VecAdd(neg_horz, neg_vert, corner4);
 
-    
+
     //shift by rectangle position
     VecAdd(corner1, r.pos, corner1);
     VecAdd(corner2, r.pos, corner2);
@@ -58,58 +123,58 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
     MakeVector(0, 0, 0, zero);
 
     Vec corner[4];
-    
+
     float angle = r.angle;
-	//unit axis vectors
-	Vec vert, horz, gravity;
+    //unit axis vectors
+    Vec vert, horz, gravity;
     MakeVector(0, 1, 0, vert);
     MakeVector(1, 0, 0, horz);
 
     MakeVector(0, -1, 0, gravity);
-    
-    
-	//rotated
-	VecRotate(vert, angle, vert);
-	VecRotate(horz, angle, horz);
-
-     
 
 
-	Vec between, dV, rNorm;
-	VecBtn(r.pos, b.pos, between);
-	double projectX = VecProject(between, horz);
-	double projectY = VecProject(between, vert);
+    //rotated
+    VecRotate(vert, angle, vert);
+    VecRotate(horz, angle, horz);
+
+
+
+
+    Vec between, dV, rNorm;
+    VecBtn(r.pos, b.pos, between);
+    double projectX = VecProject(between, horz);
+    double projectY = VecProject(between, vert);
     double currentSpeed = VecMagnitude(b.vel);
-    
-	//check collision
-	if (projectX > -(r.width + b.radius) && projectX < r.width + b.radius
-			&& projectY > -(b.radius + r.height) && projectY < b.radius + r.height) {
-        
+
+    //check collision
+    if (projectX > -(r.width + b.radius) && projectX < r.width + b.radius
+            && projectY > -(b.radius + r.height) && projectY < b.radius + r.height) {
+
         getRectangleCorners(r, corner[0], corner[1], corner[2], corner[3]);
 
-        
+
         //Figure out which edge
         bool lDiagonal = isLeft(corner[0], corner[2], b.pos);
         bool rDiagonal = isLeft(corner[3], corner[1], b.pos);
-        
+
         if (lDiagonal && rDiagonal)
         {
-        //bottom edge
+            //bottom edge
             VecScale(vert, -1, rNorm);
         }
         else if (lDiagonal && !rDiagonal)
         {
-        //left edge
+            //left edge
             VecScale(horz, -1, rNorm);
         }
         else if (!lDiagonal && rDiagonal)
         {
-        //right edge
+            //right edge
             VecScale(horz, 1, rNorm);
         }
         else
         {
-        //top edge
+            //top edge
             VecScale(vert, 1, rNorm);
 
         }
@@ -117,7 +182,7 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
         //if (VecProject(b.vel, rNorm) < 0 && currentSpeed < 0.1)
         //{
-            //VecScale(rNorm, std::abs(currentSpeed) * projectY * 0.5, b.vel);
+        //VecScale(rNorm, std::abs(currentSpeed) * projectY * 0.5, b.vel);
         //}
 
         //else
@@ -136,7 +201,7 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
         VecRotate(dV,(posAng ? 2 : -2) * angBtn, dV);
         VecScale(dV, currentSpeed * 0.6, b.vel);
-        
+
         //VecAdd(b.pos, dP, b.pos);
         //}
         return 1;

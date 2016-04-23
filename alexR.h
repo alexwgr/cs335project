@@ -7,6 +7,10 @@
 #include <iostream>
 #include <cmath>
 
+bool isLeft(Vec &, Vec &, Vec &);
+void initGameBoard(GameBoard &);
+void drawRectangle(Rectangle &);
+void addCurve(Curve &c, GameBoard &b);
 int rectangleBallCollision(Rectangle &, Ball &);
 void applyMaximumVelocity(Ball &);
 #endif

@@ -30,6 +30,7 @@ struct GameBoard {
 
 struct Curve {
     double width;
+    int npoints;
     Vec points[3];
 };
 

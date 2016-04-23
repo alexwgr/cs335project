@@ -131,19 +131,28 @@ int main(void)
 {
 	initXWindows();
 	initOpengl();
-	initBalls();
+	initGameBoard(board);
+    initBalls();
 	init_sound(alBuffer, alSource);
 
     r.pos[0] = 200.0;
-    r.pos[1] = 500.0;
+    r.pos[1] = 220.0;
     r.width = 100.0;
-    r.height = 100.0;
-    r.angle = -30.0;
+    r.height = 5.0;
+    r.angle = 0.0;
 
-    curve.points[0][0] = 100; curve.points[0][1] = 100;
-    curve.points[1][0] = 200; curve.points[1][1] = 200;
-    curve.points[2][0] = 100; curve.points[2][1] = 300;
+    curve.points[0][0] = 200; curve.points[0][1] = 500;
+    curve.points[1][0] = 400; curve.points[1][1] = 200;
+    curve.points[2][0] = 600; curve.points[2][1] = 500;
+    curve.width = 8;
+    curve.npoints = 15;
 
+
+    addCurve(curve, board);
+
+
+    std::cout << "num rectangles " << board.num_rectangles << endl;
+    
 	initFlipper(flipper, 170, 100, false);
     initFlipper(flipper2, xres - 170, 100, true);
 
@@ -450,13 +459,14 @@ void physics(void)
 	flipperMovement(flipper2);
 	flipperBallCollision(flipper2, ball1);
     
-
-    rectangleBallCollision(r, ball1);
+    //rectangle collisions
+    for (int i = 0; i < board.num_rectangles; i++) {
+        rectangleBallCollision(board.rectangles[i], ball1);
+    }
 
     
     applyMaximumVelocity(ball1);
 
-    std::cout << "Ball velocity: " << VecMagnitude(ball1.vel) << std::endl;
 
 	//Update position
 	ball1.pos[0] += ball1.vel[0];
@@ -550,28 +560,27 @@ void render(void)
 {
 
 
-    //Curve
-    glLineWidth(1.5);
-    glColor3ub(150, 10, 10);
-    glPushMatrix();
-    glBegin(GL_LINES);
-    glVertex2f(curve.points[0][0], curve.points[0][1]);
-    glVertex2f(curve.points[1][0], curve.points[1][1]);
-    glEnd();
-    glBegin(GL_LINES);
-    glVertex2f(curve.points[1][0], curve.points[1][1]);
-    glVertex2f(curve.points[2][0], curve.points[2][1]);
-    glEnd();
-
 	Rect re;
 	glClear(GL_COLOR_BUFFER_BIT);
     
+    //Curve
+    glLineWidth(2.5);
+    glColor3ub(150, 10, 10);
+    glPushMatrix();
+    glBegin(GL_LINES);
+    glVertex3f(curve.points[0][0], curve.points[0][1],0);
+    glVertex3f(curve.points[1][0], curve.points[1][1],0);
+    glEnd();
+    glBegin(GL_LINES);
+    glVertex3f(curve.points[1][0], curve.points[1][1], 0);
+    glVertex3f(curve.points[2][0], curve.points[2][1], 0);
+    glEnd();
+
     
     glColor3ub(150, 10, 10);
     glPushMatrix();
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
 	glRotatef(r.angle, 0, 0, 1);
-    glBegin(GL_QUADS);
     glBegin(GL_QUADS);
     glVertex2i(-r.width, -r.height);
     glVertex2i(-r.width, r.height);
@@ -579,7 +588,11 @@ void render(void)
     glVertex2i(r.width, - r.height);
     glEnd();
     glPopMatrix();
-
+    
+    for (int i = 0; i < board.num_rectangles; i++)
+    {
+        drawRectangle(board.rectangles[i]);
+    }
 
 
 	//draw balls
