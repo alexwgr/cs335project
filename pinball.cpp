@@ -35,6 +35,8 @@
 //#include <GL/glu.h>
 //#include "log.h"
 
+
+
 extern "C" {
     #include "fonts.h"
 }
@@ -83,6 +85,8 @@ int xres=780, yres=480;
 int leftButtonDown=0;
 Vec leftButtonPos;
 
+GameBoard board;
+Curve curve;
 
 Ball ball1;
 Ball ball2;
@@ -135,6 +139,10 @@ int main(void)
     r.width = 100.0;
     r.height = 100.0;
     r.angle = -30.0;
+
+    curve.points[0][0] = 100; curve.points[0][1] = 100;
+    curve.points[1][0] = 200; curve.points[1][1] = 200;
+    curve.points[2][0] = 100; curve.points[2][1] = 300;
 
 	initFlipper(flipper, 170, 100, false);
     initFlipper(flipper2, xres - 170, 100, true);
@@ -259,7 +267,7 @@ void initBalls(void)
 	ball1.pos[1] = 200;
 	//ball1.vel[0] = 1.6;
 	//ball1.vel[1] = 0.0;
-	ball1.radius = 7.0;
+	ball1.radius = 11.0;
 	ball1.mass = 1.0;
 
 }
@@ -445,6 +453,10 @@ void physics(void)
 
     rectangleBallCollision(r, ball1);
 
+    
+    applyMaximumVelocity(ball1);
+
+    std::cout << "Ball velocity: " << VecMagnitude(ball1.vel) << std::endl;
 
 	//Update position
 	ball1.pos[0] += ball1.vel[0];
@@ -519,6 +531,7 @@ void flipperBallCollision(Flipper &f, Ball &b)
 		VecRotate(dV, VecAngleBtn(between, vert), dV); 
 
 
+
 		//add horizontal velocity if at the tip of flipper
 		if (projectX / FLIPPER_LENGTH > 0.20)
 		{
@@ -535,9 +548,25 @@ void flipperBallCollision(Flipper &f, Ball &b)
 
 void render(void)
 {
+
+
+    //Curve
+    glLineWidth(1.5);
+    glColor3ub(150, 10, 10);
+    glPushMatrix();
+    glBegin(GL_LINES);
+    glVertex2f(curve.points[0][0], curve.points[0][1]);
+    glVertex2f(curve.points[1][0], curve.points[1][1]);
+    glEnd();
+    glBegin(GL_LINES);
+    glVertex2f(curve.points[1][0], curve.points[1][1]);
+    glVertex2f(curve.points[2][0], curve.points[2][1]);
+    glEnd();
+
 	Rect re;
 	glClear(GL_COLOR_BUFFER_BIT);
-
+    
+    
     glColor3ub(150, 10, 10);
     glPushMatrix();
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
@@ -550,6 +579,8 @@ void render(void)
     glVertex2i(r.width, - r.height);
     glEnd();
     glPopMatrix();
+
+
 
 	//draw balls
 	glColor3f(1,1,1);

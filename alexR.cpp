@@ -5,6 +5,8 @@
 #include <cmath>
 
 
+#define MAX_VELOCITY 30.0
+
 bool isLeft(Vec &a, Vec &b, Vec &p)
 {
     Vec v1, v2;
@@ -50,7 +52,7 @@ void getRectangleCorners(Rectangle &r,
 
 
 
-void rectangleBallCollision(Rectangle &r, Ball &b)
+int rectangleBallCollision(Rectangle &r, Ball &b)
 {
     Vec zero;
     MakeVector(0, 0, 0, zero);
@@ -137,7 +139,17 @@ void rectangleBallCollision(Rectangle &r, Ball &b)
         
         //VecAdd(b.pos, dP, b.pos);
         //}
+        return 1;
     }
+
+    return 0;
 }
 
+void applyMaximumVelocity(Ball &b)
+{
 
+    if (VecMagnitude(b.vel) > MAX_VELOCITY) {
+        VecNormalize(b.vel, b.vel);
+        VecScale(b.vel, MAX_VELOCITY, b.vel);
+    }
+}

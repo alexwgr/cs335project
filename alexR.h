@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 
-void rectangleBallCollision(Rectangle &, Ball &);
+int rectangleBallCollision(Rectangle &, Ball &);
+void applyMaximumVelocity(Ball &);
 #endif
 

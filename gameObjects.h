@@ -4,6 +4,14 @@
 
 #include "vector.h"
 
+#define MAX_RECTANGLES 900
+
+//Collision objects
+struct Rectangle {
+    Vec pos;
+    double width, height, angle;
+};
+
 struct Flipper {
 	Vec pos;
 	double angle;
@@ -15,6 +23,16 @@ struct Flipper {
 	//0 - idle, 1 - going up, 2 - going down
 };
 
+struct GameBoard {
+    Rectangle rectangles[MAX_RECTANGLES];
+    int num_rectangles;
+};
+
+struct Curve {
+    double width;
+    Vec points[3];
+};
+
 struct Ball {
 	Vec pos;
 	Vec vel;
@@ -22,11 +40,15 @@ struct Ball {
 	double mass;
 };
 
-
-//Collision objects
-struct Rectangle {
-    Vec pos;
-    double width, height, angle;
+struct TreasureChest {
+    int state; //0 is closed, 1 is open
+    Rectangle r;
+    int HP; // 3, 2, 1
 };
+
+
+
+
+
 
 #endif
