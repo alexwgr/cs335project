@@ -57,6 +57,12 @@ void addCurve(Curve &c, GameBoard &g)
             VecBtn(point1, point2, btn);
             r->pos[0] = (x0 + x1) / 2.0;
             r->pos[1] = (y0 + y1) / 2.0;
+            
+            r->collide[0] = c.collide[0];
+            r->collide[1] = c.collide[1];
+            r->collide[2] = false;
+            r->collide[3] = false;
+
             //rotate the rectangle based on the angle its horizontal edge and the x-axis
             r->angle = (isLeft(zero, horz, btn) ? -1 : 1) * VecAngleBtn(horz, btn);
             r->width = VecMagnitude(btn) / 2.0;
@@ -159,21 +165,33 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
         if (lDiagonal && rDiagonal)
         {
+            if (!r.collide[1])
+                return 0;
+
             //bottom edge
             VecScale(vert, -1, rNorm);
         }
         else if (lDiagonal && !rDiagonal)
         {
+            if (!r.collide[2])
+                return 0;
+
             //left edge
             VecScale(horz, -1, rNorm);
         }
         else if (!lDiagonal && rDiagonal)
         {
+            if (!r.collide[3])
+                return 0;
+
             //right edge
             VecScale(horz, 1, rNorm);
         }
         else
         {
+            if (!r.collide[0])
+                return 0;
+
             //top edge
             VecScale(vert, 1, rNorm);
 
@@ -190,8 +208,10 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
         Vec dP;
         double projectNorm = VecProject(between, rNorm); 
-        VecScale(rNorm, b.radius - std::abs(projectNorm - r.height), dP);
-        VecAdd(b.pos, dP, b.pos);
+        VecScale(rNorm, std::abs(b.radius - std::abs(projectNorm - r.height)), dP);
+        if (VecMagnitude(dP) <= b.radius) {
+            VecAdd(b.pos, dP, b.pos);
+        }
 
         VecNormalize(b.vel, dV);
         VecScale(dV, -1, dV);
@@ -200,10 +220,8 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
         bool posAng = isLeft(zero, rNorm, dV);
 
         VecRotate(dV,(posAng ? 2 : -2) * angBtn, dV);
-        VecScale(dV, currentSpeed * 0.6, b.vel);
+        VecScale(dV, 0.6 * currentSpeed, b.vel);
 
-        //VecAdd(b.pos, dP, b.pos);
-        //}
         return 1;
     }
 

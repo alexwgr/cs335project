@@ -9,7 +9,10 @@
 //Collision objects
 struct Rectangle {
     Vec pos;
+    bool collide[4]; //up, down, left, right
     double width, height, angle;
+
+    Rectangle() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
 
 struct Flipper {
@@ -30,8 +33,11 @@ struct GameBoard {
 
 struct Curve {
     double width;
+    bool collide[2]; //above, below
     int npoints;
     Vec points[3];
+
+    Curve() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
 
 struct Ball {

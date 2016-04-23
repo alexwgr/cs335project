@@ -86,7 +86,7 @@ int leftButtonDown=0;
 Vec leftButtonPos;
 
 GameBoard board;
-Curve curve;
+Curve curve, curve2;
 
 Ball ball1;
 Ball ball2;
@@ -141,15 +141,36 @@ int main(void)
     r.height = 5.0;
     r.angle = 0.0;
 
-    curve.points[0][0] = 200; curve.points[0][1] = 500;
-    curve.points[1][0] = 400; curve.points[1][1] = 200;
-    curve.points[2][0] = 600; curve.points[2][1] = 500;
-    curve.width = 8;
-    curve.npoints = 15;
+    curve.points[0][0] = xres; curve.points[0][1] = 500;
+    curve.points[1][0] = xres; curve.points[1][1] = 600;
+    curve.points[2][0] = xres - 100; curve.points[2][1] = 600;
+    curve.width = 8.0;
+    curve.npoints = 10;
 
+    curve2.points[0][0] = xres - 50; curve2.points[0][1] = 500;
+    curve2.points[1][0] = xres - 50; curve2.points[1][1] = 560;
+    curve2.points[2][0] = xres - 100; curve2.points[2][1] = 560;
+    curve2.width = 8.0;
+    curve2.npoints = 10;
 
     addCurve(curve, board);
+    //addCurve(curve2, board);
+    
+    Rectangle *rec = &board.rectangles[board.num_rectangles];
+    rec->pos[0] = xres;
+    rec->pos[1] = 300;
+    rec->height = 200;
+    rec->width = 8.0;
+    board.num_rectangles++;
 
+    rec = &board.rectangles[board.num_rectangles];
+    rec->pos[0] = xres - 50;
+    rec->pos[1] = 300;
+    rec->height = 200;
+    rec->width = 8.0;
+    board.num_rectangles++;
+
+    
 
     std::cout << "num rectangles " << board.num_rectangles << endl;
     
@@ -354,7 +375,7 @@ void checkKeys(XEvent *e)
 				ball1.vel[0] += 1.0;
 				break;
 			case XK_Up:
-				ball1.vel[1] += 1.0;
+				ball1.vel[1] = 20.0;
 				break;
 			case XK_Down:
 				ball1.vel[1] -= 1.0;
@@ -460,15 +481,29 @@ void physics(void)
 	flipperBallCollision(flipper2, ball1);
     
     //rectangle collisions
+    bool collided = false;
     for (int i = 0; i < board.num_rectangles; i++) {
-        rectangleBallCollision(board.rectangles[i], ball1);
+        if (rectangleBallCollision(board.rectangles[i], ball1)) {
+            collided = true;
+        }
     }
 
+    if (rectangleBallCollision(r, ball1))
+        collided = true;
+
+    if (collided) {
+        //apply roll
+        double momentum = ball1.vel[0] * 0.6;
+        Vec mv;
+        MakeVector(1, 0, 0, mv);
+        VecScale(mv, momentum, mv);
+        VecAdd(ball1.vel, mv, ball1.vel);
     
+    }
+
     applyMaximumVelocity(ball1);
-
-
-	//Update position
+	
+    //Update position
 	ball1.pos[0] += ball1.vel[0];
 	ball1.pos[1] += ball1.vel[1];
 	if (leftButtonDown) {
@@ -526,7 +561,7 @@ void flipperBallCollision(Flipper &f, Ball &b)
 		VecScale(vert, b.radius - projectY, dP);
 		VecAdd(b.pos, dP,b.pos);
 
-
+ 
 		Vec dV;
 		double speed;
 
