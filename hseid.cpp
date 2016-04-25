@@ -2,16 +2,49 @@
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 #include "ppm.h"
+#include <iostream>
+#include <math.h>
 
+extern Ppmimage *OceanImage;
 extern Ppmimage *pinballImage;
 extern Ppmimage *flippers;
 extern Ppmimage *flippers2;
+extern GLuint OceanTexture;
 extern GLuint flippersTexture;
 extern GLuint flippersTexture2;
 extern GLuint pinballTexture;
 extern Ball ball1;
+extern int xres;
+extern int yres;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
+
+void OceanTextureInit()
+{
+	OceanImage = ppm6GetImage("./images/Ocean.ppm");
+	glGenTextures(1, &OceanTexture);
+
+	glBindTexture(GL_TEXTURE_2D, OceanTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+				OceanImage->width, OceanImage->height,
+				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
+}	
+
+void OceanBackground()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, OceanTexture);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i(0, yres);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i(xres, yres);
+		glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
+	glEnd();
+
+
+}
 
 void flipperstexture()
 {

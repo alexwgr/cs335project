@@ -94,9 +94,14 @@ Flipper flipper;
 Flipper flipper2;
 Rectangle r;
 
+Ppmimage *OceanImage;
+
 Ppmimage *pinballImage;
 Ppmimage *flippers;
 Ppmimage *flippers2;
+
+GLuint OceanTexture;
+
 GLuint flippersTexture;
 GLuint flippersTexture2;
 GLuint pinballTexture;
@@ -287,8 +292,20 @@ void initOpengl(void)
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
+
+//	OceanImage = ppm6GetImage("./images/Ocean.ppm");
+//	glGenTextures(1, &OceanTexture);
+	
+//	glBindTexture(GL_TEXTURE_2D, OceanTexture);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+//	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+//				OceanImage->width, OceanImage->height,
+//				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
+
 	flipperstexture();
-	pinballTextureInit();	
+	pinballTextureInit();
+	OceanTextureInit();	
 }
 
 void initBalls(void)
@@ -623,7 +640,9 @@ void render(void)
     glVertex2i(r.width, - r.height);
     glEnd();
     glPopMatrix();
-    
+
+    OceanBackground();
+
     for (int i = 0; i < board.num_rectangles; i++)
     {
         drawRectangle(board.rectangles[i]);
