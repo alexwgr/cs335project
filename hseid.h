@@ -4,6 +4,9 @@
 #include <cmath>
 #include <iostream>
 #include "gameObjects.h"
+
+void OceanBackground();
+void OceanTextureInit();
 void flipperstexture();
 void pinballTextureInit();
 void drawFlipper(Flipper &f);

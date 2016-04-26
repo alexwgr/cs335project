@@ -95,11 +95,16 @@ Flipper flipper2;
 Rectangle r;
 TreasureChest chest;
 
+Ppmimage *OceanImage;
+
 Ppmimage *pinballImage;
 Ppmimage *flippers;
 Ppmimage *flippers2;
 Ppmimage  *closeChestImage;
 Ppmimage *openChestImage;
+
+GLuint OceanTexture;
+
 GLuint flippersTexture;
 GLuint flippersTexture2;
 GLuint pinballTexture;
@@ -293,9 +298,21 @@ void initOpengl(void)
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
+
+//	OceanImage = ppm6GetImage("./images/Ocean.ppm");
+//	glGenTextures(1, &OceanTexture);
+	
+//	glBindTexture(GL_TEXTURE_2D, OceanTexture);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+//	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+//				OceanImage->width, OceanImage->height,
+//				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
+
 	flipperstexture();
 	pinballTextureInit();
     chestTextureInit();	
+	OceanTextureInit();	
 }
 
 void initBalls(void)
@@ -516,7 +533,8 @@ void physics(void)
 
 	applyMaximumVelocity(ball1);
 
-	//Update position
+	
+    //Update position
 	ball1.pos[0] += ball1.vel[0];
 	ball1.pos[1] += ball1.vel[1];
 	if (leftButtonDown) {
@@ -629,18 +647,25 @@ void render(void)
 	glPushMatrix();
 	glTranslated(r.pos[0], r.pos[1], r.pos[2]);
 	glRotatef(r.angle, 0, 0, 1);
-	glBegin(GL_QUADS);
-	glVertex2i(-r.width, -r.height);
-	glVertex2i(-r.width, r.height);
-	glVertex2i(r.width, r.height);
-	glVertex2i(r.width, - r.height);
-	glEnd();
-	glPopMatrix();
 
 	for (int i = 0; i < board.num_rectangles; i++)
 	{
 		drawRectangle(board.rectangles[i]);
 	}
+    glBegin(GL_QUADS);
+    glVertex2i(-r.width, -r.height);
+    glVertex2i(-r.width, r.height);
+    glVertex2i(r.width, r.height);
+    glVertex2i(r.width, - r.height);
+    glEnd();
+    glPopMatrix();
+
+    OceanBackground();
+
+    for (int i = 0; i < board.num_rectangles; i++)
+    {
+        drawRectangle(board.rectangles[i]);
+    }
 
 	drawChest(chest);//drawing chest
 
