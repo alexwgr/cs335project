@@ -505,8 +505,6 @@ void physics(void)
         }
     }
 
-    if (rectangleBallCollision(r, ball1))
-        collided = true;
 
     if (collided) {
         //apply roll
