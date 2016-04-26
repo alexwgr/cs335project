@@ -51,6 +51,11 @@ struct TreasureChest {
     int state; //0 is closed, 1 is open
     Rectangle r;
     int HP; // 3, 2, 1
+	TreasureChest() 
+	{
+		state = 0;
+		HP = 3;
+	}
 };
 
 

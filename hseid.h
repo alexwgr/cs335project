@@ -4,7 +4,6 @@
 #include <cmath>
 #include <iostream>
 #include "gameObjects.h"
-
 void flipperstexture();
 void pinballTextureInit();
 void drawFlipper(Flipper &f);

@@ -38,7 +38,7 @@
 
 
 extern "C" {
-    #include "fonts.h"
+#include "fonts.h"
 }
 #include "ppm.h"
 #include "vector.h"
@@ -93,22 +93,27 @@ Ball ball2;
 Flipper flipper;
 Flipper flipper2;
 Rectangle r;
+TreasureChest chest;
 
 Ppmimage *pinballImage;
 Ppmimage *flippers;
 Ppmimage *flippers2;
+Ppmimage  *closeChestImage;
+Ppmimage *openChestImage;
 GLuint flippersTexture;
 GLuint flippersTexture2;
 GLuint pinballTexture;
+GLuint closeChestTexture;
+GLuint openChestTexture;
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
 ALuint alBuffer;
 ALuint alSource;
 /* functions for openAL:
    clean_sound(alBuffer, alSource);//cleans/deletes sound//use at end of program
-   //play_sound(alSource)//plays sound, use whenever playing sound
- //init_sounds(alBuffer, alSource)// initialize
-*/
+//play_sound(alSource)//plays sound, use whenever playing sound
+//init_sounds(alBuffer, alSource)// initialize
+ */
 //-----------------------------------------------------------------------------
 //Setup timers
 const double physicsRate = 1.0 / 60.0;
@@ -132,50 +137,51 @@ int main(void)
 	initXWindows();
 	initOpengl();
 	initGameBoard(board);
-    initBalls();
+	initBalls();
+	initChest(chest);//initialize chest properties
 	init_sound(alBuffer, alSource);
 
-    r.pos[0] = 200.0;
-    r.pos[1] = 220.0;
-    r.width = 100.0;
-    r.height = 5.0;
-    r.angle = 0.0;
+	r.pos[0] = 200.0;
+	r.pos[1] = 220.0;
+	r.width = 100.0;
+	r.height = 5.0;
+	r.angle = 0.0;
 
-    curve.points[0][0] = xres; curve.points[0][1] = 500;
-    curve.points[1][0] = xres; curve.points[1][1] = 600;
-    curve.points[2][0] = xres - 100; curve.points[2][1] = 600;
-    curve.width = 8.0;
-    curve.npoints = 10;
+	curve.points[0][0] = xres; curve.points[0][1] = 500;
+	curve.points[1][0] = xres; curve.points[1][1] = 600;
+	curve.points[2][0] = xres - 100; curve.points[2][1] = 600;
+	curve.width = 8.0;
+	curve.npoints = 10;
 
-    curve2.points[0][0] = xres - 50; curve2.points[0][1] = 500;
-    curve2.points[1][0] = xres - 50; curve2.points[1][1] = 560;
-    curve2.points[2][0] = xres - 100; curve2.points[2][1] = 560;
-    curve2.width = 8.0;
-    curve2.npoints = 10;
+	curve2.points[0][0] = xres - 50; curve2.points[0][1] = 500;
+	curve2.points[1][0] = xres - 50; curve2.points[1][1] = 560;
+	curve2.points[2][0] = xres - 100; curve2.points[2][1] = 560;
+	curve2.width = 8.0;
+	curve2.npoints = 10;
 
-    addCurve(curve, board);
-    //addCurve(curve2, board);
-    
-    Rectangle *rec = &board.rectangles[board.num_rectangles];
-    rec->pos[0] = xres;
-    rec->pos[1] = 300;
-    rec->height = 200;
-    rec->width = 8.0;
-    board.num_rectangles++;
+	addCurve(curve, board);
+	addCurve(curve2, board);
 
-    rec = &board.rectangles[board.num_rectangles];
-    rec->pos[0] = xres - 50;
-    rec->pos[1] = 300;
-    rec->height = 200;
-    rec->width = 8.0;
-    board.num_rectangles++;
+	Rectangle *rec = &board.rectangles[board.num_rectangles];
+	rec->pos[0] = xres;
+	rec->pos[1] = 300;
+	rec->height = 200;
+	rec->width = 8.0;
+	board.num_rectangles++;
 
-    
+	rec = &board.rectangles[board.num_rectangles];
+	rec->pos[0] = xres - 50;
+	rec->pos[1] = 300;
+	rec->height = 200;
+	rec->width = 8.0;
+	board.num_rectangles++;
 
-    std::cout << "num rectangles " << board.num_rectangles << endl;
-    
+
+
+	std::cout << "num rectangles " << board.num_rectangles << endl;
+
 	initFlipper(flipper, 170, 100, false);
-    initFlipper(flipper2, xres - 170, 100, true);
+	initFlipper(flipper2, xres - 170, 100, true);
 
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -288,7 +294,8 @@ void initOpengl(void)
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
 	flipperstexture();
-	pinballTextureInit();	
+	pinballTextureInit();
+    chestTextureInit();	
 }
 
 void initBalls(void)
@@ -310,7 +317,7 @@ void initFlipper(Flipper &f, float xpos, float ypos, bool inverted=false)
 	f.angle = FLIPPER_REST_ANGLE;
 	f.flipstate = 0;
 	f.rvel = 0;
-    f.inverted = inverted;
+	f.inverted = inverted;
 }
 
 void checkResize(XEvent *e)
@@ -401,7 +408,7 @@ void checkKeys(XEvent *e)
 				done=1;
 				break;
 		}
-	
+
 	}
 	else if (e->type == KeyRelease)
 	{
@@ -469,41 +476,47 @@ void flipperMovement(Flipper &f)
 
 void physics(void)
 {
-	
+
 	//gravity
 	ball1.vel[1] += -0.2;
-    
-    //flipper physics
+
+	//flipper physics
 	flipperMovement(flipper);
 	flipperBallCollision(flipper, ball1);
 	//flipper2 physics
 	flipperMovement(flipper2);
 	flipperBallCollision(flipper2, ball1);
-    
-    //rectangle collisions
-    bool collided = false;
-    for (int i = 0; i < board.num_rectangles; i++) {
-        if (rectangleBallCollision(board.rectangles[i], ball1)) {
-            collided = true;
-        }
-    }
 
-    if (rectangleBallCollision(r, ball1))
-        collided = true;
+	//rectangle collisions
+	bool collided = false;
+	for (int i = 0; i < board.num_rectangles; i++) {
+		if (rectangleBallCollision(board.rectangles[i], ball1)) {
+			collided = true;
 
-    if (collided) {
-        //apply roll
-        double momentum = ball1.vel[0] * 0.6;
-        Vec mv;
-        MakeVector(1, 0, 0, mv);
-        VecScale(mv, momentum, mv);
-        VecAdd(ball1.vel, mv, ball1.vel);
-    
-    }
+		}
+	}
 
-    applyMaximumVelocity(ball1);
-	
-    //Update position
+
+	if (rectangleBallCollision(chest.r, ball1)) {
+
+		if(ballChestCollision(chest, ball1, alSource)) {
+			collided = true;
+		}
+	}	
+
+	if (collided) {
+		//apply roll
+		double momentum = ball1.vel[0] * 0.6;
+		Vec mv;
+		MakeVector(1, 0, 0, mv);
+		VecScale(mv, momentum, mv);
+		VecAdd(ball1.vel, mv, ball1.vel);
+
+	}
+
+	applyMaximumVelocity(ball1);
+
+	//Update position
 	ball1.pos[0] += ball1.vel[0];
 	ball1.pos[1] += ball1.vel[1];
 	if (leftButtonDown) {
@@ -513,35 +526,35 @@ void physics(void)
 	}
 	//Check for collision with window edges
 	if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
-        ball1.pos[0] = ball1.radius;
-        ball1.vel[0] *= -0.2;
-    }
+		ball1.pos[0] = ball1.radius;
+		ball1.vel[0] *= -0.2;
+	}
 	else if (ball1.pos[0] >= (Flt)xres-ball1.radius && ball1.vel[0] > 0.0) {
 		ball1.pos[0] = xres - ball1.radius;
-        ball1.vel[0] *= - 0.2;
+		ball1.vel[0] *= - 0.2;
 	}
 	if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
-        ball1.pos[1] = ball1.radius;
-        ball1.vel[1] *= - 0.2;
-    }
-    else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
+		ball1.pos[1] = ball1.radius;
+		ball1.vel[1] *= - 0.2;
+	}
+	else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
 		ball1.pos[1] = yres - ball1.radius;
-        ball1.vel[1] *= -0.2;
+		ball1.vel[1] *= -0.2;
 	}
 }
 
 void flipperBallCollision(Flipper &f, Ball &b)
 {
-    float angle = f.inverted ? -f.angle : f.angle;
+	float angle = f.inverted ? -f.angle : f.angle;
 	//unit axis vectors
 	Vec vert, horz;
-    MakeVector(0, 1, 0, vert);
-    MakeVector(1, 0, 0, horz);
-    if (f.inverted)
-    {
-        VecScale(horz, -1, horz);
-    }
-    
+	MakeVector(0, 1, 0, vert);
+	MakeVector(1, 0, 0, horz);
+	if (f.inverted)
+	{
+		VecScale(horz, -1, horz);
+	}
+
 	//rotated
 	VecRotate(vert, angle, vert);
 	VecRotate(horz, angle, horz);
@@ -554,14 +567,14 @@ void flipperBallCollision(Flipper &f, Ball &b)
 	//check collision
 	if (projectX > 0 && projectX < FLIPPER_LENGTH + b.radius
 			&& projectY > -(b.radius + FLIPPER_HEIGHT) && projectY < b.radius) {
-	
-        
-        //adjust position
-        Vec dP;
+
+
+		//adjust position
+		Vec dP;
 		VecScale(vert, b.radius - projectY, dP);
 		VecAdd(b.pos, dP,b.pos);
 
- 
+
 		Vec dV;
 		double speed;
 
@@ -580,8 +593,8 @@ void flipperBallCollision(Flipper &f, Ball &b)
 		//add horizontal velocity if at the tip of flipper
 		if (projectX / FLIPPER_LENGTH > 0.20)
 		{
-		   VecScale(horz, speed * 0.2 * projectX / FLIPPER_LENGTH, dV);
-		   VecAdd(b.vel, dV, b.vel);
+			VecScale(horz, speed * 0.2 * projectX / FLIPPER_LENGTH, dV);
+			VecAdd(b.vel, dV, b.vel);
 		}
 
 
@@ -597,38 +610,39 @@ void render(void)
 
 	Rect re;
 	glClear(GL_COLOR_BUFFER_BIT);
-    
-    //Curve
-    glLineWidth(2.5);
-    glColor3ub(150, 10, 10);
-    glPushMatrix();
-    glBegin(GL_LINES);
-    glVertex3f(curve.points[0][0], curve.points[0][1],0);
-    glVertex3f(curve.points[1][0], curve.points[1][1],0);
-    glEnd();
-    glBegin(GL_LINES);
-    glVertex3f(curve.points[1][0], curve.points[1][1], 0);
-    glVertex3f(curve.points[2][0], curve.points[2][1], 0);
-    glEnd();
 
-    
-    glColor3ub(150, 10, 10);
-    glPushMatrix();
-    glTranslated(r.pos[0], r.pos[1], r.pos[2]);
+	//Curve
+	glLineWidth(2.5);
+	glColor3ub(150, 10, 10);
+	glPushMatrix();
+	glBegin(GL_LINES);
+	glVertex3f(curve.points[0][0], curve.points[0][1],0);
+	glVertex3f(curve.points[1][0], curve.points[1][1],0);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(curve.points[1][0], curve.points[1][1], 0);
+	glVertex3f(curve.points[2][0], curve.points[2][1], 0);
+	glEnd();
+
+
+	glColor3ub(150, 10, 10);
+	glPushMatrix();
+	glTranslated(r.pos[0], r.pos[1], r.pos[2]);
 	glRotatef(r.angle, 0, 0, 1);
-    glBegin(GL_QUADS);
-    glVertex2i(-r.width, -r.height);
-    glVertex2i(-r.width, r.height);
-    glVertex2i(r.width, r.height);
-    glVertex2i(r.width, - r.height);
-    glEnd();
-    glPopMatrix();
-    
-    for (int i = 0; i < board.num_rectangles; i++)
-    {
-        drawRectangle(board.rectangles[i]);
-    }
+	glBegin(GL_QUADS);
+	glVertex2i(-r.width, -r.height);
+	glVertex2i(-r.width, r.height);
+	glVertex2i(r.width, r.height);
+	glVertex2i(r.width, - r.height);
+	glEnd();
+	glPopMatrix();
 
+	for (int i = 0; i < board.num_rectangles; i++)
+	{
+		drawRectangle(board.rectangles[i]);
+	}
+
+	drawChest(chest);//drawing chest
 
 	//draw balls
 	glColor3f(1,1,1);
@@ -637,8 +651,8 @@ void render(void)
 	drawBall();
 	glPopMatrix();
 
-    drawFlipper(flipper);
-    drawFlipper(flipper2);
+	drawFlipper(flipper);
+	drawFlipper(flipper2);
 
 	//glPopMatrix();
 
