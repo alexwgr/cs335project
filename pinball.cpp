@@ -158,14 +158,8 @@ int main(void)
 	curve.width = 8.0;
 	curve.npoints = 10;
 
-	curve2.points[0][0] = xres - 50; curve2.points[0][1] = 500;
-	curve2.points[1][0] = xres - 50; curve2.points[1][1] = 560;
-	curve2.points[2][0] = xres - 100; curve2.points[2][1] = 560;
-	curve2.width = 8.0;
-	curve2.npoints = 10;
 
 	addCurve(curve, board);
-	addCurve(curve2, board);
 
 	Rectangle *rec = &board.rectangles[board.num_rectangles];
 	rec->pos[0] = xres;
