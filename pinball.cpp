@@ -40,6 +40,7 @@
 extern "C" {
 #include "fonts.h"
 }
+
 #include "ppm.h"
 #include "vector.h"
 #include "gameObjects.h"
@@ -87,6 +88,8 @@ int xres=780, yres=480;
 int leftButtonDown=0;
 Vec leftButtonPos;
 
+score Scorekeeper;
+
 GameBoard board;
 Curve curve, curve2;
 
@@ -108,23 +111,10 @@ char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
     "pinball.png\0",
-    "open-chest2.jpg\0",
-    "close-chest2.jpg\0",
+    "open-chest2.png\0",
+    "close-chest2.png\0",
     "Ocean.jpg\0",
-};/*
-strncpy(ImageFile[0],"convert ./images/flippers.jpg ./images/flippers.ppm",
-strlen("convert ./images/flippers.jpg ./images/flippers.ppm")+1);
-strncpy(ImageFile[1], "convert ./images/flippers2.jpg ./images/flippers2.ppm",
-strlen("convert ./images/flippers2.jpg ./images/flippers2.ppm")+1);
-strncpy(ImageFile[2], "convert ./images/pinball.png ./images/pinball.ppm",
-strlen("convert ./images/pinball.jpg ./images/pinball.ppm")+1);
-strncpy(ImageFile[3], "convert ./images/open-chest2.jpg ./images/open-chest2.ppm", 
-strlen("convert ./images/open-chest2.jpg ./images/open-chest.ppm")+1);
-strncpy(ImageFile[4], "convert ./images/close-chest2.jpg ./images/close-chest2.ppm", 
-strlen("convert ./images/close-chest2.jpg ./images/close-chest2.ppm")+1);
-strncpy(ImageFile[5], "convert ./images/Ocean.jpg ./images/Ocean.ppm", 
-strlen("convert ./images/Ocean.jpg ./images/Ocean.ppm")+1);
-*/
+};
 GLuint OceanTexture;
 
 GLuint flippersTexture;
@@ -156,6 +146,13 @@ double timeDiff(struct timespec *start, struct timespec *end) {
 	return (double)(end->tv_sec - start->tv_sec ) +
 		(double)(end->tv_nsec - start->tv_nsec) * oobillion;
 }
+/*
+struct score {
+    int points;
+    int balls_left;
+
+}Scorekeeper;
+*/
 void timeCopy(struct timespec *dest, struct timespec *source) {
 	memcpy(dest, source, sizeof(struct timespec));
 }
@@ -164,6 +161,8 @@ void timeCopy(struct timespec *dest, struct timespec *source) {
 
 int main(void)
 {
+    Scorekeeper.points = 0;
+    Scorekeeper.balls_left = 3;
     char syscall_buffer[256];
     char filename[256];
 
@@ -655,7 +654,7 @@ void render(void)
 {
 
 
-	Rect re;
+//	Rect re;
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	//Curve
@@ -713,13 +712,20 @@ void render(void)
 
 
 	//
-	re.bot = yres - 20;
-	re.left = 10;
-	re.center = 0;
-	ggprint8b(&re, 16, 0x0000000, "cs335 - Collision Demo");
-	ggprint8b(&re, 16, 0x0000000, "Arrows/mouse to move");
-	ggprint8b(&re, 16, 0x0000000, "S - Slow down movement");
+//	re.bot = yres - 20;
+//	re.left = 10;
+//	re.center = 0;
+//	ggprint8b(&re, 16, 0x0000000, "cs335 - Collision Demo");
+//	ggprint8b(&re, 16, 0x0000000, "Arrows/mouse to move");
+//	ggprint8b(&re, 16, 0x0000000, "S - Slow down movement");
 	//
+	//Hassen Seid
+	//score counter
+	
+//	ggprint8b(&re, 16, 0x00ff0000, "Score: ", Scorekeeper.points); 
+//	ggprint8b(&re, 16, 0x00ff0000, "Ball: ", Scorekeeper.balls_left); 
+//
+	drawScore();
 }
 
 
