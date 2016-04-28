@@ -132,6 +132,9 @@ GLuint flippersTexture2;
 GLuint pinballTexture;
 GLuint closeChestTexture;
 GLuint openChestTexture;
+GLuint openChestTexture_alpha;
+GLuint closeChestTexture_alpha;
+
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
 ALuint alBuffer;
@@ -192,11 +195,6 @@ int main(void)
 	curve.width = 8.0;
 	curve.npoints = 10;
 
-	curve2.points[0][0] = xres - 50; curve2.points[0][1] = 500;
-	curve2.points[1][0] = xres - 50; curve2.points[1][1] = 560;
-	curve2.points[2][0] = xres - 100; curve2.points[2][1] = 560;
-	curve2.width = 8.0;
-	curve2.npoints = 10;
 
 	addCurve(curve, board);
 
@@ -339,15 +337,6 @@ void initOpengl(void)
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
 
-//	OceanImage = ppm6GetImage("./images/Ocean.ppm");
-//	glGenTextures(1, &OceanTexture);
-	
-//	glBindTexture(GL_TEXTURE_2D, OceanTexture);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-//	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-//				OceanImage->width, OceanImage->height,
-//				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
 
 	flipperstexture();
 	pinballTextureInit();

@@ -9,8 +9,10 @@
 #include "gameObjects.h"
 #include <GL/glx.h>
 #include <sys/stat.h>
+#include "ppm.h"
 #include </usr/include/AL/alut.h>
 using namespace std;
+unsigned char *buildAlphaData(Ppmimage *);
 void chestTextureInit();
 void initChest(TreasureChest &chest);
 void drawChest(TreasureChest &);
