@@ -110,6 +110,9 @@ GLuint flippersTexture2;
 GLuint pinballTexture;
 GLuint closeChestTexture;
 GLuint openChestTexture;
+GLuint openChestTexture_alpha;
+GLuint closeChestTexture_alpha;
+
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
 ALuint alBuffer;
@@ -293,15 +296,6 @@ void initOpengl(void)
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
 
-//	OceanImage = ppm6GetImage("./images/Ocean.ppm");
-//	glGenTextures(1, &OceanTexture);
-	
-//	glBindTexture(GL_TEXTURE_2D, OceanTexture);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-//	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-//				OceanImage->width, OceanImage->height,
-//				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
 
 	flipperstexture();
 	pinballTextureInit();
