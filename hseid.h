@@ -4,7 +4,16 @@
 #include <cmath>
 #include <iostream>
 #include "gameObjects.h"
+//#include "fonts.h"
 
+struct score {
+    int points;
+    int balls_left;
+
+};
+
+void initScore(score *);
+void drawScore();
 void OceanBackground();
 void OceanTextureInit();
 void flipperstexture();

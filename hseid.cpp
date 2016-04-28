@@ -9,7 +9,11 @@
 #include "ppm.h"
 #include <iostream>
 #include <math.h>
+extern "C" {
+	#include "fonts.h"
+}
 
+extern score Scorekeeper;
 extern Ppmimage *OceanImage;
 extern Ppmimage *pinballImage;
 extern Ppmimage *flippers;
@@ -23,6 +27,24 @@ extern int xres;
 extern int yres;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
+
+
+
+void initScore(score *s)
+{
+    s->points = 0;
+    s->balls_left = 4;
+}
+
+void drawScore()
+{
+    Rect re;
+    re.bot = yres - 20;
+    re.left = 10;
+    re.center = 0;
+    ggprint8b(&re, 16, 0x00ff0000, "Score: %i", Scorekeeper.points); 
+    ggprint8b(&re, 16, 0x00ff0000, "Ball: %i", Scorekeeper.balls_left); 
+}
 
 //Loading the Image
 void OceanTextureInit()
