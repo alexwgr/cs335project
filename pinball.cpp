@@ -47,6 +47,8 @@ extern "C" {
 #include "omarO.h"
 #include "hseid.h"
 
+const int NUM_IMAGES = 6;
+
 const double FLIPPER_LENGTH = 70.0;
 const double FLIPPER_HEIGHT = 15.0;
 const double FLIPPER_SPEED = 14.8;
@@ -102,7 +104,27 @@ Ppmimage *flippers;
 Ppmimage *flippers2;
 Ppmimage  *closeChestImage;
 Ppmimage *openChestImage;
-
+char ImageFile[NUM_IMAGES][250] = {
+    "flippers.png\0",
+    "flippers2.jpg\0",
+    "pinball.png\0",
+    "open-chest2.jpg\0",
+    "close-chest2.jpg\0",
+    "Ocean.jpg\0",
+};/*
+strncpy(ImageFile[0],"convert ./images/flippers.jpg ./images/flippers.ppm",
+strlen("convert ./images/flippers.jpg ./images/flippers.ppm")+1);
+strncpy(ImageFile[1], "convert ./images/flippers2.jpg ./images/flippers2.ppm",
+strlen("convert ./images/flippers2.jpg ./images/flippers2.ppm")+1);
+strncpy(ImageFile[2], "convert ./images/pinball.png ./images/pinball.ppm",
+strlen("convert ./images/pinball.jpg ./images/pinball.ppm")+1);
+strncpy(ImageFile[3], "convert ./images/open-chest2.jpg ./images/open-chest2.ppm", 
+strlen("convert ./images/open-chest2.jpg ./images/open-chest.ppm")+1);
+strncpy(ImageFile[4], "convert ./images/close-chest2.jpg ./images/close-chest2.ppm", 
+strlen("convert ./images/close-chest2.jpg ./images/close-chest2.ppm")+1);
+strncpy(ImageFile[5], "convert ./images/Ocean.jpg ./images/Ocean.ppm", 
+strlen("convert ./images/Ocean.jpg ./images/Ocean.ppm")+1);
+*/
 GLuint OceanTexture;
 
 GLuint flippersTexture;
@@ -139,6 +161,18 @@ void timeCopy(struct timespec *dest, struct timespec *source) {
 
 int main(void)
 {
+    char syscall_buffer[256];
+    char filename[256];
+
+    for(int i = 0; i < NUM_IMAGES; i++) {
+        strcpy(filename, ImageFile[i]);
+        char *period = strchr(filename, '.');
+        *period = '\0';   
+        sprintf(syscall_buffer, "convert ./images/%s ./images/%s.ppm", 
+            ImageFile[i], filename);
+    
+        system(syscall_buffer);
+    }
 	initXWindows();
 	initOpengl();
 	initGameBoard(board);
@@ -165,7 +199,6 @@ int main(void)
 	curve2.npoints = 10;
 
 	addCurve(curve, board);
-	addCurve(curve2, board);
 
 	Rectangle *rec = &board.rectangles[board.num_rectangles];
 	rec->pos[0] = xres;
@@ -212,6 +245,13 @@ int main(void)
 	cleanupXWindows();
 	cleanup_fonts();
 	clean_sound(alBuffer, alSource);
+    for(int i = 0; i < 6; i++) {
+        strcpy(filename, ImageFile[i]);
+        char *period = strchr(filename, '.');
+        *period = '\0';   
+        sprintf(syscall_buffer, "images/%s.ppm", filename);
+        unlink(syscall_buffer);
+    }
 	return 0;
 }
 
