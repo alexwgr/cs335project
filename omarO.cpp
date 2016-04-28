@@ -1,3 +1,8 @@
+//Author: Omar Oseguera
+//Roles and Responsibilites: 
+// - This file contains code for sound
+// - attempting special effects 
+// - attempting sprite animation and timing
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
@@ -18,153 +23,11 @@ extern GLuint openChestTexture;
 extern GLuint openChestTexture_alpha;
 extern GLuint closeChestTexture;
 extern GLuint closeChestTexture_alpha;
-
-unsigned char *buildAlphaData(Ppmimage *img)
-{
-    //add 4th component to RGB stream...
-    int i;
-    int a,b,c;
-    unsigned char *newdata, *ptr;
-    unsigned char *data = (unsigned char *)img->data;
-    newdata = (unsigned char *)malloc(img->width * img->height * 4);
-    ptr = newdata;
-    for (i=0; i<img->width * img->height * 3; i+=3) {
-	a = *(data+0);
-	b = *(data+1);
-	c = *(data+2);
-	*(ptr+0) = a;
-	*(ptr+1) = b;
-	*(ptr+2) = c;
-	//get largest color component...
-	//*(ptr+3) = (unsigned char)((
-	//		(int)*(ptr+0) +
-	//		(int)*(ptr+1) +
-	//		(int)*(ptr+2)) / 3);
-	//d = a;
-	//if (b >= a && b >= c) d = b;
-	//if (c >= a && c >= b) d = c;
-	//*(ptr+3) = d;
-	*(ptr+3) = (a|b|c);
-	ptr += 4;
-	data += 3;
-    }
-    return newdata;
-}
-
-void chestTextureInit()
-{
-    openChestImage = ppm6GetImage("./images/open-chest2.ppm");
-    closeChestImage = ppm6GetImage("./images/close-chest2.ppm");
-
-    glGenTextures(1, &openChestTexture);
-    glGenTextures(1, &closeChestTexture);
-
-
-    //Open chest image
-    int w = openChestImage->width;
-    int h = openChestImage->height;
-
-    /*glBindTexture(GL_TEXTURE_2D, openChestTexture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-	    GL_RGB, GL_UNSIGNED_BYTE, openChestImage->data);
-    */
-    //Open chest alpha
-    glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
-    //
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    
-    //must build a new set of data...
-    unsigned char *alphaData = buildAlphaData(openChestImage);	
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-	    GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
-    free(alphaData);
-
-    //Close chest image
-    w = closeChestImage->width;
-    h = closeChestImage->height;
-
-    /*glBindTexture(GL_TEXTURE_2D, closeChestTexture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, 
-	    GL_RGB, GL_UNSIGNED_BYTE, closeChestImage->data);
-    */
-    //Close chest image alpha
-    glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
-    //
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-
-    alphaData = buildAlphaData(closeChestImage);	
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-	    GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
-    free(alphaData);
-
-
-}
-void drawChest(TreasureChest &c)
-{
-    glPushMatrix();
-    glColor3d(1.0, 1.0, 1.0);
-    glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
-    glRotatef(c.r.angle, 0, 0, 1);
-
-
-    if(c.state == 1) {
-	glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
-    }
-    else if(c.state == 0) {
-	glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
-    }
-    
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
-    glColor4ub(255,255,255,255);
-    
-    glBegin(GL_QUADS);
-    glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
-    glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
-    glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
-    glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
-    glEnd();
-    glPopMatrix();
-
-
-}
-void initChest(TreasureChest &chest)
-{
-    Rectangle *rec = &chest.r;
-    rec->pos[0] = 200.0;
-    rec->pos[1] = 420.0;
-    rec->width = 60.0;
-    rec->height = 60.0;
-    rec->angle = 0.0;
-}
-int ballChestCollision(TreasureChest &chest, Ball &b, ALuint &source)
-{
-    //only play sound if velocity is over a certain amount
-    if(VecMagnitude(b.vel) > 1) {
-	cout << "YOU JUST GOT 500PTS!!\n";
-	play_sound(source);
-	if(chest.HP > 0) {
-	    chest.HP--;
-	}
-	if(chest.HP == 0) {
-	    chest.state = 1;
-	}
-	return 1;
-    }
-    else
-	return 0;
-}
+/****** SOUND *****/
+//function creates sound source and buffer
 int init_sound(ALuint &buffer, ALuint &source)
 {
-    //MAKE ARRAY OF FILE NAMES for when we use more sounds
+    //NOTE: NEED TO MAKE ARRAY OF FILE NAMES for when we use more sounds
     alutInit(0, NULL);
     if (alGetError() != AL_NO_ERROR) {
 	cout << "ERROR: alutInit()\n";
@@ -202,11 +65,12 @@ int init_sound(ALuint &buffer, ALuint &source)
     }
     return 0;
 }
+//function plays sound when called
 void play_sound(ALuint &source)
 {
     alSourcePlay(source);
-    //usleep(200000);
 }
+//function cleans buffer and source when called
 int clean_sound(ALuint &buffer, ALuint &source)
 {
 
@@ -228,4 +92,134 @@ int clean_sound(ALuint &buffer, ALuint &source)
     //Close device.
     alcCloseDevice(Device);
     return 0;
+}
+/****** TREASURE CHEST ******/
+//function builds Alpha channel for image with no background
+unsigned char *buildAlphaData(Ppmimage *img)
+{
+    //add 4th component to RGB stream...
+    int i;
+    int a,b,c;
+    unsigned char *newdata, *ptr;
+    unsigned char *data = (unsigned char *)img->data;
+    newdata = (unsigned char *)malloc(img->width * img->height * 4);
+    ptr = newdata;
+    for (i=0; i<img->width * img->height * 3; i+=3) {
+	a = *(data+0);
+	b = *(data+1);
+	c = *(data+2);
+	*(ptr+0) = a;
+	*(ptr+1) = b;
+	*(ptr+2) = c;
+	//get largest color component...
+	//*(ptr+3) = (unsigned char)((
+	//		(int)*(ptr+0) +
+	//		(int)*(ptr+1) +
+	//		(int)*(ptr+2)) / 3);
+	//d = a;
+	//if (b >= a && b >= c) d = b;
+	//if (c >= a && c >= b) d = c;
+	//*(ptr+3) = d;
+	*(ptr+3) = (a|b|c);
+	ptr += 4;
+	data += 3;
+    }
+    return newdata;
+}
+//function layers texture of image
+void chestTextureInit()
+{
+    openChestImage = ppm6GetImage("./images/open-chest2.ppm");
+    closeChestImage = ppm6GetImage("./images/close-chest2.ppm");
+
+    glGenTextures(1, &openChestTexture);
+    glGenTextures(1, &closeChestTexture);
+
+
+    //Open chest image
+    int w = openChestImage->width;
+    int h = openChestImage->height;
+
+    //Open chest alpha
+    glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    
+    //must build a new set of data...
+    unsigned char *alphaData = buildAlphaData(openChestImage);	
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+	    GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
+    free(alphaData);
+
+    //Close chest image
+    w = closeChestImage->width;
+    h = closeChestImage->height;
+
+    //Close chest image alpha
+    glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+
+    alphaData = buildAlphaData(closeChestImage);	
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+	    GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
+    free(alphaData);
+}
+//function draws treasure chest object
+void drawChest(TreasureChest &c)
+{
+    glPushMatrix();
+    glColor3d(1.0, 1.0, 1.0);
+    glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
+    glRotatef(c.r.angle, 0, 0, 1);
+
+
+    if(c.state == 1) {
+	glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
+    }
+    else if(c.state == 0) {
+	glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
+    }
+    
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+    
+    glBegin(GL_QUADS);
+    glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
+    glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
+    glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
+    glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
+    glEnd();
+    glPopMatrix();
+}
+//function initalizes treasure chest object data
+void initChest(TreasureChest &chest)
+{
+    Rectangle *rec = &chest.r;
+    rec->pos[0] = 200.0;
+    rec->pos[1] = 420.0;
+    rec->width = 60.0;
+    rec->height = 60.0;
+    rec->angle = 0.0;
+}
+//function plays sound when ball collides with chest
+int ballChestCollision(TreasureChest &chest, Ball &b, ALuint &source)
+{
+    //only play sound if velocity is over a certain amount
+    if(VecMagnitude(b.vel) > 1) {
+	cout << "YOU JUST GOT 500PTS!!\n";
+	play_sound(source);
+	if(chest.HP > 0) {
+	    chest.HP--;
+	}
+	if(chest.HP == 0) {
+	    chest.state = 1;
+	}
+	return 1;
+    }
+    else
+	return 0;
 }
