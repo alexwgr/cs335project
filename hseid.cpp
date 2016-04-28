@@ -1,3 +1,8 @@
+//Hassen Seid
+//Texture Maps
+//Tutorals
+//menus and Prompts
+//Score Keeping
 #include "hseid.h"
 #include <X11/Xlib.h>
 #include <GL/glx.h>
@@ -19,6 +24,7 @@ extern int yres;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
 
+//Loading the Image
 void OceanTextureInit()
 {
 	OceanImage = ppm6GetImage("./images/Ocean.ppm");
@@ -32,6 +38,7 @@ void OceanTextureInit()
 				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
 }	
 
+//Display Image
 void OceanBackground()
 {
 	glColor3f(1.0, 1.0, 1.0);
@@ -46,6 +53,7 @@ void OceanBackground()
 
 }
 
+//Load Image Flipper
 void flipperstexture()
 {
 	flippers = ppm6GetImage("./images/flippers.ppm");
@@ -75,6 +83,7 @@ void flipperstexture()
 		GL_RGB, GL_UNSIGNED_BYTE, flippers2->data);
 }
 
+//load pinball
 void pinballTextureInit()
 {
     pinballImage = ppm6GetImage("./images/pinball.ppm");
@@ -92,6 +101,7 @@ void pinballTextureInit()
 
 }
 
+//display pinball
 void drawBall()
 {
 	float angle, radian, x, y, tx, ty, xcos, ysin;
@@ -119,7 +129,7 @@ void drawBall()
 	glEnd();
 }
 
-
+//Display Image 
 void drawFlipper(Flipper &f)
 {
     float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
@@ -133,6 +143,7 @@ void drawFlipper(Flipper &f)
 	//} else {
 	//    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
 	//}
+	//Coord
 	glBegin(GL_QUADS);
 	glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
 	glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
