@@ -1,3 +1,13 @@
+// Author: Alex Rinaldi 
+// CS335 Project 
+
+/* Roles for this project:
+ * Collision detection
+ * Physics and movement 
+ * Special effects 
+ */
+
+
 #include "vector.h"
 #include "gameObjects.h"
 #include "alexR.h"
@@ -12,6 +22,7 @@ void initGameBoard(GameBoard &g)
     g.num_rectangles = 0;
 }
 
+/* This draws rectangles for debugging */
 void drawRectangle(Rectangle &r)
 {
 
@@ -28,9 +39,18 @@ void drawRectangle(Rectangle &r)
     glPopMatrix();
 }
 
+/* This draws circles for debugging */
+void drawCircle(Circle &c)
+{
+    glColor3ub(150, 10, 10);
+    glPushMatrix();
+}
+
+/* This adds a curve to the game board */
+/* It uses beizer curves to rectangles at a set number of steps */
 void addCurve(Curve &c, GameBoard &g)
 {
-//uses beizer curves
+    //uses beizer curves
     double t = 0.0;
     double tStep = 1.0 / c.npoints;
     double x0, y0, x1, y1;
@@ -78,6 +98,7 @@ void addCurve(Curve &c, GameBoard &g)
     }
 }
 
+/* Vector function for testing if a point is on either side of a line */
 bool isLeft(Vec &a, Vec &b, Vec &p)
 {
     Vec v1, v2;
@@ -87,6 +108,8 @@ bool isLeft(Vec &a, Vec &b, Vec &p)
     return xp > 0;
 }
 
+
+/* Given a position and an angle, get coordinates of rectangle corners */
 void getRectangleCorners(Rectangle &r,
         Vec &corner1, Vec &corner2, Vec &corner3, Vec &corner4)
 {
@@ -122,7 +145,7 @@ void getRectangleCorners(Rectangle &r,
 }
 
 
-
+/* Handles the physics for a circle colliding with a rectangle */
 int rectangleBallCollision(Rectangle &r, Ball &b)
 {
     Vec zero;
@@ -163,32 +186,28 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
         bool lDiagonal = isLeft(corner[0], corner[2], b.pos);
         bool rDiagonal = isLeft(corner[3], corner[1], b.pos);
 
-        if (lDiagonal && rDiagonal)
-        {
+        if (lDiagonal && rDiagonal) {
             if (!r.collide[1])
                 return 0;
 
             //bottom edge
             VecScale(vert, -1, rNorm);
         }
-        else if (lDiagonal && !rDiagonal)
-        {
+        else if (lDiagonal && !rDiagonal) {
             if (!r.collide[2])
                 return 0;
 
             //left edge
             VecScale(horz, -1, rNorm);
         }
-        else if (!lDiagonal && rDiagonal)
-        {
+        else if (!lDiagonal && rDiagonal) {
             if (!r.collide[3])
                 return 0;
 
             //right edge
             VecScale(horz, 1, rNorm);
         }
-        else
-        {
+        else {
             if (!r.collide[0])
                 return 0;
 
@@ -228,6 +247,7 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
     return 0;
 }
 
+/* Scales down the ball's velocity if it is greater than maximum */
 void applyMaximumVelocity(Ball &b)
 {
 
