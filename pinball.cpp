@@ -40,6 +40,7 @@
 extern "C" {
 #include "fonts.h"
 }
+
 #include "ppm.h"
 #include "vector.h"
 #include "gameObjects.h"
@@ -86,6 +87,8 @@ int done=0;
 int xres=780, yres=480;
 int leftButtonDown=0;
 Vec leftButtonPos;
+
+score Scorekeeper;
 
 GameBoard board;
 Curve curve, curve2;
@@ -156,6 +159,13 @@ double timeDiff(struct timespec *start, struct timespec *end) {
 	return (double)(end->tv_sec - start->tv_sec ) +
 		(double)(end->tv_nsec - start->tv_nsec) * oobillion;
 }
+/*
+struct score {
+    int points;
+    int balls_left;
+
+}Scorekeeper;
+*/
 void timeCopy(struct timespec *dest, struct timespec *source) {
 	memcpy(dest, source, sizeof(struct timespec));
 }
@@ -164,6 +174,8 @@ void timeCopy(struct timespec *dest, struct timespec *source) {
 
 int main(void)
 {
+    Scorekeeper.points = 0;
+    Scorekeeper.balls_left = 3;
     char syscall_buffer[256];
     char filename[256];
 
@@ -655,7 +667,7 @@ void render(void)
 {
 
 
-	Rect re;
+//	Rect re;
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	//Curve
@@ -713,13 +725,20 @@ void render(void)
 
 
 	//
-	re.bot = yres - 20;
-	re.left = 10;
-	re.center = 0;
-	ggprint8b(&re, 16, 0x0000000, "cs335 - Collision Demo");
-	ggprint8b(&re, 16, 0x0000000, "Arrows/mouse to move");
-	ggprint8b(&re, 16, 0x0000000, "S - Slow down movement");
+//	re.bot = yres - 20;
+//	re.left = 10;
+//	re.center = 0;
+//	ggprint8b(&re, 16, 0x0000000, "cs335 - Collision Demo");
+//	ggprint8b(&re, 16, 0x0000000, "Arrows/mouse to move");
+//	ggprint8b(&re, 16, 0x0000000, "S - Slow down movement");
 	//
+	//Hassen Seid
+	//score counter
+	
+//	ggprint8b(&re, 16, 0x00ff0000, "Score: ", Scorekeeper.points); 
+//	ggprint8b(&re, 16, 0x00ff0000, "Ball: ", Scorekeeper.balls_left); 
+//
+	drawScore();
 }
 
 

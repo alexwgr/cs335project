@@ -40,11 +40,11 @@ void drawRectangle(Rectangle &r)
 }
 
 /* This draws circles for debugging */
-void drawCircle(Circle &c)
-{
-    glColor3ub(150, 10, 10);
-    glPushMatrix();
-}
+//void drawCircle(Circle &c)
+//{
+  //  glColor3ub(150, 10, 10);
+  //  glPushMatrix();
+//}
 
 /* This adds a curve to the game board */
 /* It uses beizer curves to rectangles at a set number of steps */
