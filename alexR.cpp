@@ -44,6 +44,27 @@ void drawCircle(Circle &c)
 {
     glColor3ub(150, 10, 10);
     glPushMatrix();
+    
+    int i;
+    int firsttime=1;
+    float verts[32][2];
+    static int n=32;
+    if (firsttime) {
+        float ang=0.0;
+        float inc = 3.14159 * 2.0 / (float)n;
+        for (i=0; i<n; i++) {
+            verts[i][0] = sin(ang);
+            verts[i][1] = cos(ang);
+            ang += inc;
+        }
+        firsttime=0;
+    }
+    glBegin(GL_TRIANGLE_FAN);
+    for (i=0; i<n; i++) {
+        glVertex2f(verts[i][0]*c.radius, verts[i][1]*c.radius);
+    }
+    glEnd();
+	
 }
 
 /* This adds a curve to the game board */
