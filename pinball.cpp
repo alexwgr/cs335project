@@ -108,23 +108,10 @@ char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
     "pinball.png\0",
-    "open-chest2.jpg\0",
-    "close-chest2.jpg\0",
+    "open-chest2.png\0",
+    "close-chest2.png\0",
     "Ocean.jpg\0",
-};/*
-strncpy(ImageFile[0],"convert ./images/flippers.jpg ./images/flippers.ppm",
-strlen("convert ./images/flippers.jpg ./images/flippers.ppm")+1);
-strncpy(ImageFile[1], "convert ./images/flippers2.jpg ./images/flippers2.ppm",
-strlen("convert ./images/flippers2.jpg ./images/flippers2.ppm")+1);
-strncpy(ImageFile[2], "convert ./images/pinball.png ./images/pinball.ppm",
-strlen("convert ./images/pinball.jpg ./images/pinball.ppm")+1);
-strncpy(ImageFile[3], "convert ./images/open-chest2.jpg ./images/open-chest2.ppm", 
-strlen("convert ./images/open-chest2.jpg ./images/open-chest.ppm")+1);
-strncpy(ImageFile[4], "convert ./images/close-chest2.jpg ./images/close-chest2.ppm", 
-strlen("convert ./images/close-chest2.jpg ./images/close-chest2.ppm")+1);
-strncpy(ImageFile[5], "convert ./images/Ocean.jpg ./images/Ocean.ppm", 
-strlen("convert ./images/Ocean.jpg ./images/Ocean.ppm")+1);
-*/
+};
 GLuint OceanTexture;
 
 GLuint flippersTexture;

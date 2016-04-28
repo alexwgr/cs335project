@@ -1,0 +1,13 @@
+ALEX:
+- Movement and physics
+- collision detection
+OMAR:
+- Sound
+- Sprite animation and timing
+- special effects
+
+HASSEN:
+- Texture maps
+- Tutorials
+- Menus and prompts
+- Score keeping
