@@ -4,6 +4,7 @@
 //menus and Prompts
 //Score Keeping
 #include "hseid.h"
+#include "omarO.h"
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 #include "ppm.h"
@@ -30,7 +31,10 @@ extern int yres;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
 
-
+void addScore(score *s, int add)
+{
+    s->points = s->points + add;
+}
 
 void initScore(score *s)
 {
@@ -57,6 +61,9 @@ void textureInit(char *filename, GLuint &textureID, Ppmimage *file)
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	
+
+        //unsigned char *alphaData = buildAlphaData(file);	
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
 				file->width, file->height,
 				0, GL_RGB, GL_UNSIGNED_BYTE, file->data);
