@@ -9,10 +9,12 @@
 #include "ppm.h"
 #include <iostream>
 #include <math.h>
+#include <cstring>
 extern "C" {
 	#include "fonts.h"
 }
 
+char buffer[256];
 extern score Scorekeeper;
 extern Ppmimage *OceanImage;
 extern Ppmimage *pinballImage;
@@ -46,10 +48,26 @@ void drawScore()
     ggprint8b(&re, 16, 0x00ff0000, "Ball: %i", Scorekeeper.balls_left); 
 }
 
+
+void textureInit(char *filename, GLuint &textureID, Ppmimage *file)
+{
+	file = ppm6GetImage(filename);
+	glGenTextures(1, &textureID);
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+				file->width, file->height,
+				0, GL_RGB, GL_UNSIGNED_BYTE, file->data);
+}
+
 //Loading the Image
 void OceanTextureInit()
 {
-	OceanImage = ppm6GetImage("./images/Ocean.ppm");
+    	strcpy(buffer, "./images/Ocean.ppm");
+    	textureInit(buffer, OceanTexture, OceanImage);
+	/*OceanImage = ppm6GetImage("./images/Ocean.ppm");
 	glGenTextures(1, &OceanTexture);
 
 	glBindTexture(GL_TEXTURE_2D, OceanTexture);
@@ -58,7 +76,71 @@ void OceanTextureInit()
 	glTexImage2D(GL_TEXTURE_2D, 0, 3,
 				OceanImage->width, OceanImage->height,
 				0, GL_RGB, GL_UNSIGNED_BYTE, OceanImage->data);
+				*/
 }	
+
+
+//Load Image Flipper
+void flipperstexture()
+{
+	
+        //int w = flippers->width;
+        //int h = flippers->height;
+    	strcpy(buffer, "./images/flippers.ppm");
+	textureInit(buffer, flippersTexture, flippers);
+	/*flippers = ppm6GetImage("./images/flippers.ppm");
+        glGenTextures(1, &flippersTexture);
+
+        int w = flippers->width;
+        int h = flippers->height;
+
+        glBindTexture(GL_TEXTURE_2D, flippersTexture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, flippers->data);
+
+*/
+	/////////////////////////////////////////
+	strcpy(buffer, "./images/flippers2.ppm");
+	textureInit(buffer, flippersTexture2, flippers2);
+/*
+        flippers2 = ppm6GetImage("./images/flippers2.ppm");
+
+        glGenTextures(1, &flippersTexture2);
+        //w = flippers2->width;
+        //h = flippers2->height;
+
+        glBindTexture(GL_TEXTURE_2D, flippersTexture2);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, 
+		GL_RGB, GL_UNSIGNED_BYTE, flippers2->data);
+*/
+}
+
+//load pinball
+void pinballTextureInit()
+{
+    strcpy(buffer, "./images/pinball.ppm");
+    textureInit(buffer, pinballTexture, pinballImage);
+/*
+    pinballImage = ppm6GetImage("./images/pinball.ppm");
+    glGenTextures(1, &pinballTexture);
+
+    int w = pinballImage->width;
+    int h = pinballImage->height;
+
+    glBindTexture(GL_TEXTURE_2D, pinballTexture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, pinballImage->data);
+*/
+}
 
 //Display Image
 void OceanBackground()
@@ -74,55 +156,29 @@ void OceanBackground()
 
 
 }
-
-//Load Image Flipper
-void flipperstexture()
+//Display Image 
+void drawFlipper(Flipper &f)
 {
-	flippers = ppm6GetImage("./images/flippers.ppm");
-        flippers2 = ppm6GetImage("./images/flippers2.ppm");
-
-        glGenTextures(1, &flippersTexture);
-        glGenTextures(1, &flippersTexture2);
-
-        int w = flippers->width;
-        int h = flippers->height;
-
-        glBindTexture(GL_TEXTURE_2D, flippersTexture);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-            GL_RGB, GL_UNSIGNED_BYTE, flippers->data);
-
-        w = flippers2->width;
-        h = flippers2->height;
-
-        glBindTexture(GL_TEXTURE_2D, flippersTexture2);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, 
-		GL_RGB, GL_UNSIGNED_BYTE, flippers2->data);
+    float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
+    float angle = f.inverted ? -f.angle : f.angle;
+    glPushMatrix();
+	glColor3f(1, 1, 1);
+	glTranslated(f.pos[0], f.pos[1], f.pos[2]);
+	glRotatef(angle, 0, 0, 1);
+	//if (f.inverted) {
+		glBindTexture(GL_TEXTURE_2D, flippersTexture);
+	//} else {
+	//    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
+	//}
+	//Coord
+	glBegin(GL_QUADS);
+	glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
+	glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
+	glVertex2f(length, 0); glTexCoord2f(0.0f, 1.0f); 
+	glVertex2f(0, 0); glTexCoord2f(1.0f, 1.0f); 
+	glEnd();
+    glPopMatrix();
 }
-
-//load pinball
-void pinballTextureInit()
-{
-    pinballImage = ppm6GetImage("./images/pinball.ppm");
-    glGenTextures(1, &pinballTexture);
-
-    int w = pinballImage->width;
-    int h = pinballImage->height;
-
-    glBindTexture(GL_TEXTURE_2D, pinballTexture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, pinballImage->data);
-
-}
-
 //display pinball
 void drawBall()
 {
@@ -151,26 +207,3 @@ void drawBall()
 	glEnd();
 }
 
-//Display Image 
-void drawFlipper(Flipper &f)
-{
-    float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
-    float angle = f.inverted ? -f.angle : f.angle;
-    glPushMatrix();
-	glColor3f(1, 1, 1);
-	glTranslated(f.pos[0], f.pos[1], f.pos[2]);
-	glRotatef(angle, 0, 0, 1);
-	//if (f.inverted) {
-		glBindTexture(GL_TEXTURE_2D, flippersTexture);
-	//} else {
-	//    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
-	//}
-	//Coord
-	glBegin(GL_QUADS);
-	glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
-	glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(length, 0); glTexCoord2f(0.0f, 1.0f); 
-	glVertex2f(0, 0); glTexCoord2f(1.0f, 1.0f); 
-	glEnd();
-    glPopMatrix();
-}
