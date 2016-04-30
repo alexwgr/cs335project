@@ -23,7 +23,7 @@ struct Circle {
 
 struct Flipper {
 	Vec pos;
-	double angle;
+	double width, height, angle;
 	double rvel;
     //direction inverted
     bool inverted;

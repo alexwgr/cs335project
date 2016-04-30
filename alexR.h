@@ -14,13 +14,13 @@ void initBumpers(GameBoard &);
 
 void drawCircle(Circle &);
 void drawRectangle(Rectangle &);
-void drawBumper(Bumper &);
 
 void addBumperToBoard(Bumper &, GameBoard &);
 void addCurve(Curve &c, GameBoard &b);
 
 int bumperBallCollision(Bumper &, Ball &);
 int rectangleBallCollision(Rectangle &, Ball &);
+void flipperBallCollision(Flipper &, Ball &);
 void applyMaximumVelocity(Ball &);
 #endif
 

@@ -60,20 +60,11 @@ void addBumperToBoard(Bumper &b, GameBoard &g)
     }
 }
 
-void drawBumper(Bumper &b)
-{
-    glPushMatrix();
-    glColor3ub(250, 0, 0);
-    glTranslated(b.c.pos[0], b.c.pos[1], b.c.pos[2]);
-    drawCircle(b.c);
-    glPopMatrix();
-}
 
 /* This draws rectangles for debugging */
 void drawRectangle(Rectangle &r)
 {
 
-    glColor3ub(150, 10, 10);
     glPushMatrix();
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
 	glRotatef(r.angle, 0, 0, 1);
@@ -215,7 +206,7 @@ int bumperBallCollision(Bumper &b, Ball &ba)
     
     if (VecMagnitude(between) < b.c.radius + ba.radius) {
         VecNormalize(between, dV);
-        VecScale(dV, 17, ba.vel);
+        VecScale(dV, 12, ba.vel);
         b.state = 1;
         
         return 1;
@@ -329,6 +320,66 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
     return 0;
 }
+
+void flipperBallCollision(Flipper &f, Ball &b)
+{
+	float angle = f.inverted ? -f.angle : f.angle;
+	//unit axis vectors
+	Vec vert, horz;
+	MakeVector(0, 1, 0, vert);
+	MakeVector(1, 0, 0, horz);
+	if (f.inverted)
+	{
+		VecScale(horz, -1, horz);
+	}
+
+	//rotated
+	VecRotate(vert, angle, vert);
+	VecRotate(horz, angle, horz);
+
+	Vec between;
+	VecBtn(f.pos, b.pos, between);
+	double projectX = VecProject(between, horz);
+	double projectY = VecProject(between, vert);
+
+	//check collision
+	if (projectX > 0 && projectX < f.width + b.radius
+			&& projectY > -(b.radius + f.height) && projectY < b.radius) {
+
+
+		//adjust position
+		Vec dP;
+		VecScale(vert, b.radius - projectY, dP);
+		VecAdd(b.pos, dP,b.pos);
+
+
+		Vec dV;
+		double speed;
+
+		//speed is based on the incoming velocity
+		//the horizontal distance from the pivot point of the flipper (torque)
+		//and the speed at which the flipper is rotating 
+		speed = 0.5 * VecMagnitude(b.vel) + pow((projectX / f.width) + 0.5, 4) * (f.rvel / 10);
+		VecScale(vert, speed, dV);
+		VecAdd(b.vel, dV, b.vel);
+
+		//reflection vector
+		VecRotate(dV, VecAngleBtn(between, vert), dV); 
+
+		//add horizontal velocity if at the tip of flipper
+		if (projectX / f.width > 0.20)
+		{
+			VecScale(horz, speed * 0.2 * projectX / f.width, dV);
+			VecAdd(b.vel, dV, b.vel);
+		}
+
+
+	}
+
+
+}
+
+
 
 /* Scales down the ball's velocity if it is greater than maximum */
 void applyMaximumVelocity(Ball &b)
