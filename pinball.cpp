@@ -163,6 +163,8 @@ int main(void)
 {
     Scorekeeper.points = 0;
     Scorekeeper.balls_left = 3;
+    
+    
     char syscall_buffer[256];
     char filename[256];
 
@@ -176,8 +178,9 @@ int main(void)
         system(syscall_buffer);
     }
 	initXWindows();
-	initOpengl();
+    initOpengl();
 	initGameBoard(board);
+    initBumpers(board);
 	initBalls();
 	initChest(chest);//initialize chest properties
 	init_sound(alBuffer, alSource);
@@ -532,6 +535,7 @@ void physics(void)
 	flipperMovement(flipper2);
 	flipperBallCollision(flipper2, ball1);
 
+
 	//rectangle collisions
 	bool collided = false;
 	for (int i = 0; i < board.num_rectangles; i++) {
@@ -558,6 +562,12 @@ void physics(void)
 		VecAdd(ball1.vel, mv, ball1.vel);
 
 	}
+
+    for (int i = 0; i < board.num_bumpers; i++) {
+        if (bumperBallCollision(board.bumpers[i], ball1)) {
+            
+        }
+    }
 
 	applyMaximumVelocity(ball1);
 
@@ -680,6 +690,11 @@ void render(void)
 	{
 		drawRectangle(board.rectangles[i]);
 	}
+
+    
+
+
+    //Draw background image 
     glBegin(GL_QUADS);
     glVertex2i(-r.width, -r.height);
     glVertex2i(-r.width, r.height);
@@ -690,9 +705,14 @@ void render(void)
 
     OceanBackground();
 
-    for (int i = 0; i < board.num_rectangles; i++)
-    {
+    //draw collision rectangles
+    for (int i = 0; i < board.num_rectangles; i++) {
         drawRectangle(board.rectangles[i]);
+    }
+
+    //draw bumpers
+    for (int i = 0; i < board.num_bumpers; i++) {
+        drawBumper(board.bumpers[i]);
     }
 
 	drawChest(chest);//drawing chest

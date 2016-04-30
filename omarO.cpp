@@ -67,7 +67,6 @@ void play_sound(ALuint &source)
 //function cleans buffer and source when called
 int clean_sound(ALuint &buffer, ALuint &source)
 {
-
         //Cleanup.
         //First delete the source.
         //alDeleteSources(1, &alSource);
@@ -202,7 +201,7 @@ void drawChest(TreasureChest &c)
 void initChest(TreasureChest &chest)
 {
         Rectangle *rec = &chest.r;
-        rec->pos[0] = 200.0;
+        rec->pos[0] = 100.0;
         rec->pos[1] = 420.0;
         rec->width = 60.0;
         rec->height = 60.0;

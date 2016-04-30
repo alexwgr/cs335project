@@ -1,6 +1,11 @@
 // Author: Alex Rinaldi 
 // CS335 Project 
 
+// Purpose 
+// Provide functions to detect and handle collision between the ball and various objects, 
+// along with functions to add more complex objects to the game board.
+
+
 /* Roles for this project:
  * Collision detection
  * Physics and movement 
@@ -16,10 +21,52 @@
 #include <GL/glx.h>
 
 #define MAX_VELOCITY 30.0
+#define MAX_BUMPERS 20
+
 
 void initGameBoard(GameBoard &g)
 {
     g.num_rectangles = 0;
+}
+
+void initBumpers(GameBoard &g)
+{
+    Bumper b;
+    MakeVector(300, 500, 0, b.c.pos);
+    b.c.radius = 20;
+    b.state = 0;
+
+    addBumperToBoard(b, g);
+
+    MakeVector(200, 500, 0, b.c.pos);
+
+    addBumperToBoard(b, g);
+
+    MakeVector(250, 400, 0, b.c.pos);
+
+    addBumperToBoard(b, g);
+    
+}
+
+void addBumperToBoard(Bumper &b, GameBoard &g)
+{
+    if (g.num_bumpers < MAX_BUMPERS) {
+        Bumper *currentBumper = &g.bumpers[g.num_bumpers];
+        currentBumper->c.pos[0] = b.c.pos[0];
+        currentBumper->c.pos[1] = b.c.pos[1];
+        currentBumper->c.radius = b.c.radius;
+        currentBumper->state = b.state;
+        g.num_bumpers++;
+    }
+}
+
+void drawBumper(Bumper &b)
+{
+    glPushMatrix();
+    glColor3ub(250, 0, 0);
+    glTranslated(b.c.pos[0], b.c.pos[1], b.c.pos[2]);
+    drawCircle(b.c);
+    glPopMatrix();
 }
 
 /* This draws rectangles for debugging */
@@ -38,6 +85,28 @@ void drawRectangle(Rectangle &r)
     glEnd();
     glPopMatrix();
 }
+
+/* This draws circles for debugging */
+void drawCircle(Circle &c)
+{
+	int i;
+	double verts[32][2];
+	int n=32;
+	double ang=0.0;
+	double inc = 3.14159 * 2.0 / (double)n;
+	for (i=0; i<n; i++) {
+		verts[i][0] = sin(ang);
+		verts[i][1] = cos(ang);
+		ang += inc;
+	}
+    glColor3ub(250, 0, 0);
+	glBegin(GL_TRIANGLE_FAN);
+	for (i=0; i<n; i++) {
+		glVertex2f(verts[i][0]*c.radius, verts[i][1]*c.radius);
+	}
+	glEnd();
+}
+
 
 /* This adds a curve to the game board */
 /* It uses beizer curves to rectangles at a set number of steps */
@@ -135,6 +204,27 @@ void getRectangleCorners(Rectangle &r,
     VecAdd(corner4, r.pos, corner4);
 
 
+}
+
+/* Handles the physics for a circle collding with a bumper */
+int bumperBallCollision(Bumper &b, Ball &ba)
+{
+    Vec between, dV;
+
+    VecBtn(b.c.pos, ba.pos, between);
+    
+    if (VecMagnitude(between) < b.c.radius + ba.radius) {
+        VecNormalize(between, dV);
+        VecScale(dV, 17, ba.vel);
+        b.state = 1;
+        
+        return 1;
+    }
+    else {
+        b.state = 0;
+        return 0;
+    }
+    
 }
 
 

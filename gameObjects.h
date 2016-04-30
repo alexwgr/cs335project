@@ -15,6 +15,12 @@ struct Rectangle {
     Rectangle() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
 
+struct Circle {
+    Vec pos;
+    double radius;
+
+};
+
 struct Flipper {
 	Vec pos;
 	double angle;
@@ -26,10 +32,6 @@ struct Flipper {
 	//0 - idle, 1 - going up, 2 - going down
 };
 
-struct GameBoard {
-    Rectangle rectangles[MAX_RECTANGLES];
-    int num_rectangles;
-};
 
 struct Curve {
     double width;
@@ -47,6 +49,11 @@ struct Ball {
 	double mass;
 };
 
+struct Bumper {
+    Circle c;
+    int state; // 0 up, 1 down
+};
+
 struct TreasureChest {
     int state; //0 is closed, 1 is open
     Rectangle r;
@@ -59,6 +66,12 @@ struct TreasureChest {
 };
 
 
+struct GameBoard {
+    Rectangle rectangles[MAX_RECTANGLES];
+    Bumper bumpers[MAX_RECTANGLES];
+    int num_rectangles;
+    int num_bumpers;
+};
 
 
 
