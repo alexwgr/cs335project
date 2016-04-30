@@ -8,10 +8,12 @@
 
 struct score {
     int points;
+    int rising_points;
     int balls_left;
 
 };
 
+void addScore(score *, int);
 void initScore(score *);
 void drawScore();
 void OceanBackground();

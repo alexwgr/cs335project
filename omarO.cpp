@@ -16,7 +16,9 @@
 #include <sys/stat.h>
 #include <GL/glx.h>
 #include </usr/include/AL/alut.h>
+#include "hseid.h"
 using namespace std;
+extern score Scorekeeper;
 /****** SOUND *****/
 //function creates sound source and buffer
 int init_sound(ALuint &buffer, ALuint &source)
@@ -220,6 +222,7 @@ int ballChestCollision(TreasureChest &chest, Ball &b, ALuint &source)
                 if(chest.HP == 0) {
                         cout << "OPEN\n";
                         chest.state = 1;
+			addScore(&Scorekeeper, 1000);
                 }
                 return 1;
         }
