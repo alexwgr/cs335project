@@ -14,9 +14,13 @@
 using namespace std;
 unsigned char *buildAlphaData(Ppmimage *);
 void chestTextureInit();
-void initChest(TreasureChest &chest);
+void initChest(TreasureChest &);
 void drawChest(TreasureChest &);
 int ballChestCollision(TreasureChest &, Ball &, ALuint &);
+void drawCanon(Canon &);
+void initCanon(Canon & );
+void CanonTextureInit();
+void KaBoom(Canon &, Ball &, ALuint &);
 int init_sound(ALuint &, ALuint &);
 void play_sound(ALuint &);
 int clean_sound(ALuint &, ALuint &);

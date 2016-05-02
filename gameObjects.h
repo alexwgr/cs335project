@@ -64,7 +64,10 @@ struct TreasureChest {
 		HP = 3;
 	}
 };
-
+struct Canon {
+    Rectangle r;
+    int state;//use to launch canon
+};
 
 struct GameBoard {
     Rectangle rectangles[MAX_RECTANGLES];

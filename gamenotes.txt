@@ -1,0 +1,5 @@
+We are going to implement flowing water into our game.
+Idea is that when you lose 2 balls, water starts flowing, affecting
+gameplay difficulty.
+- build this using waterfall model
+Try to make 2d puff of smoke by making the pixels appear chunk by chunk

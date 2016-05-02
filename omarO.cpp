@@ -19,6 +19,79 @@
 #include "hseid.h"
 using namespace std;
 extern score Scorekeeper;
+
+/*****CANON****/
+void KaBoom(Canon &c, Ball &b, ALuint &source)
+{
+        if(rectangleBallCollision(c.r, b))
+        {
+                //play_sound(source);
+                cout << "KABOOM!\n";
+        } 
+
+}
+
+void drawCanon(Canon &c)
+{
+        extern GLuint canonTexture;
+        glPushMatrix();
+        glColor3d(1.0, 1.0, 1.0);
+        glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
+        glRotatef(c.r.angle, 0, 0, 1);
+        glBindTexture(GL_TEXTURE_2D, canonTexture);
+
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.0f);
+        glColor4ub(255,255,255,255);
+
+
+        glBegin(GL_QUADS);
+        glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
+        glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
+        glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
+        glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
+        glEnd();
+
+        glBindTexture(GL_TEXTURE_2D,0);
+        glPopMatrix();
+
+}
+void initCanon(Canon &c)
+{
+        Rectangle *rec = &c.r;
+        rec->pos[0] = 455.0;//x pos
+        rec->pos[1] = 100.0;// y pos
+        rec->width = 40.0;//thickness
+        rec->height = 40.0;
+        rec->angle = 0.0;
+
+}
+void CanonTextureInit()
+{    
+        extern Ppmimage *canonImage;
+        extern GLuint canonTexture;
+        canonImage = ppm6GetImage("./images/canon.ppm");
+
+
+        //canon image
+        glGenTextures(1, &canonTexture);
+        int w = canonImage->width;
+        int h = canonImage->height;
+
+        //canon alpha
+        glBindTexture(GL_TEXTURE_2D, canonTexture);
+        //
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+
+        //must build a new set of data...
+        unsigned char *alphaDataCanon = buildAlphaData(canonImage);	
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+                        GL_RGBA, GL_UNSIGNED_BYTE, alphaDataCanon);
+        free(alphaDataCanon);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+}
 /****** SOUND *****/
 //function creates sound source and buffer
 int init_sound(ALuint &buffer, ALuint &source)
@@ -203,10 +276,10 @@ void drawChest(TreasureChest &c)
 void initChest(TreasureChest &chest)
 {
         Rectangle *rec = &chest.r;
-        rec->pos[0] = 100.0;
-        rec->pos[1] = 420.0;
-        rec->width = 60.0;
-        rec->height = 60.0;
+        rec->pos[0] = 250.0;
+        rec->pos[1] = 580.0;
+        rec->width = 40.0;
+        rec->height = 40.0;
         rec->angle = 0.0;
 }
 //function plays sound when ball collides with chest
@@ -222,7 +295,7 @@ int ballChestCollision(TreasureChest &chest, Ball &b, ALuint &source)
                 if(chest.HP == 0) {
                         cout << "OPEN\n";
                         chest.state = 1;
-			addScore(&Scorekeeper, 1000);
+                        addScore(&Scorekeeper, 1000);
                 }
                 return 1;
         }

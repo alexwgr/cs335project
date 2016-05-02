@@ -48,7 +48,7 @@ extern "C" {
 #include "omarO.h"
 #include "hseid.h"
 
-const int NUM_IMAGES = 8;
+const int NUM_IMAGES = 9;
 
 
 const double FLIPPER_LENGTH = 70.0;
@@ -101,6 +101,7 @@ Flipper flipper;
 Flipper flipper2;
 Rectangle r;
 TreasureChest chest;
+Canon canon;
 
 Ppmimage *OceanImage;
 
@@ -111,6 +112,7 @@ Ppmimage  *closeChestImage;
 Ppmimage *openChestImage;
 Ppmimage *bumperUpImage;
 Ppmimage *bumperDownImage;
+Ppmimage *canonImage;
 char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
@@ -119,7 +121,8 @@ char ImageFile[NUM_IMAGES][250] = {
     "close-chest2.png\0",
     "Ocean.jpg\0",
     "bumper_up.png\0",
-    "bumper_down.png\0"
+    "bumper_down.png\0",
+    "canon.png\0"
 };
 GLuint OceanTexture;
 
@@ -132,6 +135,7 @@ GLuint openChestTexture_alpha;
 GLuint closeChestTexture_alpha;
 GLuint bumperUpTexture;
 GLuint bumperDownTexture;
+GLuint canonTexture;
 
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
@@ -191,6 +195,7 @@ int main(void)
     initBumpers(board);
     initBalls();
     initChest(chest);//initialize chest properties
+    initCanon(canon);
     init_sound(alBuffer, alSource);
 
     r.pos[0] = 200.0;
@@ -253,7 +258,7 @@ int main(void)
     cleanupXWindows();
     cleanup_fonts();
     clean_sound(alBuffer, alSource);
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < NUM_IMAGES; i++) {
         strcpy(filename, ImageFile[i]);
         char *period = strchr(filename, '.');
         *period = '\0';   
@@ -353,12 +358,13 @@ void initOpengl(void)
     chestTextureInit();	
     OceanTextureInit();
     bumperTextureInit();
+    CanonTextureInit();
 }
 
 void initBalls(void)
 {
-    ball1.pos[0] = 100;
-    ball1.pos[1] = 200;
+    ball1.pos[0] = 450;
+    ball1.pos[1] = 420;
     //ball1.vel[0] = 1.6;
     //ball1.vel[1] = 0.0;
     ball1.radius = 11.0;
@@ -576,9 +582,10 @@ void physics(void)
 
     for (int i = 0; i < board.num_bumpers; i++) {
         if (bumperBallCollision(board.bumpers[i], ball1)) {
-
+            play_sound(alSource);
         }
     }
+    KaBoom(canon, ball1, alSource);//when ball is on canon
 
     applyMaximumVelocity(ball1);
 
@@ -739,6 +746,7 @@ void render(void)
     }
 
     drawChest(chest);//drawing chest
+    drawCanon(canon);//draw canon
 
     //draw balls
     glColor3f(1,1,1);
