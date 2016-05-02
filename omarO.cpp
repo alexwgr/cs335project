@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include <GL/glx.h>
 #include </usr/include/AL/alut.h>
-#include "hseid.h"
+#include "hassenS.h"
 using namespace std;
 extern score Scorekeeper;
 

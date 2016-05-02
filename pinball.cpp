@@ -46,7 +46,7 @@ extern "C" {
 #include "gameObjects.h"
 #include "alexR.h"
 #include "omarO.h"
-#include "hseid.h"
+#include "hassenS.h"
 
 const int NUM_IMAGES = 9;
 const double CHUTE_WIDTH = 40.0;
@@ -816,6 +816,7 @@ void render(void)
 
     drawChest(chest);//drawing chest
     drawSteeringWheel(steeringWheel);
+    drawCanon(canon);//draw canon
 
     //draw collision rectangles
     glColor3ub(255, 255, 255);
@@ -828,8 +829,6 @@ void render(void)
         drawBumper(board.bumpers[i]);
     }
 
-    drawChest(chest);//drawing chest
-    drawCanon(canon);//draw canon
 
     //draw balls
     glColor3f(1,1,1);
