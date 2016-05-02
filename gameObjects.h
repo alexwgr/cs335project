@@ -3,6 +3,7 @@
 #define _GAME_OBJECTS_H
 
 #include "vector.h"
+#include "time.h"
 
 #define MAX_RECTANGLES 900
 
@@ -47,6 +48,7 @@ struct Ball {
 	Vec vel;
 	double radius;
 	double mass;
+    int inPlay; //1 if ball has left launch chute
 };
 
 struct Bumper {
@@ -56,13 +58,28 @@ struct Bumper {
 
 struct TreasureChest {
     int state; //0 is closed, 1 is open
+    int active; // 0 if recently collided, 1 if not
     Rectangle r;
     int HP; // 3, 2, 1
-	TreasureChest() 
-	{
+    timespec collision_time;
+	TreasureChest() {
+        active = 1;
 		state = 0;
 		HP = 3;
 	}
+};
+
+struct SteeringWheel {
+    Vec pos;
+    double inner_radius, outer_radius;
+    double angle, rvel;
+    int state; // 0 is not spinning, 1 is spinning
+    timespec collision_time; //keeps track of how long the ball spins
+    SteeringWheel() {
+        state = 0;
+        angle = 0;
+        rvel = 0;
+    }
 };
 
 

@@ -17,12 +17,17 @@
 #include "gameObjects.h"
 #include "alexR.h"
 #include <iostream>
+#include <cstring>
 #include <cmath>
 #include <GL/glx.h>
 
 #define MAX_VELOCITY 30.0
 #define MAX_BUMPERS 20
 
+
+extern double xres, yres;
+extern struct timespec timeCurrent;
+extern Flipper flipper, flipper2;
 
 void initGameBoard(GameBoard &g)
 {
@@ -219,6 +224,44 @@ int bumperBallCollision(Bumper &b, Ball &ba)
 }
 
 
+//---------steering wheel functions---------------//
+void initSteeringWheel(SteeringWheel &wheel)
+{
+    wheel.pos[0] = 235;
+    wheel.pos[1] = 300;
+    wheel.inner_radius = 7;
+    wheel.outer_radius = 70;
+}
+
+void steeringWheelMovement(SteeringWheel &wheel)
+{
+    //spin for 3 seconds
+    wheel.angle += fmod(wheel.rvel, 360.0);
+    if (wheel.rvel >= 0.0) {
+        wheel.rvel -= 0.01 * wheel.rvel;
+    }
+    if (wheel.rvel < 0) {
+        wheel.rvel = 0.0;
+    }
+}
+
+int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
+{
+
+    Vec between;
+    VecBtn(wheel.pos, ball.pos, between);
+    
+    //if inside inner radius
+    if (VecMagnitude(between) < ball.radius + wheel.inner_radius) {
+        wheel.rvel = (VecMagnitude(ball.vel) / MAX_VELOCITY) * 10.0;
+        return 1;
+    }
+        
+    return 0;
+}
+
+
+
 /* Handles the physics for a circle colliding with a rectangle */
 int rectangleBallCollision(Rectangle &r, Ball &b)
 {
@@ -389,4 +432,14 @@ void applyMaximumVelocity(Ball &b)
         VecNormalize(b.vel, b.vel);
         VecScale(b.vel, MAX_VELOCITY, b.vel);
     }
+}
+
+
+double timeDiff(struct timespec *start, struct timespec *end) {
+    return (double)(end->tv_sec - start->tv_sec ) +
+        (double)(end->tv_nsec - start->tv_nsec) * (1.0/1e9);
+}
+
+void timeCopy(struct timespec *dest, struct timespec *source) {
+    std::memcpy(dest, source, sizeof(struct timespec));
 }

@@ -48,8 +48,9 @@ extern "C" {
 #include "omarO.h"
 #include "hseid.h"
 
-const int NUM_IMAGES = 8;
-
+const int NUM_IMAGES = 9;
+const double CHUTE_WIDTH = 40.0;
+const double CHUTE_THICKNESS = 6.0;
 
 const double FLIPPER_LENGTH = 70.0;
 const double FLIPPER_HEIGHT = 15.0;
@@ -73,7 +74,7 @@ void initXWindows(void);
 void initOpengl(void);
 void initBalls(void);
 void initFlipper(Flipper &, float, float, bool);
-void bumperTextureInit(void);
+void TexturesInit(void);
 void cleanupXWindows(void);
 void checkResize(XEvent *e);
 void checkMouse(XEvent *e);
@@ -82,6 +83,8 @@ void render(void);
 
 void drawBumper(Bumper &);
 void drawFlipper(const Flipper &);
+void drawSteeringWheel(SteeringWheel &);
+
 void physics(void);
 void flipperMovement(Flipper &e);
 
@@ -95,11 +98,13 @@ score Scorekeeper;
 GameBoard board;
 Curve curve, curve2;
 
+//gameObjects
 Ball ball1;
 Ball ball2;
 Flipper flipper;
 Flipper flipper2;
 Rectangle r;
+SteeringWheel steeringWheel;
 TreasureChest chest;
 
 Ppmimage *OceanImage;
@@ -111,6 +116,7 @@ Ppmimage  *closeChestImage;
 Ppmimage *openChestImage;
 Ppmimage *bumperUpImage;
 Ppmimage *bumperDownImage;
+Ppmimage *steeringWheelImage;
 char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
@@ -119,7 +125,8 @@ char ImageFile[NUM_IMAGES][250] = {
     "close-chest2.png\0",
     "Ocean.jpg\0",
     "bumper_up.png\0",
-    "bumper_down.png\0"
+    "bumper_down.png\0",
+    "steering_wheel.png\0"
 };
 GLuint OceanTexture;
 
@@ -132,6 +139,7 @@ GLuint openChestTexture_alpha;
 GLuint closeChestTexture_alpha;
 GLuint bumperUpTexture;
 GLuint bumperDownTexture;
+GLuint steeringWheelTexture;
 
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
@@ -150,20 +158,6 @@ struct timespec timeStart, timeCurrent;
 struct timespec timePause;
 double physicsCountdown=0.0;
 double timeSpan=0.0;
-double timeDiff(struct timespec *start, struct timespec *end) {
-    return (double)(end->tv_sec - start->tv_sec ) +
-        (double)(end->tv_nsec - start->tv_nsec) * oobillion;
-}
-/*
-   struct score {
-   int points;
-   int balls_left;
-
-   }Scorekeeper;
- */
-void timeCopy(struct timespec *dest, struct timespec *source) {
-    memcpy(dest, source, sizeof(struct timespec));
-}
 //-----------------------------------------------------------------------------
 
 
@@ -187,10 +181,14 @@ int main(void)
     }
     initXWindows();
     initOpengl();
+    
     initGameBoard(board);
     initBumpers(board);
     initBalls();
     initChest(chest);//initialize chest properties
+    initSteeringWheel(steeringWheel);
+
+
     init_sound(alBuffer, alSource);
 
     r.pos[0] = 200.0;
@@ -206,23 +204,22 @@ int main(void)
     curve.npoints = 10;
 
 
+    // Add chute to board
     addCurve(curve, board);
 
     Rectangle *rec = &board.rectangles[board.num_rectangles];
     rec->pos[0] = xres;
     rec->pos[1] = 300;
     rec->height = 200;
-    rec->width = 8.0;
+    rec->width = CHUTE_THICKNESS;
     board.num_rectangles++;
 
     rec = &board.rectangles[board.num_rectangles];
-    rec->pos[0] = xres - 50;
+    rec->pos[0] = xres - CHUTE_WIDTH;
     rec->pos[1] = 300;
     rec->height = 200;
-    rec->width = 8.0;
+    rec->width = 6.0;
     board.num_rectangles++;
-
-
 
     std::cout << "num rectangles " << board.num_rectangles << endl;
 
@@ -352,16 +349,16 @@ void initOpengl(void)
     pinballTextureInit();
     chestTextureInit();	
     OceanTextureInit();
-    bumperTextureInit();
+    TexturesInit();
 }
 
 void initBalls(void)
 {
-    ball1.pos[0] = 100;
+    ball1.radius = 11.0;
+    ball1.pos[0] = xres - CHUTE_THICKNESS - ball1.radius;
     ball1.pos[1] = 200;
     //ball1.vel[0] = 1.6;
     //ball1.vel[1] = 0.0;
-    ball1.radius = 11.0;
     ball1.mass = 1.0;
 
 }
@@ -557,12 +554,34 @@ void physics(void)
     }
 
 
+    //treasure chest collision
     if (rectangleBallCollision(chest.r, ball1)) {
-
+        
+        if (chest.active == 1) {
+            timeCopy(&chest.collision_time, &timeCurrent);
+            chest.active = 0;
+    
         if(ballChestCollision(chest, ball1, alSource)) {
-            collided = true;
+                collided = true;
+            }
         }
+
+        if (chest.active == 0 && timeDiff(&chest.collision_time, &timeCurrent) > 0.8) {
+            chest.active = 1;
+        }
+
     }	
+
+    //bumper collision
+    for (int i = 0; i < board.num_bumpers; i++) {
+        if (bumperBallCollision(board.bumpers[i], ball1)) {
+
+        }
+    }
+
+    //steering wheel collision
+    steeringWheelBallCollision(steeringWheel, ball1);
+    steeringWheelMovement(steeringWheel);
 
     if (collided) {
         //apply roll
@@ -574,14 +593,12 @@ void physics(void)
 
     }
 
-    for (int i = 0; i < board.num_bumpers; i++) {
-        if (bumperBallCollision(board.bumpers[i], ball1)) {
-
-        }
-    }
-
     applyMaximumVelocity(ball1);
 
+    //set ball inPlay flag if ball is left of launch chute
+    if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
+        ball1.inPlay = 1;
+    }
 
     //Update position
     ball1.pos[0] += ball1.vel[0];
@@ -591,27 +608,41 @@ void physics(void)
         ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
         ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
     }
+
     //Check for collision with window edges
+
+    //right board edge shifts left if the ball is in play and has left the chute
+    double boardEdge = ball1.inPlay ? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) : xres - ball1.radius;
+
+    //left window edge
     if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
         ball1.pos[0] = ball1.radius;
         ball1.vel[0] *= -0.2;
     }
-    else if (ball1.pos[0] >= (Flt)xres-ball1.radius && ball1.vel[0] > 0.0) {
-        ball1.pos[0] = xres - ball1.radius;
+
+    //right window edge
+    else if (ball1.pos[0] >= boardEdge && ball1.vel[0] > 0.0) {
+        ball1.pos[0] = boardEdge;
         ball1.vel[0] *= - 0.2;
     }
+
+    //bottom window edge
     if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
         ball1.pos[1] = ball1.radius;
         ball1.vel[1] *= - 0.2;
     }
+
+    //top window edge
     else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
         ball1.pos[1] = yres - ball1.radius;
         ball1.vel[1] *= -0.2;
     }
 }
 
-void bumperTextureInit(void)
+void TexturesInit(void)
 {
+
+    //bumper texture init
 
     bumperUpImage = ppm6GetImage("./images/bumper_up.ppm");
     bumperDownImage = ppm6GetImage("./images/bumper_down.ppm");
@@ -651,22 +682,64 @@ void bumperTextureInit(void)
     free(alphaData);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    //steering wheel
+    steeringWheelImage = ppm6GetImage("./images/steering_wheel.ppm");
+    w = steeringWheelImage->width;
+    h = steeringWheelImage->height;
+    
+    glGenTextures(1, &steeringWheelTexture);
+    
+    glBindTexture(GL_TEXTURE_2D, steeringWheelTexture);
+
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+
+    alphaData = buildAlphaData(steeringWheelImage);	
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
+    free(alphaData);
+
+
 }
 
+void drawSteeringWheel(SteeringWheel &wheel)
+{
+    glPushMatrix();
+    glColor3d(1.0, 1.0, 1.0);
+    glTranslated(wheel.pos[0], wheel.pos[1], wheel.pos[2]);
+    glRotatef(wheel.angle, 0, 0, 1);
+
+    glBindTexture(GL_TEXTURE_2D, steeringWheelTexture);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+
+    glBegin(GL_QUADS);
+    glVertex2d(-wheel.outer_radius, -wheel.outer_radius); glTexCoord2f(0.0f, 1.0f);
+    glVertex2d(-wheel.outer_radius,  wheel.outer_radius); glTexCoord2f(0.0f, 0.0f); 
+    glVertex2d( wheel.outer_radius,  wheel.outer_radius); glTexCoord2f(1.0f, 0.0f); 
+    glVertex2d( wheel.outer_radius, -wheel.outer_radius); glTexCoord2f(1.0f, 1.0f); 
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPopMatrix();
+}
 
 void drawBumper(Bumper &b)
 {
-	double angle, radian, x, y, tx, ty, xcos, ysin;
+    double angle, radian, x, y, tx, ty, xcos, ysin;
     double radius = b.state == 0 ? b.c.radius : b.c.radius - 2.0;
 
     glPushMatrix();
     glColor3f(1.0f, 1.0f, 1.0f);
     glTranslated(b.c.pos[0], b.c.pos[1], b.c.pos[2]);
-	glBindTexture(GL_TEXTURE_2D, b.state == 0 ? bumperUpTexture : bumperDownTexture);
-	glBegin(GL_POLYGON);
+    glBindTexture(GL_TEXTURE_2D, b.state == 0 ? bumperUpTexture : bumperDownTexture);
+    glBegin(GL_POLYGON);
 
-	for(angle = 0.0; angle < 360.0; angle+= 2.0) {
-	    radian = angle * (M_PI/100.0f);
+    for(angle = 0.0; angle < 360.0; angle+= 2.0) {
+        radian = angle * (M_PI/100.0f);
 
         xcos = (float)cos(radian);
         ysin = (float)sin(radian);
@@ -675,10 +748,10 @@ void drawBumper(Bumper &b)
         tx = xcos * 0.5 + 0.5;
         ty = ysin * 0.5 + 0.5;
 
-	    glTexCoord2f(tx, ty);
-	    glVertex2f(x, y);
-	}
-	glEnd();
+        glTexCoord2f(tx, ty);
+        glVertex2f(x, y);
+    }
+    glEnd();
     glPopMatrix();
 }
 
@@ -703,12 +776,12 @@ void render(void)
     glVertex3f(curve.points[2][0], curve.points[2][1], 0);
     glEnd();
 
-
+/*
     glColor3ub(150, 10, 10);
     glPushMatrix();
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
     glRotatef(r.angle, 0, 0, 1);
-
+*/
     for (int i = 0; i < board.num_rectangles; i++)
     {
         drawRectangle(board.rectangles[i]);
@@ -718,17 +791,21 @@ void render(void)
 
 
     //Draw background image 
-    glBegin(GL_QUADS);
+    /*glBegin(GL_QUADS);
     glVertex2i(-r.width, -r.height);
     glVertex2i(-r.width, r.height);
     glVertex2i(r.width, r.height);
-    glVertex2i(r.width, - r.height);
+    glVertex2i(r.width, - r.height);*/
     glEnd();
     glPopMatrix();
 
     OceanBackground();
 
+    drawChest(chest);//drawing chest
+    drawSteeringWheel(steeringWheel);
+
     //draw collision rectangles
+    glColor3ub(255, 255, 255);
     for (int i = 0; i < board.num_rectangles; i++) {
         drawRectangle(board.rectangles[i]);
     }
@@ -738,7 +815,6 @@ void render(void)
         drawBumper(board.bumpers[i]);
     }
 
-    drawChest(chest);//drawing chest
 
     //draw balls
     glColor3f(1,1,1);

@@ -205,8 +205,8 @@ void initChest(TreasureChest &chest)
         Rectangle *rec = &chest.r;
         rec->pos[0] = 100.0;
         rec->pos[1] = 420.0;
-        rec->width = 60.0;
-        rec->height = 60.0;
+        rec->width = 40.0;
+        rec->height = 40.0;
         rec->angle = 0.0;
 }
 //function plays sound when ball collides with chest
