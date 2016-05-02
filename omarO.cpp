@@ -276,8 +276,8 @@ void drawChest(TreasureChest &c)
 void initChest(TreasureChest &chest)
 {
         Rectangle *rec = &chest.r;
-        rec->pos[0] = 250.0;
-        rec->pos[1] = 580.0;
+        rec->pos[0] = 100.0;
+        rec->pos[1] = 420.0;
         rec->width = 40.0;
         rec->height = 40.0;
         rec->angle = 0.0;
