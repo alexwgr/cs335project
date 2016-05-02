@@ -834,7 +834,9 @@ void render(void)
     glColor3f(1,1,1);
     glPushMatrix();
     glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
-    drawBall();
+    if (ball1.isVisible) {
+        drawBall();
+    }
     glPopMatrix();
 
     drawFlipper(flipper);

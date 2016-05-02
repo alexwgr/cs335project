@@ -1,3 +1,11 @@
+//Author: Hassen Seid, Omar Oseguera, Alex Rinaldi
+//Purpose - Contains resources that can be used by everyone (and don't really belong to anyone)
+
+//Description
+//Includes struct definitions for all the different objects in the game (flipper, bumper)
+//Also includes useful functions like drawing debug rectangles and time/counter management
+
+
 #ifndef _GAME_OBJECTS_H
 
 #define _GAME_OBJECTS_H
@@ -22,6 +30,7 @@ struct Circle {
 
 };
 
+//Smacks the ball when you press a button
 struct Flipper {
 	Vec pos;
 	double width, height, angle;
@@ -34,6 +43,7 @@ struct Flipper {
 };
 
 
+// A curve that is built from small rectangles
 struct Curve {
     double width;
     bool collide[2]; //above, below
@@ -43,19 +53,28 @@ struct Curve {
     Curve() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
 
+//The main character of our story
 struct Ball {
 	Vec pos;
 	Vec vel;
 	double radius;
 	double mass;
     int inPlay; //1 if ball has left launch chute
+    int isVisible; // 0 is hidden, 1 is showing
+
+    Ball() {
+        inPlay = 0;
+        isVisible = 1;
+    }
 };
 
+//A circular object that bounces the ball away
 struct Bumper {
     Circle c;
     int state; // 0 up, 1 down
 };
 
+//Opens and awards points after it is hit multiple times
 struct TreasureChest {
     int state; //0 is closed, 1 is open
     int active; // 0 if recently collided, 1 if not
@@ -68,11 +87,14 @@ struct TreasureChest {
 		HP = 3;
 	}
 };
+
+//Shoots the ball
 struct Canon {
     Rectangle r;
     int state;//use to launch canon
 };
 
+//Does a little spin when the ball moves over it
 struct SteeringWheel {
     Vec pos;
     double inner_radius, outer_radius;
@@ -87,6 +109,7 @@ struct SteeringWheel {
 };
 
 
+//Holds all of the repeating objects in the game; collision rectangles, bumpers, etc.
 struct GameBoard {
     Rectangle rectangles[MAX_RECTANGLES];
     Bumper bumpers[MAX_RECTANGLES];
@@ -95,6 +118,22 @@ struct GameBoard {
 };
 
 
+//functions
 
+//used for timing
+double timeDiff(struct timespec *, struct timespec *);
+void timeCopy(struct timespec *, struct timespec *);
+
+//used to set default values 
+void initGameBoard(GameBoard &);
+void initBumpers(GameBoard &);
+void initSteeringWheel(SteeringWheel &);
+
+//simple filled shapes, good for debugging
+void drawCircle(Circle &);
+void drawRectangle(Rectangle &);
+
+//adds a bumper to the board
+void addBumperToBoard(Bumper &, GameBoard &);
 
 #endif
