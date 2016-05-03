@@ -29,9 +29,6 @@ extern double xres, yres;
 extern struct timespec timeCurrent;
 extern Flipper flipper, flipper2;
 
-
-
-
 /* This adds a curve to the game board */
 /* It uses beizer curves to rectangles at a set number of steps */
 void addCurve(Curve &c, GameBoard &g)
