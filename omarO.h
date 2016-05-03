@@ -12,12 +12,9 @@
 #include "ppm.h"
 #include </usr/include/AL/alut.h>
 using namespace std;
-unsigned char *buildAlphaData(Ppmimage *);
 void chestTextureInit();
 void initChest(TreasureChest &);
-void drawChest(TreasureChest &);
 int ballChestCollision(TreasureChest &, Ball &, ALuint &);
-void drawCanon(Canon &);
 void initCanon(Canon & );
 void CanonTextureInit();
 void KaBoom(Canon &, Ball &, ALuint &);

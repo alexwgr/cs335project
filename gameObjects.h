@@ -12,8 +12,10 @@
 
 #include "vector.h"
 #include "time.h"
+#include "ppm.h"
 
 #define MAX_RECTANGLES 900
+#define MAX_PARTICLES 800
 
 //Collision objects
 struct Rectangle {
@@ -23,7 +25,24 @@ struct Rectangle {
 
     Rectangle() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
-
+struct Shape {
+    float width, height;
+    float radius;
+    Vec center;
+};
+struct Particle {
+    Shape s;
+    Vec velocity;
+};
+struct Water {
+    bool waterflow;
+    Vec pos;
+    int n;
+    Particle particle[MAX_PARTICLES];
+    Water() {
+        waterflow = true;//may not need this
+    }
+};
 struct Circle {
     Vec pos;
     double radius;
@@ -120,6 +139,7 @@ struct GameBoard {
 
 //functions
 
+unsigned char *buildAlphaData(Ppmimage *);
 //used for timing
 double timeDiff(struct timespec *, struct timespec *);
 void timeCopy(struct timespec *, struct timespec *);

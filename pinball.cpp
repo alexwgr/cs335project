@@ -82,6 +82,8 @@ void checkKeys(XEvent *e);
 void render(void);
 
 void drawBumper(Bumper &);
+void drawCanon(Canon &);
+void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
 
@@ -767,8 +769,63 @@ void drawBumper(Bumper &b)
     glEnd();
     glPopMatrix();
 }
+void drawCanon(Canon &c)
+{
+        extern GLuint canonTexture;
+        glPushMatrix();
+        glColor3d(1.0, 1.0, 1.0);
+        glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
+        glRotatef(c.r.angle, 0, 0, 1);
+        glBindTexture(GL_TEXTURE_2D, canonTexture);
+
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.0f);
+        glColor4ub(255,255,255,255);
 
 
+        glBegin(GL_QUADS);
+        glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
+        glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
+        glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
+        glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
+        glEnd();
+
+        glBindTexture(GL_TEXTURE_2D,0);
+        glPopMatrix();
+
+}
+//function draws treasure chest object
+void drawChest(TreasureChest &c)
+{
+        extern GLuint openChestTexture_alpha;
+        extern GLuint closeChestTexture_alpha;
+        glPushMatrix();
+        glColor3d(1.0, 1.0, 1.0);
+        glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
+        glRotatef(c.r.angle, 0, 0, 1);
+
+
+        if(c.state == 1) {
+                glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
+        }
+        else if(c.state == 0) {
+                glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
+        }
+
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.0f);
+        glColor4ub(255,255,255,255);
+
+        glBegin(GL_QUADS);
+        glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
+        glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
+        glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
+        glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
+        glEnd();
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glPopMatrix();
+}
 void render(void)
 {
 

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cmath>
 #include <GL/glx.h>
+#include <cstdlib>
 
 void initGameBoard(GameBoard &g)
 {
@@ -77,7 +78,50 @@ void drawCircle(Circle &c)
     }
     glEnd();
 }
-
+/*void makeWater(Water *water, int x, int y) {
+    if(water->n >= MAX_PARTICLES)
+        return;
+    Particle *p = &water->particle[water->n];
+    p->s.center.x = x;
+    p->s.center.y = y;
+    p->velocity.y =  -0.5;
+    p->velocity.x = + 0.5;
+    water->n++;
+    water.pos[0] = 150;
+    water.pos[1] = 150;
+}*/
+//function builds Alpha channel for image with no background
+unsigned char *buildAlphaData(Ppmimage *img)
+{
+        //add 4th component to RGB stream...
+        int i;
+        int a,b,c;
+        unsigned char *newdata, *ptr;
+        unsigned char *data = (unsigned char *)img->data;
+        newdata = (unsigned char *)malloc(img->width * img->height * 4);
+        ptr = newdata;
+        for (i=0; i<img->width * img->height * 3; i+=3) {
+                a = *(data+0);
+                b = *(data+1);
+                c = *(data+2);
+                *(ptr+0) = a;
+                *(ptr+1) = b;
+                *(ptr+2) = c;
+                //get largest color component...
+                //*(ptr+3) = (unsigned char)((
+                //		(int)*(ptr+0) +
+                //		(int)*(ptr+1) +
+                //		(int)*(ptr+2)) / 3);
+                //d = a;
+                //if (b >= a && b >= c) d = b;
+                //if (c >= a && c >= b) d = c;
+                //*(ptr+3) = d;
+                *(ptr+3) = (a|b|c);
+                ptr += 4;
+                data += 3;
+        }
+        return newdata;
+}
 double timeDiff(struct timespec *start, struct timespec *end) {
     return (double)(end->tv_sec - start->tv_sec ) +
         (double)(end->tv_nsec - start->tv_nsec) * (1.0/1e9);
