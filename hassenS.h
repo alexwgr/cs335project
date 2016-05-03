@@ -1,6 +1,7 @@
 #ifndef _HSEID_H_
 #define _HSEID_h_
-
+#include <GL/glx.h>
+#include "ppm.h"
 #include <cmath>
 #include <iostream>
 #include "gameObjects.h"
@@ -13,13 +14,9 @@ struct score {
 
 };
 
+void alphaTextureInit(char *, GLuint &, Ppmimage *);
+void textureInit(char *, GLuint &, Ppmimage *);
 void addScore(score *, int);
 void initScore(score *);
 void drawScore();
-void OceanBackground();
-void OceanTextureInit();
-void flipperstexture();
-void pinballTextureInit();
-void drawFlipper(Flipper &f);
-void drawBall();
 #endif

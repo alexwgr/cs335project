@@ -74,7 +74,7 @@ void initXWindows(void);
 void initOpengl(void);
 void initBalls(void);
 void initFlipper(Flipper &, float, float, bool);
-void TexturesInit(void);
+void initTextures(void);
 void cleanupXWindows(void);
 void checkResize(XEvent *e);
 void checkMouse(XEvent *e);
@@ -84,6 +84,9 @@ void render(void);
 void drawBumper(Bumper &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
+void OceanBackground();
+void drawFlipper(Flipper &f);
+void drawBall();
 
 void physics(void);
 void flipperMovement(Flipper &e);
@@ -91,6 +94,9 @@ void flipperMovement(Flipper &e);
 int done=0;
 int xres=780, yres=480;
 int leftButtonDown=0;
+
+char buffer[256];
+
 Vec leftButtonPos;
 
 score Scorekeeper;
@@ -129,7 +135,7 @@ char ImageFile[NUM_IMAGES][250] = {
     "bumper_up.png\0",
     "bumper_down.png\0",
     "canon.png\0"
-    "steering_wheel.png\0"
+	"steering_wheel.png\0"
 };
 GLuint OceanTexture;
 
@@ -153,7 +159,7 @@ ALuint alSource;
    clean_sound(alBuffer, alSource);//cleans/deletes sound//use at end of program
 //play_sound(alSource)//plays sound, use whenever playing sound
 //init_sounds(alBuffer, alSource)// initialize
- */
+*/
 //-----------------------------------------------------------------------------
 //Setup timers
 const double physicsRate = 1.0 / 60.0;
@@ -175,17 +181,17 @@ int main(void)
     char filename[256];
 
     for(int i = 0; i < NUM_IMAGES; i++) {
-        strcpy(filename, ImageFile[i]);
-        char *period = strchr(filename, '.');
-        *period = '\0';   
-        sprintf(syscall_buffer, "convert ./images/%s ./images/%s.ppm", 
-                ImageFile[i], filename);
+	strcpy(filename, ImageFile[i]);
+	char *period = strchr(filename, '.');
+	*period = '\0';   
+	sprintf(syscall_buffer, "convert ./images/%s ./images/%s.ppm", 
+		ImageFile[i], filename);
 
-        system(syscall_buffer);
+	system(syscall_buffer);
     }
     initXWindows();
     initOpengl();
-    
+
     initGameBoard(board);
     initBumpers(board);
     initBalls();
@@ -234,33 +240,33 @@ int main(void)
     clock_gettime(CLOCK_REALTIME, &timePause);
     clock_gettime(CLOCK_REALTIME, &timeStart);
     while(!done) {
-        while(XPending(dpy)) {
-            XEvent e;
-            XNextEvent(dpy, &e);
-            checkResize(&e);
-            checkMouse(&e);
-            checkKeys(&e);
-        }
-        clock_gettime(CLOCK_REALTIME, &timeCurrent);
-        timeSpan = timeDiff(&timeStart, &timeCurrent);
-        timeCopy(&timeStart, &timeCurrent);
-        physicsCountdown += timeSpan;
-        while(physicsCountdown >= physicsRate) {
-            physics();
-            physicsCountdown -= physicsRate;
-        }
-        render();
-        glXSwapBuffers(dpy, win);
+	while(XPending(dpy)) {
+	    XEvent e;
+	    XNextEvent(dpy, &e);
+	    checkResize(&e);
+	    checkMouse(&e);
+	    checkKeys(&e);
+	}
+	clock_gettime(CLOCK_REALTIME, &timeCurrent);
+	timeSpan = timeDiff(&timeStart, &timeCurrent);
+	timeCopy(&timeStart, &timeCurrent);
+	physicsCountdown += timeSpan;
+	while(physicsCountdown >= physicsRate) {
+	    physics();
+	    physicsCountdown -= physicsRate;
+	}
+	render();
+	glXSwapBuffers(dpy, win);
     }
     cleanupXWindows();
     cleanup_fonts();
     clean_sound(alBuffer, alSource);
     for(int i = 0; i < NUM_IMAGES; i++) {
-        strcpy(filename, ImageFile[i]);
-        char *period = strchr(filename, '.');
-        *period = '\0';   
-        sprintf(syscall_buffer, "images/%s.ppm", filename);
-        unlink(syscall_buffer);
+	strcpy(filename, ImageFile[i]);
+	char *period = strchr(filename, '.');
+	*period = '\0';   
+	sprintf(syscall_buffer, "images/%s.ppm", filename);
+	unlink(syscall_buffer);
     }
     return 0;
 }
@@ -294,14 +300,14 @@ void initXWindows(void)
     setupScreenRes(480, 700);
     dpy = XOpenDisplay(NULL);
     if (dpy == NULL) {
-        printf("\n\tcannot connect to X server\n\n");
-        exit(EXIT_FAILURE);
+	printf("\n\tcannot connect to X server\n\n");
+	exit(EXIT_FAILURE);
     }
     Window root = DefaultRootWindow(dpy);
     XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
     if (vi == NULL) {
-        printf("\n\tno appropriate visual found\n\n");
-        exit(EXIT_FAILURE);
+	printf("\n\tno appropriate visual found\n\n");
+	exit(EXIT_FAILURE);
     } 
     //else {
     //	// %p creates hexadecimal output like in glxinfo
@@ -310,12 +316,12 @@ void initXWindows(void)
     cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
     swa.colormap = cmap;
     swa.event_mask = ExposureMask | KeyPressMask |
-        KeyReleaseMask | PointerMotionMask |
-        ButtonPressMask | ButtonReleaseMask |
-        StructureNotifyMask | SubstructureNotifyMask;
+	KeyReleaseMask | PointerMotionMask |
+	ButtonPressMask | ButtonReleaseMask |
+	StructureNotifyMask | SubstructureNotifyMask;
     win = XCreateWindow(dpy, root, 0, 0, xres, yres, 0,
-            vi->depth, InputOutput, vi->visual,
-            CWColormap | CWEventMask, &swa);
+	    vi->depth, InputOutput, vi->visual,
+	    CWColormap | CWEventMask, &swa);
     GLXContext glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
     glXMakeCurrent(dpy, win, glc);
     setTitle();
@@ -349,13 +355,7 @@ void initOpengl(void)
     glEnable(GL_TEXTURE_2D);
     initialize_fonts();
 
-
-    flipperstexture();
-    pinballTextureInit();
-    chestTextureInit();	
-    OceanTextureInit();
-    CanonTextureInit();
-    TexturesInit();
+    initTextures();
 }
 
 void initBalls(void)
@@ -387,11 +387,11 @@ void checkResize(XEvent *e)
     //The ConfigureNotify is sent by the
     //server if the window is resized.
     if (e->type != ConfigureNotify)
-        return;
+	return;
     XConfigureEvent xce = e->xconfigure;
     if (xce.width != xres || xce.height != yres) {
-        //Window size did change.
-        reshapeWindow(xce.width, xce.height);
+	//Window size did change.
+	reshapeWindow(xce.width, xce.height);
     }
 }
 
@@ -403,28 +403,28 @@ void checkMouse(XEvent *e)
     static int savey = 0;
     //
     if (e->type == ButtonRelease) {
-        leftButtonDown=0;
-        return;
+	leftButtonDown=0;
+	return;
     }
     if (e->type == ButtonPress) {
-        if (e->xbutton.button==1) {
-            //Left button is down
-            leftButtonDown = 1;
-            leftButtonPos[0] = (Flt)e->xbutton.x;
-            leftButtonPos[1] = (Flt)(yres - e->xbutton.y);
-        }
-        if (e->xbutton.button==3) {
-            //Right button is down
-        }
+	if (e->xbutton.button==1) {
+	    //Left button is down
+	    leftButtonDown = 1;
+	    leftButtonPos[0] = (Flt)e->xbutton.x;
+	    leftButtonPos[1] = (Flt)(yres - e->xbutton.y);
+	}
+	if (e->xbutton.button==3) {
+	    //Right button is down
+	}
     }
     if (savex != e->xbutton.x || savey != e->xbutton.y) {
-        //Mouse moved
-        savex = e->xbutton.x;
-        savey = e->xbutton.y;
-        if (leftButtonDown) {
-            leftButtonPos[0] = (Flt)e->xbutton.x;
-            leftButtonPos[1] = (Flt)(yres - e->xbutton.y);
-        }
+	//Mouse moved
+	savex = e->xbutton.x;
+	savey = e->xbutton.y;
+	if (leftButtonDown) {
+	    leftButtonPos[0] = (Flt)e->xbutton.x;
+	    leftButtonPos[1] = (Flt)(yres - e->xbutton.y);
+	}
     }
 }
 
@@ -436,64 +436,64 @@ void checkKeys(XEvent *e)
     //XPeekEvent(dpy, &nev);
     //Was there input from the keyboard?
     if (e->type == KeyPress) {
-        switch(key) {
-            case XK_Left:
-                ball1.vel[0] -= 1.0;
-                break;
-            case XK_Right:
-                ball1.vel[0] += 1.0;
-                break;
-            case XK_Up:
-                ball1.vel[1] = 20.0;
-                break;
-            case XK_Down:
-                ball1.vel[1] -= 1.0;
-                break;
-            case XK_s:
-                //press s to slow the balls
-                ball1.vel[0] *= 0.5;
-                ball1.vel[1] *= 0.5;
-                ball2.vel[0] *= 0.5;
-                ball2.vel[1] *= 0.5;
-                break;
-            case XK_f:
-                //press s to slow the balls
-                flipper.flipstate = 1;
-                play_sound(alSource);
-                break;
-            case XK_k:
-                //flipper 2
-                flipper2.flipstate = 1;
-                play_sound(alSource);
-                break;
-            case XK_Escape:
-                done=1;
-                break;
-        }
+	switch(key) {
+	    case XK_Left:
+		ball1.vel[0] -= 1.0;
+		break;
+	    case XK_Right:
+		ball1.vel[0] += 1.0;
+		break;
+	    case XK_Up:
+		ball1.vel[1] = 20.0;
+		break;
+	    case XK_Down:
+		ball1.vel[1] -= 1.0;
+		break;
+	    case XK_s:
+		//press s to slow the balls
+		ball1.vel[0] *= 0.5;
+		ball1.vel[1] *= 0.5;
+		ball2.vel[0] *= 0.5;
+		ball2.vel[1] *= 0.5;
+		break;
+	    case XK_f:
+		//press s to slow the balls
+		flipper.flipstate = 1;
+		play_sound(alSource);
+		break;
+	    case XK_k:
+		//flipper 2
+		flipper2.flipstate = 1;
+		play_sound(alSource);
+		break;
+	    case XK_Escape:
+		done=1;
+		break;
+	}
 
     }
     else if (e->type == KeyRelease)
     {
-        char keys[32];
-        XQueryKeymap(dpy, keys);
+	char keys[32];
+	XQueryKeymap(dpy, keys);
 
-        if(!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
-        {
-            // Stuff to do on KeyRelease
-            switch (key) {
-                case XK_f:
-                    //press s to slow the balls
-                    flipper.flipstate = 2;
-                    break;
-                case XK_k:
-                    //flipper 2
-                    flipper2.flipstate = 2;
-                    break;
-            }
-        }
-        //if (nev.type != KeyPress || nev.xkey.time != e->xkey.time ||
-        //    nev.xkey.keycode != e->xkey.keycode) {
-        //}
+	if(!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
+	{
+	    // Stuff to do on KeyRelease
+	    switch (key) {
+		case XK_f:
+		    //press s to slow the balls
+		    flipper.flipstate = 2;
+		    break;
+		case XK_k:
+		    //flipper 2
+		    flipper2.flipstate = 2;
+		    break;
+	    }
+	}
+	//if (nev.type != KeyPress || nev.xkey.time != e->xkey.time ||
+	//    nev.xkey.keycode != e->xkey.keycode) {
+	//}
     }
 }
 
@@ -507,32 +507,32 @@ void flipperMovement(Flipper &f)
 
     switch (f.flipstate)
     {
-        //idle; rotational velocity is 0 and the angle is the rest angle
-        case 0:
-            f.rvel = 0;
-            f.angle = FLIPPER_REST_ANGLE;
-            break;
-        case 1:
-            //going up; set rotational velocity to flipper speed until the flipper passes the max angle
-            if (f.angle < 40) {
-                f.rvel = FLIPPER_SPEED;
-            }
-            else {
-                // if the flipper is passed the max angle, set flipstate to 'going down'
-                f.rvel = 0;
-                //f.flipstate = 2;
-            }
-            break;
-        case 2: 
-            //going down; make rotational velocity negative until flipper is at rest angle
-            if (f.angle > FLIPPER_REST_ANGLE) {
-                f.rvel = -10;
-            }
-            else {
-                f.rvel = 0;
-                f.flipstate = 0;
-            }
-            break;
+	//idle; rotational velocity is 0 and the angle is the rest angle
+	case 0:
+	    f.rvel = 0;
+	    f.angle = FLIPPER_REST_ANGLE;
+	    break;
+	case 1:
+	    //going up; set rotational velocity to flipper speed until the flipper passes the max angle
+	    if (f.angle < 40) {
+		f.rvel = FLIPPER_SPEED;
+	    }
+	    else {
+		// if the flipper is passed the max angle, set flipstate to 'going down'
+		f.rvel = 0;
+		//f.flipstate = 2;
+	    }
+	    break;
+	case 2: 
+	    //going down; make rotational velocity negative until flipper is at rest angle
+	    if (f.angle > FLIPPER_REST_ANGLE) {
+		f.rvel = -10;
+	    }
+	    else {
+		f.rvel = 0;
+		f.flipstate = 0;
+	    }
+	    break;
     }
 }
 
@@ -553,36 +553,36 @@ void physics(void)
     //rectangle collisions
     bool collided = false;
     for (int i = 0; i < board.num_rectangles; i++) {
-        if (rectangleBallCollision(board.rectangles[i], ball1)) {
-            collided = true;
+	if (rectangleBallCollision(board.rectangles[i], ball1)) {
+	    collided = true;
 
-        }
+	}
     }
 
 
     //treasure chest collision
     if (rectangleBallCollision(chest.r, ball1)) {
-        
-        if (chest.active == 1) {
-            timeCopy(&chest.collision_time, &timeCurrent);
-            chest.active = 0;
-    
-        if(ballChestCollision(chest, ball1, alSource)) {
-                collided = true;
-            }
-        }
 
-        if (chest.active == 0 && timeDiff(&chest.collision_time, &timeCurrent) > 0.8) {
-            chest.active = 1;
-        }
+	if (chest.active == 1) {
+	    timeCopy(&chest.collision_time, &timeCurrent);
+	    chest.active = 0;
+
+	    if(ballChestCollision(chest, ball1, alSource)) {
+		collided = true;
+	    }
+	}
+
+	if (chest.active == 0 && timeDiff(&chest.collision_time, &timeCurrent) > 0.8) {
+	    chest.active = 1;
+	}
 
     }	
 
     //bumper collision
     for (int i = 0; i < board.num_bumpers; i++) {
-        if (bumperBallCollision(board.bumpers[i], ball1)) {
+	if (bumperBallCollision(board.bumpers[i], ball1)) {
 
-        }
+	}
     }
 
     //steering wheel collision
@@ -590,19 +590,19 @@ void physics(void)
     steeringWheelMovement(steeringWheel);
 
     if (collided) {
-        //apply roll
-        double momentum = ball1.vel[0] * 0.6;
-        Vec mv;
-        MakeVector(1, 0, 0, mv);
-        VecScale(mv, momentum, mv);
-        VecAdd(ball1.vel, mv, ball1.vel);
+	//apply roll
+	double momentum = ball1.vel[0] * 0.6;
+	Vec mv;
+	MakeVector(1, 0, 0, mv);
+	VecScale(mv, momentum, mv);
+	VecAdd(ball1.vel, mv, ball1.vel);
 
     }
 
     for (int i = 0; i < board.num_bumpers; i++) {
-        if (bumperBallCollision(board.bumpers[i], ball1)) {
-            play_sound(alSource);
-        }
+	if (bumperBallCollision(board.bumpers[i], ball1)) {
+	    play_sound(alSource);
+	}
     }
     KaBoom(canon, ball1, alSource);//when ball is on canon
 
@@ -610,16 +610,16 @@ void physics(void)
 
     //set ball inPlay flag if ball is left of launch chute
     if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
-        ball1.inPlay = 1;
+	ball1.inPlay = 1;
     }
 
     //Update position
     ball1.pos[0] += ball1.vel[0];
     ball1.pos[1] += ball1.vel[1];
     if (leftButtonDown) {
-        //make ball go toward mouse pointer position
-        ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
-        ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
+	//make ball go toward mouse pointer position
+	ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
+	ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
     }
 
     //Check for collision with window edges
@@ -629,91 +629,80 @@ void physics(void)
 
     //left window edge
     if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
-        ball1.pos[0] = ball1.radius;
-        ball1.vel[0] *= -0.2;
+	ball1.pos[0] = ball1.radius;
+	ball1.vel[0] *= -0.2;
     }
 
     //right window edge
     else if (ball1.pos[0] >= boardEdge && ball1.vel[0] > 0.0) {
-        ball1.pos[0] = boardEdge;
-        ball1.vel[0] *= - 0.2;
+	ball1.pos[0] = boardEdge;
+	ball1.vel[0] *= - 0.2;
     }
 
     //bottom window edge
     if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
-        ball1.pos[1] = ball1.radius;
-        ball1.vel[1] *= - 0.2;
+	ball1.pos[1] = ball1.radius;
+	ball1.vel[1] *= - 0.2;
     }
 
     //top window edge
     else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
-        ball1.pos[1] = yres - ball1.radius;
-        ball1.vel[1] *= -0.2;
+	ball1.pos[1] = yres - ball1.radius;
+	ball1.vel[1] *= -0.2;
     }
 }
 
-void TexturesInit(void)
+void initTextures(void)
 {
+    extern Ppmimage *pinballImage;
+    extern GLuint pinballTexture;
+    strcpy(buffer, "./images/pinball.ppm");
+    textureInit(buffer, pinballTexture, pinballImage);
 
-    //bumper texture init
+    extern Ppmimage *flippers;
+    extern GLuint flippersTexture;
+    strcpy(buffer, "./images/flippers.ppm");
+    textureInit(buffer, flippersTexture, flippers);
 
-    bumperUpImage = ppm6GetImage("./images/bumper_up.ppm");
-    bumperDownImage = ppm6GetImage("./images/bumper_down.ppm");
+    extern Ppmimage *flippers2;
+    extern GLuint flippersTexture2;
+    strcpy(buffer, "./images/flippers2.ppm");
+    textureInit(buffer, flippersTexture2, flippers2);
 
-    glGenTextures(1, &bumperUpTexture);
+    extern Ppmimage *OceanImage;
+    extern GLuint OceanTexture;
+    strcpy(buffer, "./images/Ocean.ppm");
+    textureInit(buffer, OceanTexture, OceanImage);
 
-    //Open chest image
-    int w = bumperUpImage->width;
-    int h = bumperUpImage->height;
+    extern Ppmimage *canonImage;
+    extern GLuint canonTexture;
+    strcpy(buffer , "./images/canon.ppm");
+    alphaTextureInit(buffer, canonTexture, canonImage);
 
-    //Open chest alpha
-    glBindTexture(GL_TEXTURE_2D, bumperUpTexture);
-    //
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    extern Ppmimage *openChestImage;
+    extern GLuint openChestTexture_alpha;
+    strcpy(buffer, "./images/open-chest2.ppm");
+    alphaTextureInit(buffer, openChestTexture_alpha, openChestImage);
 
-    //must build a new set of data...
-    unsigned char *alphaData = buildAlphaData(bumperUpImage);	
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
-    free(alphaData);
+    extern Ppmimage *closeChestImage;
+    extern GLuint closeChestTexture_alpha;
+    strcpy(buffer, "./images/close-chest2.ppm");
+    alphaTextureInit(buffer, closeChestTexture_alpha, closeChestImage);
 
-    //Close chest image
-    glGenTextures(1, &bumperDownTexture);
-    w = bumperDownImage->width;
-    h = bumperDownImage->height;
+    extern Ppmimage *bumperUpImage;
+    extern GLuint bumperUpTexture;
+    strcpy(buffer, "./images/bumper_up.ppm");
+    alphaTextureInit(buffer, bumperUpTexture, bumperUpImage);
 
-    //Close chest image alpha
-    glBindTexture(GL_TEXTURE_2D, bumperDownTexture);
-    //
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    extern Ppmimage *bumperDownImage;
+    extern GLuint bumperDownTexture;
+    strcpy(buffer, "./images/bumper_down.ppm");
+    alphaTextureInit(buffer, bumperDownTexture, bumperDownImage);
 
-    alphaData = buildAlphaData(bumperDownImage);	
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
-    free(alphaData);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    //steering wheel
-    steeringWheelImage = ppm6GetImage("./images/steering_wheel.ppm");
-    w = steeringWheelImage->width;
-    h = steeringWheelImage->height;
-    
-    glGenTextures(1, &steeringWheelTexture);
-    
-    glBindTexture(GL_TEXTURE_2D, steeringWheelTexture);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-
-    alphaData = buildAlphaData(steeringWheelImage);	
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
-    free(alphaData);
-
-
+    extern Ppmimage *steeringWheelImage;
+    extern GLuint steeringWheelTexture;
+    strcpy(buffer, "./images/steering_wheel.ppm");
+    alphaTextureInit(buffer, steeringWheelTexture, steeringWheelImage);
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -740,6 +729,69 @@ void drawSteeringWheel(SteeringWheel &wheel)
     glPopMatrix();
 }
 
+void OceanBackground()
+{
+    glColor3f(1.0, 1.0, 1.0);
+    glBindTexture(GL_TEXTURE_2D, OceanTexture);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(0, yres);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(xres, yres);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
+    glEnd();
+
+
+}
+//Display Image 
+void drawFlipper(Flipper &f)
+{
+    float length = f.inverted ? -FLIPPER_LENGTH : FLIPPER_LENGTH;
+    float angle = f.inverted ? -f.angle : f.angle;
+    glPushMatrix();
+    glColor3f(1, 1, 1);
+    glTranslated(f.pos[0], f.pos[1], f.pos[2]);
+    glRotatef(angle, 0, 0, 1);
+    //if (f.inverted) {
+    glBindTexture(GL_TEXTURE_2D, flippersTexture);
+    //} else {
+    //    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
+    //}
+    //Coord
+    glBegin(GL_QUADS);
+    glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
+    glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(length, 0); glTexCoord2f(0.0f, 1.0f); 
+    glVertex2f(0, 0); glTexCoord2f(1.0f, 1.0f); 
+    glEnd();
+    glPopMatrix();
+}
+//display pinball
+void drawBall()
+{
+    float angle, radian, x, y, tx, ty, xcos, ysin;
+
+    glBindTexture(GL_TEXTURE_2D, pinballTexture);
+    glBegin(GL_POLYGON);
+    //for (i=0; i<n; i++) {
+    //	glVertex2d(verts[i][0]*rad, verts[i][1]*rad);
+    //	}
+
+    for(angle = 0.0; angle < 360.0; angle+= 2.0)
+    {
+	radian = angle * (M_PI/100.0f);
+	xcos = (float)cos(radian);
+	ysin = (float)sin(radian);
+	x = xcos * ball1.radius;
+	y = ysin * ball1.radius;
+	tx = xcos * 0.5 + 0.5;
+	ty = ysin * 0.5 + 0.5;
+
+	glTexCoord2f(tx, ty);
+	glVertex2f(x, y);
+    }
+    glEnd();
+
+}
 void drawBumper(Bumper &b)
 {
     double angle, radian, x, y, tx, ty, xcos, ysin;
@@ -752,17 +804,17 @@ void drawBumper(Bumper &b)
     glBegin(GL_POLYGON);
 
     for(angle = 0.0; angle < 360.0; angle+= 2.0) {
-        radian = angle * (M_PI/100.0f);
+	radian = angle * (M_PI/100.0f);
 
-        xcos = (float)cos(radian);
-        ysin = (float)sin(radian);
-        x = xcos * radius;
-        y = ysin * radius;
-        tx = xcos * 0.5 + 0.5;
-        ty = ysin * 0.5 + 0.5;
+	xcos = (float)cos(radian);
+	ysin = (float)sin(radian);
+	x = xcos * radius;
+	y = ysin * radius;
+	tx = xcos * 0.5 + 0.5;
+	ty = ysin * 0.5 + 0.5;
 
-        glTexCoord2f(tx, ty);
-        glVertex2f(x, y);
+	glTexCoord2f(tx, ty);
+	glVertex2f(x, y);
     }
     glEnd();
     glPopMatrix();
@@ -789,15 +841,15 @@ void render(void)
     glVertex3f(curve.points[2][0], curve.points[2][1], 0);
     glEnd();
 
-/*
-    glColor3ub(150, 10, 10);
-    glPushMatrix();
-    glTranslated(r.pos[0], r.pos[1], r.pos[2]);
-    glRotatef(r.angle, 0, 0, 1);
-*/
+    /*
+       glColor3ub(150, 10, 10);
+       glPushMatrix();
+       glTranslated(r.pos[0], r.pos[1], r.pos[2]);
+       glRotatef(r.angle, 0, 0, 1);
+       */
     for (int i = 0; i < board.num_rectangles; i++)
     {
-        drawRectangle(board.rectangles[i]);
+	drawRectangle(board.rectangles[i]);
     }
 
 
@@ -805,10 +857,10 @@ void render(void)
 
     //Draw background image 
     /*glBegin(GL_QUADS);
-    glVertex2i(-r.width, -r.height);
-    glVertex2i(-r.width, r.height);
-    glVertex2i(r.width, r.height);
-    glVertex2i(r.width, - r.height);*/
+      glVertex2i(-r.width, -r.height);
+      glVertex2i(-r.width, r.height);
+      glVertex2i(r.width, r.height);
+      glVertex2i(r.width, - r.height);*/
     glEnd();
     glPopMatrix();
 
@@ -821,12 +873,12 @@ void render(void)
     //draw collision rectangles
     glColor3ub(255, 255, 255);
     for (int i = 0; i < board.num_rectangles; i++) {
-        drawRectangle(board.rectangles[i]);
+	drawRectangle(board.rectangles[i]);
     }
 
     //draw bumpers
     for (int i = 0; i < board.num_bumpers; i++) {
-        drawBumper(board.bumpers[i]);
+	drawBumper(board.bumpers[i]);
     }
 
 
@@ -835,7 +887,7 @@ void render(void)
     glPushMatrix();
     glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
     if (ball1.isVisible) {
-        drawBall();
+	drawBall();
     }
     glPopMatrix();
 
