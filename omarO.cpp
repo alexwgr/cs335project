@@ -40,32 +40,6 @@ void initCanon(Canon &c)
 				rec->angle = 0.0;
 
 }
-void CanonTextureInit()
-{    
-				extern Ppmimage *canonImage;
-				extern GLuint canonTexture;
-				canonImage = ppm6GetImage("./images/canon.ppm");
-
-
-				//canon image
-				glGenTextures(1, &canonTexture);
-				int w = canonImage->width;
-				int h = canonImage->height;
-
-				//canon alpha
-				glBindTexture(GL_TEXTURE_2D, canonTexture);
-				//
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-
-				//must build a new set of data...
-				unsigned char *alphaDataCanon = buildAlphaData(canonImage);	
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-												GL_RGBA, GL_UNSIGNED_BYTE, alphaDataCanon);
-				free(alphaDataCanon);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-}
 /****** SOUND *****/
 //function creates sound source and buffer
 int init_sound(ALuint &buffer, ALuint &source)
@@ -134,54 +108,6 @@ int clean_sound(ALuint &buffer, ALuint &source)
 				//Close device.
 				alcCloseDevice(Device);
 				return 0;
-}
-/****** TREASURE CHEST ******/
-
-//function layers texture of image
-void chestTextureInit()
-{
-				extern Ppmimage *openChestImage;
-				extern Ppmimage *closeChestImage;
-				extern GLuint openChestTexture_alpha;
-				extern GLuint closeChestTexture_alpha;
-				openChestImage = ppm6GetImage("./images/open-chest2.ppm");
-				closeChestImage = ppm6GetImage("./images/close-chest2.ppm");
-
-				glGenTextures(1, &openChestTexture_alpha);
-
-				//Open chest image
-				int w = openChestImage->width;
-				int h = openChestImage->height;
-
-				//Open chest alpha
-				glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
-				//
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-
-				//must build a new set of data...
-				unsigned char *alphaDataOpen = buildAlphaData(openChestImage);	
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-												GL_RGBA, GL_UNSIGNED_BYTE, alphaDataOpen);
-				free(alphaDataOpen);
-
-				//Close chest image
-				glGenTextures(1, &closeChestTexture_alpha);
-				w = closeChestImage->width;
-				h = closeChestImage->height;
-
-				//Close chest image alpha
-				glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
-				//
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-
-				unsigned char * alphaDataClosed = buildAlphaData(closeChestImage);	
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-												GL_RGBA, GL_UNSIGNED_BYTE, alphaDataClosed);
-				free(alphaDataClosed);
-
-				glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 //function initalizes treasure chest object data

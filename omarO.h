@@ -12,11 +12,9 @@
 #include "ppm.h"
 #include </usr/include/AL/alut.h>
 using namespace std;
-void chestTextureInit();
 void initChest(TreasureChest &);
 int ballChestCollision(TreasureChest &, Ball &, ALuint &);
 void initCanon(Canon & );
-void CanonTextureInit();
 void KaBoom(Canon &, Ball &, ALuint &);
 int init_sound(ALuint &, ALuint &);
 void play_sound(ALuint &);
