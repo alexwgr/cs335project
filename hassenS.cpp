@@ -1,8 +1,11 @@
-//Hassen Seid
-//Texture Maps
-//Tutorals
-//menus and Prompts
-//Score Keeping
+//Author: Hassen Seid
+//May 02,
+//Roles and Resp
+// - Texture Maps
+// - Tutorial 
+// - menus and Prompts
+// - Score Keeping
+
 #include "hassenS.h"
 #include "omarO.h"
 #include <X11/Xlib.h>
@@ -36,10 +39,9 @@ extern int yres;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
 
+//Transparent pictures
 void alphaTextureInit(char *fileTexture, GLuint &textureID, Ppmimage *fileT)
 {
-    //extern Ppmimage * something;
-    //extern GLuint something;
     fileT = ppm6GetImage(fileTexture);
 
     glGenTextures(1, &textureID);
@@ -58,10 +60,9 @@ void alphaTextureInit(char *fileTexture, GLuint &textureID, Ppmimage *fileT)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+//Texture picture
 void textureInit(char *fileTexture, GLuint &textureID, Ppmimage *fileT)
 {
-    //extern Ppmimage * something;
-    //extern GLuint something;
     fileT = ppm6GetImage(fileTexture);
 
     glGenTextures(1, &textureID);
@@ -77,17 +78,21 @@ void textureInit(char *fileTexture, GLuint &textureID, Ppmimage *fileT)
 	    GL_RGB, GL_UNSIGNED_BYTE, fileT->data);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+//Adding score
 void addScore(score *s, int add)
 {
     s->points = s->points + add;
 }
 
+//score counter
 void initScore(score *s)
 {
     s->points = 0;
     s->balls_left = 4;
 }
 
+//displaying score
 void drawScore()
 {
     Rect re;
