@@ -50,7 +50,7 @@ void addCurve(Curve &c, GameBoard &g)
             t * t * c.points[2][1];
 
         if (i > 0) {
-        //for each segment of the curve, draw a rectangle
+            //for each segment of the curve, draw a rectangle
             Rectangle *r = &(g.rectangles[g.num_rectangles]);
             MakeVector(x0, y0, 0, point1);
             MakeVector(x1, y1, 0, point2);
@@ -153,7 +153,6 @@ void initSteeringWheel(SteeringWheel &wheel)
 
 void steeringWheelMovement(SteeringWheel &wheel)
 {
-    //spin for 3 seconds
     wheel.angle += fmod(wheel.rvel, 360.0);
     if (wheel.rvel >= 0.0) {
         wheel.rvel -= 0.01 * wheel.rvel;
@@ -212,7 +211,7 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
         getRectangleCorners(r, corner[0], corner[1], corner[2], corner[3]);
 
-        //Figure out which edge
+        //Figure out which edge the ball collided with
         bool lDiagonal = isLeft(corner[0], corner[2], b.pos);
         bool rDiagonal = isLeft(corner[3], corner[1], b.pos);
 
@@ -247,21 +246,26 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
         }
 
         Vec dP;
-        double projectNorm = VecProject(between, rNorm); 
+        //project the ball's position onto the collided surface's normal
+        double projectNorm = VecProject(between, rNorm);
+        
+        //scale the rNorm to the distance the ball is inside the rect.
         VecScale(rNorm, 
             std::abs(b.radius - std::abs(projectNorm - r.height)), 
             dP);
 
+        //if the distance is small enough, shift the ball's posion
         if (VecMagnitude(dP) <= b.radius) {
             VecAdd(b.pos, dP, b.pos);
         }
 
         VecNormalize(b.vel, dV);
         VecScale(dV, -1, dV);
+        //get incoming velocity angle and get whether is positive
         double angBtn = VecAngleBtn(rNorm, dV);
-
         bool posAng = isLeft(zero, rNorm, dV);
 
+        //get the reflection vector by rotating it
         VecRotate(dV,(posAng ? 2 : -2) * angBtn, dV);
         VecScale(dV, 0.6 * currentSpeed, b.vel);
 
