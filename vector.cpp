@@ -29,7 +29,8 @@ double VecProject(Vec &vec1, Vec &vec2)
 
 double VecAngleBtn(Vec &vec1, Vec &vec2)
 {
-    return RadiansToDegrees(acos(VecDot(vec1, vec2) / (VecMagnitude(vec1) * VecMagnitude(vec2))));
+    return RadiansToDegrees(acos(VecDot(vec1, vec2) / 
+        (VecMagnitude(vec1) * VecMagnitude(vec2))));
 }
 
 void VecScale(Vec &vec, double scale, Vec &out)

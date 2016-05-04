@@ -122,11 +122,13 @@ unsigned char *buildAlphaData(Ppmimage *img)
         }
         return newdata;
 }
-double timeDiff(struct timespec *start, struct timespec *end) {
+double timeDiff(struct timespec *start, struct timespec *end) 
+{
     return (double)(end->tv_sec - start->tv_sec ) +
         (double)(end->tv_nsec - start->tv_nsec) * (1.0/1e9);
 }
 
-void timeCopy(struct timespec *dest, struct timespec *source) {
+void timeCopy(struct timespec *dest, struct timespec *source) 
+{
     std::memcpy(dest, source, sizeof(struct timespec));
 }

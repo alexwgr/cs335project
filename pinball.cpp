@@ -157,12 +157,7 @@ GLuint steeringWheelTexture;
 //variables below are for AL sound
 ALuint alBuffer;
 ALuint alSource;
-/* functions for openAL:
-   clean_sound(alBuffer, alSource);//cleans/deletes sound//use at end of program
-//play_sound(alSource)//plays sound, use whenever playing sound
-//init_sounds(alBuffer, alSource)// initialize
- */
-//-----------------------------------------------------------------------------
+
 //Setup timers
 const double physicsRate = 1.0 / 60.0;
 const double oobillion = 1.0 / 1e9;
@@ -170,8 +165,6 @@ struct timespec timeStart, timeCurrent;
 struct timespec timePause;
 double physicsCountdown=0.0;
 double timeSpan=0.0;
-//-----------------------------------------------------------------------------
-
 
 int main(void)
 {
@@ -434,9 +427,6 @@ void checkKeys(XEvent *e)
 {
     int key = XLookupKeysym(&e->xkey, 0);
 
-    //XEvent nev;
-    //XPeekEvent(dpy, &nev);
-    //Was there input from the keyboard?
     if (e->type == KeyPress) {
         switch(key) {
             case XK_Left:
@@ -479,7 +469,7 @@ void checkKeys(XEvent *e)
         char keys[32];
         XQueryKeymap(dpy, keys);
 
-        if(!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
+        if (!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
         {
             // Stuff to do on KeyRelease
             switch (key) {
@@ -493,9 +483,6 @@ void checkKeys(XEvent *e)
                     break;
             }
         }
-        //if (nev.type != KeyPress || nev.xkey.time != e->xkey.time ||
-        //    nev.xkey.keycode != e->xkey.keycode) {
-        //}
     }
 }
 
@@ -515,18 +502,21 @@ void flipperMovement(Flipper &f)
             f.angle = FLIPPER_REST_ANGLE;
             break;
         case 1:
-            //going up; set rotational velocity to flipper speed until the flipper passes the max angle
+            //going up; set rotational velocity to 
+            //flipper speed until the flipper passes the max angle
             if (f.angle < 40) {
                 f.rvel = FLIPPER_SPEED;
             }
             else {
-                // if the flipper is passed the max angle, set flipstate to 'going down'
+                // if the flipper is passed the max angle, set flipstate to 
+                //'going down'
                 f.rvel = 0;
                 //f.flipstate = 2;
             }
             break;
         case 2: 
-            //going down; make rotational velocity negative until flipper is at rest angle
+            //going down; make rotational velocity negative 
+            //until flipper is at rest angle
             if (f.angle > FLIPPER_REST_ANGLE) {
                 f.rvel = -10;
             }
@@ -540,7 +530,6 @@ void flipperMovement(Flipper &f)
 
 void physics(void)
 {
-
     //gravity
     ball1.vel[1] += -0.2;
 
@@ -551,7 +540,6 @@ void physics(void)
     flipperMovement(flipper2);
     flipperBallCollision(flipper2, ball1);
 
-
     //rectangle collisions
     bool collided = false;
     for (int i = 0; i < board.num_rectangles; i++) {
@@ -561,7 +549,6 @@ void physics(void)
         }
     }
 
-
     //treasure chest collision
     if (rectangleBallCollision(chest.r, ball1)) {
 
@@ -569,12 +556,13 @@ void physics(void)
             timeCopy(&chest.collision_time, &timeCurrent);
             chest.active = 0;
 
-            if(ballChestCollision(chest, ball1, alSource)) {
+            if (ballChestCollision(chest, ball1, alSource)) {
                 collided = true;
             }
         }
 
-        if (chest.active == 0 && timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
+        if (chest.active == 0 && 
+            timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
             chest.active = 1;
         }
 
@@ -626,8 +614,11 @@ void physics(void)
 
     //Check for collision with window edges
 
-    //right board edge shifts left if the ball is in play and has left the chute
-    double boardEdge = ball1.inPlay ? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) : xres - ball1.radius;
+    //right board edge shifts left if the ball is in play 
+    //and has left the chute
+    double boardEdge = ball1.inPlay 
+        ? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) 
+        : xres - ball1.radius;
 
     //left window edge
     if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
@@ -721,10 +712,14 @@ void drawSteeringWheel(SteeringWheel &wheel)
     glColor4ub(255,255,255,255);
 
     glBegin(GL_QUADS);
-    glVertex2d(-wheel.outer_radius, -wheel.outer_radius); glTexCoord2f(0.0f, 1.0f);
-    glVertex2d(-wheel.outer_radius,  wheel.outer_radius); glTexCoord2f(0.0f, 0.0f); 
-    glVertex2d( wheel.outer_radius,  wheel.outer_radius); glTexCoord2f(1.0f, 0.0f); 
-    glVertex2d( wheel.outer_radius, -wheel.outer_radius); glTexCoord2f(1.0f, 1.0f); 
+    glVertex2d(-wheel.outer_radius, -wheel.outer_radius); 
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex2d(-wheel.outer_radius,  wheel.outer_radius); 
+    glTexCoord2f(0.0f, 0.0f); 
+    glVertex2d( wheel.outer_radius,  wheel.outer_radius); 
+    glTexCoord2f(1.0f, 0.0f); 
+    glVertex2d( wheel.outer_radius, -wheel.outer_radius); 
+    glTexCoord2f(1.0f, 1.0f); 
     glEnd();
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -741,8 +736,6 @@ void OceanBackground()
     glTexCoord2f(1.0f, 0.0f); glVertex2i(xres, yres);
     glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
     glEnd();
-
-
 }
 //Display Image 
 void drawFlipper(Flipper &f)
@@ -753,12 +746,7 @@ void drawFlipper(Flipper &f)
     glColor3f(1, 1, 1);
     glTranslated(f.pos[0], f.pos[1], f.pos[2]);
     glRotatef(angle, 0, 0, 1);
-    //if (f.inverted) {
     glBindTexture(GL_TEXTURE_2D, flippersTexture);
-    //} else {
-    //    	glBindTexture(GL_TEXTURE_2D, flippersTexture2);
-    //}
-    //Coord
     glBegin(GL_QUADS);
     glVertex2f(0, -FLIPPER_HEIGHT); glTexCoord2f(1.0f, 0.0f); 
     glVertex2f(length, -FLIPPER_HEIGHT); glTexCoord2f(0.0f, 0.0f);
@@ -774,9 +762,6 @@ void drawBall()
 
     glBindTexture(GL_TEXTURE_2D, pinballTexture);
     glBegin(GL_POLYGON);
-    //for (i=0; i<n; i++) {
-    //	glVertex2d(verts[i][0]*rad, verts[i][1]*rad);
-    //	}
 
     for(angle = 0.0; angle < 360.0; angle+= 2.0)
     {
@@ -802,7 +787,9 @@ void drawBumper(Bumper &b)
     glPushMatrix();
     glColor3f(1.0f, 1.0f, 1.0f);
     glTranslated(b.c.pos[0], b.c.pos[1], b.c.pos[2]);
-    glBindTexture(GL_TEXTURE_2D, b.state == 0 ? bumperUpTexture : bumperDownTexture);
+    glBindTexture(GL_TEXTURE_2D, b.state == 0 
+        ? bumperUpTexture 
+        : bumperDownTexture);
     glBegin(GL_POLYGON);
 
     for(angle = 0.0; angle < 360.0; angle+= 2.0) {
@@ -834,7 +821,6 @@ void drawCanon(Canon &c)
     glAlphaFunc(GL_GREATER, 0.0f);
     glColor4ub(255,255,255,255);
 
-
     glBegin(GL_QUADS);
     glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
     glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
@@ -856,8 +842,7 @@ void drawChest(TreasureChest &c)
     glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
     glRotatef(c.r.angle, 0, 0, 1);
 
-
-    if(c.state == 1) {
+    if (c.state == 1) {
         glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
     }
     else if(c.state == 0) {
@@ -880,8 +865,6 @@ void drawChest(TreasureChest &c)
 }
 void render(void)
 {
-
-
     //	Rect re;
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -898,26 +881,11 @@ void render(void)
     glVertex3f(curve.points[2][0], curve.points[2][1], 0);
     glEnd();
 
-    /*
-       glColor3ub(150, 10, 10);
-       glPushMatrix();
-       glTranslated(r.pos[0], r.pos[1], r.pos[2]);
-       glRotatef(r.angle, 0, 0, 1);
-     */
     for (int i = 0; i < board.num_rectangles; i++)
     {
         drawRectangle(board.rectangles[i]);
     }
-
-
-
-
-    //Draw background image 
-    /*glBegin(GL_QUADS);
-      glVertex2i(-r.width, -r.height);
-      glVertex2i(-r.width, r.height);
-      glVertex2i(r.width, r.height);
-      glVertex2i(r.width, - r.height);*/
+    
     glEnd();
     glPopMatrix();
 
@@ -938,7 +906,6 @@ void render(void)
         drawBumper(board.bumpers[i]);
     }
 
-
     //draw balls
     glColor3f(1,1,1);
     glPushMatrix();
@@ -950,25 +917,7 @@ void render(void)
 
     drawFlipper(flipper);
     drawFlipper(flipper2);
-
-    //glPopMatrix();
-
-
-
-    //
-    //	re.bot = yres - 20;
-    //	re.left = 10;
-    //	re.center = 0;
-    //	ggprint8b(&re, 16, 0x0000000, "cs335 - Collision Demo");
-    //	ggprint8b(&re, 16, 0x0000000, "Arrows/mouse to move");
-    //	ggprint8b(&re, 16, 0x0000000, "S - Slow down movement");
-    //
-    //Hassen Seid
-    //score counter
-
-    //	ggprint8b(&re, 16, 0x00ff0000, "Score: ", Scorekeeper.points); 
-    //	ggprint8b(&re, 16, 0x00ff0000, "Ball: ", Scorekeeper.balls_left); 
-    //
+    
     drawScore();
 }
 

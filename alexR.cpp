@@ -12,7 +12,6 @@
  * Special effects 
  */
 
-
 #include "vector.h"
 #include "gameObjects.h"
 #include "alexR.h"
@@ -23,7 +22,6 @@
 
 #define MAX_VELOCITY 30.0
 #define MAX_BUMPERS 20
-
 
 extern double xres, yres;
 extern struct timespec timeCurrent;
@@ -40,7 +38,6 @@ void addCurve(Curve &c, GameBoard &g)
     Vec point1, point2, btn, horz, zero;
     MakeVector(1, 0, 0, horz);
     MakeVector(0, 0, 0, zero);
-    
     
     for (int i = 0; i <= c.npoints; i++) {
 
@@ -66,8 +63,10 @@ void addCurve(Curve &c, GameBoard &g)
             r->collide[2] = false;
             r->collide[3] = false;
 
-            //rotate the rectangle based on the angle its horizontal edge and the x-axis
-            r->angle = (isLeft(zero, horz, btn) ? -1 : 1) * VecAngleBtn(horz, btn);
+            //rotate the rectangle based on the angle its 
+            //horizontal edge and the x-axis
+            r->angle = (isLeft(zero, horz, btn) ? -1 : 1) * 
+                VecAngleBtn(horz, btn);
             r->width = VecMagnitude(btn) / 2.0;
             r->width += r->width * .05;
             r->height = c.width;
@@ -100,7 +99,6 @@ void getRectangleCorners(Rectangle &r,
     MakeVector(0,1,0,vert);
     MakeVector(1,0,0, horz);
 
-
     //unit vectors rotated
     VecRotate(vert, r.angle, vert);
     VecRotate(horz, r.angle, horz);
@@ -117,14 +115,11 @@ void getRectangleCorners(Rectangle &r,
     VecAdd(horz, neg_vert, corner3);
     VecAdd(neg_horz, neg_vert, corner4);
 
-
     //shift by rectangle position
     VecAdd(corner1, r.pos, corner1);
     VecAdd(corner2, r.pos, corner2);
     VecAdd(corner3, r.pos, corner3);
     VecAdd(corner4, r.pos, corner4);
-
-
 }
 
 /* Handles the physics for a circle collding with a bumper */
@@ -145,9 +140,7 @@ int bumperBallCollision(Bumper &b, Ball &ba)
         b.state = 0;
         return 0;
     }
-    
 }
-
 
 //---------steering wheel functions---------------//
 void initSteeringWheel(SteeringWheel &wheel)
@@ -172,7 +165,6 @@ void steeringWheelMovement(SteeringWheel &wheel)
 
 int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
 {
-
     Vec between;
     VecBtn(wheel.pos, ball.pos, between);
     
@@ -203,13 +195,9 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
     MakeVector(0, -1, 0, gravity);
 
-
     //rotated
     VecRotate(vert, angle, vert);
     VecRotate(horz, angle, horz);
-
-
-
 
     Vec between, dV, rNorm;
     VecBtn(r.pos, b.pos, between);
@@ -219,10 +207,10 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
     //check collision
     if (projectX > -(r.width + b.radius) && projectX < r.width + b.radius
-            && projectY > -(b.radius + r.height) && projectY < b.radius + r.height) {
+            && projectY > -(b.radius + r.height) 
+            && projectY < b.radius + r.height) {
 
         getRectangleCorners(r, corner[0], corner[1], corner[2], corner[3]);
-
 
         //Figure out which edge
         bool lDiagonal = isLeft(corner[0], corner[2], b.pos);
@@ -258,18 +246,12 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
         }
 
-
-        //if (VecProject(b.vel, rNorm) < 0 && currentSpeed < 0.1)
-        //{
-        //VecScale(rNorm, std::abs(currentSpeed) * projectY * 0.5, b.vel);
-        //}
-
-        //else
-        //{
-
         Vec dP;
         double projectNorm = VecProject(between, rNorm); 
-        VecScale(rNorm, std::abs(b.radius - std::abs(projectNorm - r.height)), dP);
+        VecScale(rNorm, 
+            std::abs(b.radius - std::abs(projectNorm - r.height)), 
+            dP);
+
         if (VecMagnitude(dP) <= b.radius) {
             VecAdd(b.pos, dP, b.pos);
         }
@@ -296,8 +278,7 @@ void flipperBallCollision(Flipper &f, Ball &b)
 	Vec vert, horz;
 	MakeVector(0, 1, 0, vert);
 	MakeVector(1, 0, 0, horz);
-	if (f.inverted)
-	{
+	if (f.inverted) {
 		VecScale(horz, -1, horz);
 	}
 
@@ -314,12 +295,10 @@ void flipperBallCollision(Flipper &f, Ball &b)
 	if (projectX > 0 && projectX < f.width + b.radius
 			&& projectY > -(b.radius + f.height) && projectY < b.radius) {
 
-
 		//adjust position
 		Vec dP;
 		VecScale(vert, b.radius - projectY, dP);
 		VecAdd(b.pos, dP,b.pos);
-
 
 		Vec dV;
 		double speed;
@@ -327,7 +306,8 @@ void flipperBallCollision(Flipper &f, Ball &b)
 		//speed is based on the incoming velocity
 		//the horizontal distance from the pivot point of the flipper (torque)
 		//and the speed at which the flipper is rotating 
-		speed = 0.5 * VecMagnitude(b.vel) + pow((projectX / f.width) + 0.5, 4) * (f.rvel / 10);
+		speed = 0.5 * VecMagnitude(b.vel) + 
+            pow((projectX / f.width) + 0.5, 4) * (f.rvel / 10);
 		VecScale(vert, speed, dV);
 		VecAdd(b.vel, dV, b.vel);
 
@@ -335,24 +315,16 @@ void flipperBallCollision(Flipper &f, Ball &b)
 		VecRotate(dV, VecAngleBtn(between, vert), dV); 
 
 		//add horizontal velocity if at the tip of flipper
-		if (projectX / f.width > 0.20)
-		{
+		if (projectX / f.width > 0.20) {
 			VecScale(horz, speed * 0.2 * projectX / f.width, dV);
 			VecAdd(b.vel, dV, b.vel);
 		}
-
-
 	}
-
-
 }
-
-
 
 /* Scales down the ball's velocity if it is greater than maximum */
 void applyMaximumVelocity(Ball &b)
 {
-
     if (VecMagnitude(b.vel) > MAX_VELOCITY) {
         VecNormalize(b.vel, b.vel);
         VecScale(b.vel, MAX_VELOCITY, b.vel);
