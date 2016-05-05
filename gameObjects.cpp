@@ -47,6 +47,7 @@ void drawRectangle(Rectangle &r)
 {
 
     glPushMatrix();
+    glColor3f(1.0f, 1.0f, 1.0f);
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
     glRotatef(r.angle, 0, 0, 1);
     glBegin(GL_QUADS);

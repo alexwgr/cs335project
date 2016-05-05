@@ -594,7 +594,6 @@ void physics(void)
         }
     }
 
-
     //steering wheel collision
     steeringWheelBallCollision(steeringWheel, ball1);
     steeringWheelMovement(steeringWheel);
