@@ -653,6 +653,7 @@ void physics(void)
     }
 
     //bottom window edge
+    //Hassen 
     if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
         ball1.pos[1] = ball1.radius;
         ball1.vel[1] *= - 0.2;
