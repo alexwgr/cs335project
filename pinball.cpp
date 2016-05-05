@@ -24,16 +24,11 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
-//#include <unistd.h>
 #include <time.h>
 #include <math.h>
 #include <X11/Xlib.h>
-//#include <X11/Xutil.h>
 #include <X11/keysym.h>
-//#include <GL/gl.h>
 #include <GL/glx.h>
-//#include <GL/glu.h>
-//#include "log.h"
 
 
 
@@ -75,6 +70,7 @@ void initOpengl(void);
 void initBalls(void);
 void initFlipper(Flipper &, float, float, bool);
 void initTextures(void);
+void initDeflectors(GameBoard &board);
 void cleanupXWindows(void);
 void checkResize(XEvent *e);
 void checkMouse(XEvent *e);
@@ -86,6 +82,7 @@ void drawCanon(Canon &);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
+void drawDeflector(Deflector &);
 void OceanBackground();
 void drawFlipper(Flipper &f);
 void drawBall();
@@ -109,8 +106,7 @@ Curve curve, curve2;
 //gameObjects
 Ball ball1;
 Ball ball2;
-Flipper flipper;
-Flipper flipper2;
+Flipper flipper, flipper2;
 Rectangle r;
 SteeringWheel steeringWheel;
 TreasureChest chest;
@@ -189,11 +185,11 @@ int main(void)
 
     initGameBoard(board);
     initBumpers(board);
+    initDeflectors(board);
     initBalls();
     initChest(chest);//initialize chest properties
     initCanon(canon);
     initSteeringWheel(steeringWheel);
-
 
     init_sound(alBuffer, alSource);
 
@@ -362,6 +358,23 @@ void initBalls(void)
     //ball1.vel[1] = 0.0;
     ball1.mass = 1.0;
 
+}
+
+void initDeflectors(GameBoard &board)
+{
+    Deflector *deflector = &board.deflectors[0];
+    MakeVector(140, 200, 0, deflector->r.pos);
+    deflector->r.angle = -70.0;
+    deflector->r.width = 40;
+    deflector->r.height = 5;
+
+    deflector++;
+    MakeVector(340, 200, 0, deflector->r.pos);
+    deflector->r.angle = 70.0;
+    deflector->r.width = 40;
+    deflector->r.height = 5;
+
+    board.num_deflectors = 2;
 }
 
 void initFlipper(Flipper &f, float xpos, float ypos, bool inverted=false)
@@ -575,6 +588,13 @@ void physics(void)
         }
     }
 
+    //deflector collisions
+    for (int i = 0; i < board.num_rectangles; i++) {
+        if (deflectorBallCollision(board.deflectors[i], ball1)) {
+        }
+    }
+
+
     //steering wheel collision
     steeringWheelBallCollision(steeringWheel, ball1);
     steeringWheelMovement(steeringWheel);
@@ -725,6 +745,12 @@ void drawSteeringWheel(SteeringWheel &wheel)
     glBindTexture(GL_TEXTURE_2D, 0);
     glPopMatrix();
 }
+
+void drawDeflector(Deflector &d)
+{
+    drawRectangle(d.r);
+}
+
 
 void OceanBackground()
 {
@@ -881,10 +907,8 @@ void render(void)
     glVertex3f(curve.points[2][0], curve.points[2][1], 0);
     glEnd();
 
-    for (int i = 0; i < board.num_rectangles; i++)
-    {
-        drawRectangle(board.rectangles[i]);
-    }
+
+    
     
     glEnd();
     glPopMatrix();
@@ -901,10 +925,16 @@ void render(void)
         drawRectangle(board.rectangles[i]);
     }
 
+    //draw deflectors
+    for (int i = 0; i < board.num_deflectors; i++) { 
+        drawDeflector(board.deflectors[i]);
+    }
+    
     //draw bumpers
     for (int i = 0; i < board.num_bumpers; i++) {
         drawBumper(board.bumpers[i]);
     }
+
 
     //draw balls
     glColor3f(1,1,1);

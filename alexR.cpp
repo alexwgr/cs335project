@@ -176,6 +176,36 @@ int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
     return 0;
 }
 
+void rectangleSurfaceNormals(Rectangle &r, Vec &vert, Vec &horz)
+{
+    MakeVector(0, 1, 0, vert);
+    MakeVector(1, 0, 0, horz);
+    //rotated
+    VecRotate(vert, r.angle, vert);
+    VecRotate(horz, r.angle, horz);
+}
+
+//collisionw with the deflectors...a simplified version of rectangle ball collision
+int deflectorBallCollision(Deflector &d, Ball &b)
+{
+    //unit axis vectors
+    Vec vert, horz, between;
+    rectangleSurfaceNormals(d.r, vert, horz);
+    VecBtn(d.r.pos, b.pos, between);
+    double projectX = VecProject(between, horz);
+    double projectY = VecProject(between, vert);
+
+    //check collision
+    if (projectX > -(d.r.width + b.radius) && projectX < d.r.width + b.radius
+            && projectY > -(b.radius + d.r.height) 
+            && projectY < b.radius + d.r.height) {
+        //move ball in direction of surface normal
+        VecScale(vert, 15.0, vert);
+        VecAdd(vert, b.vel, b.vel);
+        return 1;
+    }
+    return 0;
+}
 
 
 /* Handles the physics for a circle colliding with a rectangle */
