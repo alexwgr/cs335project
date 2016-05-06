@@ -90,6 +90,8 @@ void drawBall();
 void physics(void);
 void flipperMovement(Flipper &e);
 
+bool hide = false;
+
 int done=0;
 int xres=780, yres=480;
 int leftButtonDown=0;
@@ -471,6 +473,9 @@ void checkKeys(XEvent *e)
                 flipper2.flipstate = 1;
                 play_sound(alSource);
                 break;
+	    case XK_h:
+		hide = true;
+		break;
             case XK_Escape:
                 done=1;
                 break;
@@ -947,8 +952,9 @@ void render(void)
 
     drawFlipper(flipper);
     drawFlipper(flipper2);
-    
+   if(hide) { 
     drawScore();
+   } 
 }
 
 
