@@ -487,6 +487,8 @@ void checkKeys(XEvent *e)
                 flipper2.flipstate = 1;
                 play_sound(alSource);
                 break;
+		case XK_b:
+			boom = true;
 	    case XK_h:
 		hide = true;
 		break;
