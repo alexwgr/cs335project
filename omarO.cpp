@@ -17,8 +17,24 @@
 #include <GL/glx.h>
 #include </usr/include/AL/alut.h>
 #include "hassenS.h"
+extern "C" {
+	#include "fonts.h"
+}
 using namespace std;
 extern score Scorekeeper;
+//initSmoke sets properties for smoke sprites
+//all sprites at same position to loop through each frame
+
+void initSmoke(Smoke &s)
+{
+				Rectangle *smoke_sprite = &s.r;
+				smoke_sprite->pos[0] = 455.0;
+				smoke_sprite->pos[1] = 150.0;
+				smoke_sprite->width = 40.0;
+				smoke_sprite->height = 40.0;
+				smoke_sprite->angle = 0.0;
+	
+}
 //play sound when Cannon launches ball
 void KaBoom(Canon &c, Ball &b, ALuint &source)
 {
