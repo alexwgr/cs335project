@@ -17,6 +17,7 @@ struct score {
 
 };
 
+void risingScore(score *);
 //Transparent Pic
 void alphaTextureInit(char *, GLuint &, Ppmimage *);
 //Tex pic

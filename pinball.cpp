@@ -24,16 +24,11 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
-//#include <unistd.h>
 #include <time.h>
 #include <math.h>
 #include <X11/Xlib.h>
-//#include <X11/Xutil.h>
 #include <X11/keysym.h>
-//#include <GL/gl.h>
 #include <GL/glx.h>
-//#include <GL/glu.h>
-//#include "log.h"
 
 
 
@@ -76,6 +71,7 @@ void initOpengl(void);
 void initBalls(void);
 void initFlipper(Flipper &, float, float, bool);
 void initTextures(void);
+void initDeflectors(GameBoard &board);
 void cleanupXWindows(void);
 void checkResize(XEvent *e);
 void checkMouse(XEvent *e);
@@ -88,12 +84,15 @@ void drawSmoke(Smoke &);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
+void drawDeflector(Deflector &);
 void OceanBackground();
 void drawFlipper(Flipper &f);
 void drawBall();
 
 void physics(void);
 void flipperMovement(Flipper &e);
+
+bool hide = false;
 
 int done=0;
 int xres=780, yres=480;
@@ -112,8 +111,7 @@ Curve curve, curve2;
 //gameObjects
 Ball ball1;
 Ball ball2;
-Flipper flipper;
-Flipper flipper2;
+Flipper flipper, flipper2;
 Rectangle r;
 SteeringWheel steeringWheel;
 TreasureChest chest;
@@ -200,6 +198,7 @@ int main(void)
 				initOpengl();
 
 				initGameBoard(board);
+    initDeflectors(board);
 				initBumpers(board);
 				initBalls();
 				initChest(chest);//initialize chest properties
@@ -377,6 +376,23 @@ void initBalls(void)
 
 }
 
+void initDeflectors(GameBoard &board)
+{
+    Deflector *deflector = &board.deflectors[0];
+    MakeVector(140, 200, 0, deflector->r.pos);
+    deflector->r.angle = -70.0;
+    deflector->r.width = 40;
+    deflector->r.height = 5;
+
+    deflector++;
+    MakeVector(340, 200, 0, deflector->r.pos);
+    deflector->r.angle = 70.0;
+    deflector->r.width = 40;
+    deflector->r.height = 5;
+
+    board.num_deflectors = 2;
+}
+
 void initFlipper(Flipper &f, float xpos, float ypos, bool inverted=false)
 {
 				f.pos[0] = xpos;
@@ -438,67 +454,68 @@ void checkMouse(XEvent *e)
 
 void checkKeys(XEvent *e)
 {
-				int key = XLookupKeysym(&e->xkey, 0);
+    int key = XLookupKeysym(&e->xkey, 0);
 
-				if (e->type == KeyPress) {
-								switch(key) {
-												case XK_Left:
-																ball1.vel[0] -= 1.0;
-																break;
-												case XK_Right:
-																ball1.vel[0] += 1.0;
-																break;
-												case XK_Up:
-																ball1.vel[1] = 20.0;
-																break;
-												case XK_Down:
-																ball1.vel[1] -= 1.0;
-																break;
-												case XK_b:
-																boom = true;
-												case XK_s:
-																//press s to slow the balls
-																ball1.vel[0] *= 0.5;
-																ball1.vel[1] *= 0.5;
-																ball2.vel[0] *= 0.5;
-																ball2.vel[1] *= 0.5;
-																break;
-												case XK_f:
-																//press s to slow the balls
-																flipper.flipstate = 1;
-																play_sound(alSource);
-																break;
-												case XK_k:
-																//flipper 2
-																flipper2.flipstate = 1;
-																play_sound(alSource);
-																break;
-												case XK_Escape:
-																done=1;
-																break;
-								}
+    if (e->type == KeyPress) {
+        switch(key) {
+            case XK_Left:
+                ball1.vel[0] -= 1.0;
+                break;
+            case XK_Right:
+                ball1.vel[0] += 1.0;
+                break;
+            case XK_Up:
+                ball1.vel[1] = 20.0;
+                break;
+            case XK_Down:
+                ball1.vel[1] -= 1.0;
+                break;
+            case XK_s:
+                //press s to slow the balls
+                ball1.vel[0] *= 0.5;
+                ball1.vel[1] *= 0.5;
+                ball2.vel[0] *= 0.5;
+                ball2.vel[1] *= 0.5;
+                break;
+            case XK_f:
+                //press s to slow the balls
+                flipper.flipstate = 1;
+                play_sound(alSource);
+                break;
+            case XK_k:
+                //flipper 2
+                flipper2.flipstate = 1;
+                play_sound(alSource);
+                break;
+	    case XK_h:
+		hide = true;
+		break;
+            case XK_Escape:
+                done=1;
+                break;
+        }
 
-				}
-				else if (e->type == KeyRelease)
-				{
-								char keys[32];
-								XQueryKeymap(dpy, keys);
+    }
+    else if (e->type == KeyRelease)
+    {
+        char keys[32];
+        XQueryKeymap(dpy, keys);
 
-								if (!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
-								{
-												// Stuff to do on KeyRelease
-												switch (key) {
-																case XK_f:
-																				//press s to slow the balls
-																				flipper.flipstate = 2;
-																				break;
-																case XK_k:
-																				//flipper 2
-																				flipper2.flipstate = 2;
-																				break;
-												}
-								}
-				}
+        if (!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
+        {
+            // Stuff to do on KeyRelease
+            switch (key) {
+                case XK_f:
+                    //press s to slow the balls
+                    flipper.flipstate = 2;
+                    break;
+                case XK_k:
+                    //flipper 2
+                    flipper2.flipstate = 2;
+                    break;
+            }
+        }
+    }
 }
 
 
@@ -545,119 +562,126 @@ void flipperMovement(Flipper &f)
 
 void physics(void)
 {
-				//gravity
-				ball1.vel[1] += -0.2;
+    //gravity
+    ball1.vel[1] += -0.2;
 
-				//flipper physics
-				flipperMovement(flipper);
-				flipperBallCollision(flipper, ball1);
-				//flipper2 physics
-				flipperMovement(flipper2);
-				flipperBallCollision(flipper2, ball1);
+    //flipper physics
+    flipperMovement(flipper);
+    flipperBallCollision(flipper, ball1);
+    //flipper2 physics
+    flipperMovement(flipper2);
+    flipperBallCollision(flipper2, ball1);
 
-				//rectangle collisions
-				bool collided = false;
-				for (int i = 0; i < board.num_rectangles; i++) {
-								if (rectangleBallCollision(board.rectangles[i], ball1)) {
-												collided = true;
+    //rectangle collisions
+    bool collided = false;
+    for (int i = 0; i < board.num_rectangles; i++) {
+        if (rectangleBallCollision(board.rectangles[i], ball1)) {
+            collided = true;
 
-								}
-				}
+        }
+    }
 
-				//treasure chest collision
-				if (rectangleBallCollision(chest.r, ball1)) {
+    //treasure chest collision
+    if (rectangleBallCollision(chest.r, ball1)) {
 
-								if (chest.active == 1) {
-												timeCopy(&chest.collision_time, &timeCurrent);
-												chest.active = 0;
+        if (chest.active == 1) {
+            timeCopy(&chest.collision_time, &timeCurrent);
+            chest.active = 0;
 
-												if (ballChestCollision(chest, ball1, alSource)) {
-																collided = true;
-												}
-								}
+            if (ballChestCollision(chest, ball1, alSource)) {
+                collided = true;
+            }
+        }
 
-								if (chest.active == 0 && 
-																timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
-												chest.active = 1;
-								}
+        if (chest.active == 0 && 
+            timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
+            chest.active = 1;
+        }
 
-				}	
+    }	
 
-				//bumper collision
-				for (int i = 0; i < board.num_bumpers; i++) {
-								if (bumperBallCollision(board.bumpers[i], ball1)) {
+    //bumper collision
+    for (int i = 0; i < board.num_bumpers; i++) {
+        if (bumperBallCollision(board.bumpers[i], ball1)) {
 
-								}
-				}
+        }
+    }
 
-				//steering wheel collision
-				steeringWheelBallCollision(steeringWheel, ball1);
-				steeringWheelMovement(steeringWheel);
+    //deflector collisions
+    for (int i = 0; i < board.num_rectangles; i++) {
+        if (deflectorBallCollision(board.deflectors[i], ball1)) {
+        }
+    }
 
-				if (collided) {
-								//apply roll
-								double momentum = ball1.vel[0] * 0.6;
-								Vec mv;
-								MakeVector(1, 0, 0, mv);
-								VecScale(mv, momentum, mv);
-								VecAdd(ball1.vel, mv, ball1.vel);
+    //steering wheel collision
+    steeringWheelBallCollision(steeringWheel, ball1);
+    steeringWheelMovement(steeringWheel);
 
-				}
+    if (collided) {
+        //apply roll
+        double momentum = ball1.vel[0] * 0.6;
+        Vec mv;
+        MakeVector(1, 0, 0, mv);
+        VecScale(mv, momentum, mv);
+        VecAdd(ball1.vel, mv, ball1.vel);
 
-				for (int i = 0; i < board.num_bumpers; i++) {
-								if (bumperBallCollision(board.bumpers[i], ball1)) {
-												play_sound(alSource);
-								}
-				}
-				KaBoom(canon, ball1, alSource);//when ball is on canon
+    }
 
-				applyMaximumVelocity(ball1);
+    for (int i = 0; i < board.num_bumpers; i++) {
+        if (bumperBallCollision(board.bumpers[i], ball1)) {
+            play_sound(alSource);
+        }
+    }
+    KaBoom(canon, ball1, alSource);//when ball is on canon
 
-				//set ball inPlay flag if ball is left of launch chute
-				if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
-								ball1.inPlay = 1;
-				}
+    applyMaximumVelocity(ball1);
 
-				//Update position
-				ball1.pos[0] += ball1.vel[0];
-				ball1.pos[1] += ball1.vel[1];
-				if (leftButtonDown) {
-								//make ball go toward mouse pointer position
-								ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
-								ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
-				}
+    //set ball inPlay flag if ball is left of launch chute
+    if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
+        ball1.inPlay = 1;
+    }
 
-				//Check for collision with window edges
+    //Update position
+    ball1.pos[0] += ball1.vel[0];
+    ball1.pos[1] += ball1.vel[1];
+    if (leftButtonDown) {
+        //make ball go toward mouse pointer position
+        ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
+        ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
+    }
 
-				//right board edge shifts left if the ball is in play 
-				//and has left the chute
-				double boardEdge = ball1.inPlay 
-								? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) 
-								: xres - ball1.radius;
+    //Check for collision with window edges
 
-				//left window edge
-				if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
-								ball1.pos[0] = ball1.radius;
-								ball1.vel[0] *= -0.2;
-				}
+    //right board edge shifts left if the ball is in play 
+    //and has left the chute
+    double boardEdge = ball1.inPlay 
+        ? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) 
+        : xres - ball1.radius;
 
-				//right window edge
-				else if (ball1.pos[0] >= boardEdge && ball1.vel[0] > 0.0) {
-								ball1.pos[0] = boardEdge;
-								ball1.vel[0] *= - 0.2;
-				}
+    //left window edge
+    if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
+        ball1.pos[0] = ball1.radius;
+        ball1.vel[0] *= -0.2;
+    }
 
-				//bottom window edge
-				if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
-								ball1.pos[1] = ball1.radius;
-								ball1.vel[1] *= - 0.2;
-				}
+    //right window edge
+    else if (ball1.pos[0] >= boardEdge && ball1.vel[0] > 0.0) {
+        ball1.pos[0] = boardEdge;
+        ball1.vel[0] *= - 0.2;
+    }
 
-				//top window edge
-				else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
-								ball1.pos[1] = yres - ball1.radius;
-								ball1.vel[1] *= -0.2;
-				}
+    //bottom window edge
+    //Hassen 
+    if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
+        ball1.pos[1] = ball1.radius;
+        ball1.vel[1] *= - 0.2;
+    }
+
+    //top window edge
+    else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
+        ball1.pos[1] = yres - ball1.radius;
+        ball1.vel[1] *= -0.2;
+    }
 }
 
 void initTextures(void)
@@ -727,8 +751,6 @@ void initTextures(void)
 
 				strcpy(buffer, "./images/smoke11.ppm");
 				alphaTextureInit(buffer, smokeSpriteTexture[11], smokeSprites[11]);
-
-
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -758,6 +780,12 @@ void drawSteeringWheel(SteeringWheel &wheel)
 				glBindTexture(GL_TEXTURE_2D, 0);
 				glPopMatrix();
 }
+
+void drawDeflector(Deflector &d)
+{
+    drawRectangle(d.r);
+}
+
 
 void OceanBackground()
 {
@@ -810,7 +838,6 @@ void drawBall()
 								glVertex2f(x, y);
 				}
 				glEnd();
-
 }
 void drawBumper(Bumper &b)
 {
@@ -924,62 +951,65 @@ void drawChest(TreasureChest &c)
 }
 void render(void)
 {
-				//	Rect re;
-				glClear(GL_COLOR_BUFFER_BIT);
+    //	Rect re;
+    glClear(GL_COLOR_BUFFER_BIT);
 
-				//Curve
-				glLineWidth(2.5);
-				glColor3ub(150, 10, 10);
-				glPushMatrix();
-				glBegin(GL_LINES);
-				glVertex3f(curve.points[0][0], curve.points[0][1],0);
-				glVertex3f(curve.points[1][0], curve.points[1][1],0);
-				glEnd();
-				glBegin(GL_LINES);
-				glVertex3f(curve.points[1][0], curve.points[1][1], 0);
-				glVertex3f(curve.points[2][0], curve.points[2][1], 0);
-				glEnd();
-
-				for (int i = 0; i < board.num_rectangles; i++)
-				{
-								drawRectangle(board.rectangles[i]);
-				}
+    //Curve
+    glLineWidth(2.5);
+    glColor3ub(150, 10, 10);
+    glPushMatrix();
+    glBegin(GL_LINES);
+    glVertex3f(curve.points[0][0], curve.points[0][1],0);
+    glVertex3f(curve.points[1][0], curve.points[1][1],0);
+    glEnd();
+    glBegin(GL_LINES);
+    glVertex3f(curve.points[1][0], curve.points[1][1], 0);
+    glVertex3f(curve.points[2][0], curve.points[2][1], 0);
+    glEnd();
 
 
-				glEnd();
-				glPopMatrix();
+    
+    
+    glEnd();
+    glPopMatrix();
 
-				OceanBackground();
+    OceanBackground();
+
+    drawChest(chest);//drawing chest
+    drawSteeringWheel(steeringWheel);
+    drawCanon(canon);//draw canon
+
+    //draw collision rectangles
+    glColor3ub(255, 255, 255);
+    for (int i = 0; i < board.num_rectangles; i++) {
+        drawRectangle(board.rectangles[i]);
+    }
+
+    //draw deflectors
+    for (int i = 0; i < board.num_deflectors; i++) { 
+        drawDeflector(board.deflectors[i]);
+    }
+    
+    //draw bumpers
+    for (int i = 0; i < board.num_bumpers; i++) {
+        drawBumper(board.bumpers[i]);
+    }
 
 
-				drawChest(chest);//drawing chest
-				drawSteeringWheel(steeringWheel);
-				drawCanon(canon);//draw canon
-				//draw collision rectangles
-				glColor3ub(255, 255, 255);
-				for (int i = 0; i < board.num_rectangles; i++) {
-								drawRectangle(board.rectangles[i]);
-				}
+    //draw balls
+    glColor3f(1,1,1);
+    glPushMatrix();
+    glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
+    if (ball1.isVisible) {
+        drawBall();
+    }
+    glPopMatrix();
 
-				//draw bumpers
-				for (int i = 0; i < board.num_bumpers; i++) {
-								drawBumper(board.bumpers[i]);
-				}
-
-				//draw balls
-				glColor3f(1,1,1);
-				glPushMatrix();
-				glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
-				if (ball1.isVisible) {
-								drawBall();
-				}
-				glPopMatrix();
-
-				drawFlipper(flipper);
-				drawFlipper(flipper2);
-
-				drawScore();
-				//places smoke rectangle on screen
+    drawFlipper(flipper);
+    drawFlipper(flipper2);
+   if(hide) { 
+    drawScore();
+   } 
 				if(boom) {
 								drawSmoke(smoke);
 				}	
