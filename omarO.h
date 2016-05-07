@@ -14,6 +14,8 @@
 #include "ppm.h"
 #include </usr/include/AL/alut.h>
 using namespace std;
+//initSmoke sets properties for smoke sprites
+void initSmoke(Smoke &);
 //initChest initializes treasure chest object properties
 void initChest(TreasureChest &);
 //ballChestCollision plays sound when ball collides with chest

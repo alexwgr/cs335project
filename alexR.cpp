@@ -202,8 +202,22 @@ int deflectorBallCollision(Deflector &d, Ball &b)
         //move ball in direction of surface normal
         VecScale(vert, 15.0, vert);
         VecAdd(vert, b.vel, b.vel);
+
+        timeCopy(&d.collision_time, &timeCurrent);
+        d.state = 1;
+
+        //set state to 1
+        d.state = 1;
+
         return 1;
     }
+    
+    //if a small time period has passed since the collision
+    if (d.state == 1 && 
+        timeDiff(&d.collision_time, &timeCurrent) > 0.2) {
+        d.state = 0;
+    }
+
     return 0;
 }
 

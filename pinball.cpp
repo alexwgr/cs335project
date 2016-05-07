@@ -43,6 +43,8 @@ extern "C" {
 #include "omarO.h"
 #include "hassenS.h"
 
+const int NUM_IMAGES = 34;
+const int SMOKE_SPRITES = 12;
 const double CHUTE_THICKNESS = 6.0;
 const double CHUTE_WIDTH = 40.0;
 const double FLIPPER_LENGTH = 70.0;
@@ -76,6 +78,7 @@ void render(void);
 
 void drawBumper(Bumper &);
 void drawCanon(Canon &);
+void drawSmoke(Smoke &);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
@@ -87,9 +90,12 @@ void drawBall();
 void physics(void);
 void flipperMovement(Flipper &e);
 
+bool hide = false;
+
 int done=0;
 int xres=780, yres=480;
 int leftButtonDown=0;
+bool boom = false;
 
 char buffer[256];
 
@@ -108,8 +114,8 @@ Rectangle r;
 SteeringWheel steeringWheel;
 TreasureChest chest;
 Canon canon;
+Smoke smoke;
 
-const int NUM_IMAGES = 12;
 Ppmimage *OceanImage;
 
 Ppmimage *pinballImage;
@@ -122,7 +128,18 @@ Ppmimage *bumperDownImage;
 Ppmimage *canonImage;
 Ppmimage *steeringWheelImage;
 Ppmimage *ropeDeflectorImage[2];
+Ppmimage *smokeSprites[SMOKE_SPRITES];
 char ImageFile[NUM_IMAGES][250] = {
+    "flippers.png\0",
+    "flippers2.jpg\0",
+    "pinball.png\0",
+    "open-chest2.png\0",
+    "close-chest2.png\0",
+    "Ocean.jpg\0",
+    "bumper_up.png\0",
+    "bumper_down.png\0",
+    "canon.png\0",
+    "steering_wheel.png\0",
     "flippers.png\0",
     "flippers2.jpg\0",
     "pinball.png\0",
@@ -135,6 +152,12 @@ char ImageFile[NUM_IMAGES][250] = {
     "steering_wheel.png\0",
     "rope.png\0",
     "rope_bent.png\0",
+    "smoke0.png\0","smoke1.png\0",
+    "smoke2.png\0","smoke3.png\0",
+    "smoke4.png\0","smoke5.png\0",
+    "smoke6.png\0","smoke7.png\0",
+    "smoke8.png\0","smoke9.png\0",
+    "smoke10.png\0","smoke11.png\0"
 };
 GLuint OceanTexture;
 
@@ -148,6 +171,7 @@ GLuint closeChestTexture_alpha;
 GLuint bumperUpTexture;
 GLuint bumperDownTexture;
 GLuint canonTexture;
+GLuint smokeSpriteTexture[SMOKE_SPRITES];
 GLuint steeringWheelTexture;
 GLuint ropeDeflectorTexture[2];
 
@@ -186,12 +210,14 @@ int main(void)
     initOpengl();
 
     initGameBoard(board);
-    initBumpers(board);
     initDeflectors(board);
+    initBumpers(board);
     initBalls();
     initChest(chest);//initialize chest properties
     initCanon(canon);
+    initSmoke(smoke);
     initSteeringWheel(steeringWheel);
+
 
     init_sound(alBuffer, alSource);
 
@@ -353,7 +379,7 @@ void initOpengl(void)
 
 void initGameBoard(GameBoard &gb) {
     gb.num_rectangles = 0;
-    
+
     Rectangle rec;
     rec.angle = -50.0;
     rec.width = 60.0;
@@ -484,6 +510,11 @@ void checkKeys(XEvent *e)
                 flipper2.flipstate = 1;
                 play_sound(alSource);
                 break;
+            case XK_b:
+                boom = true;
+            case XK_h:
+                hide = true;
+                break;
             case XK_Escape:
                 done=1;
                 break;
@@ -588,7 +619,7 @@ void physics(void)
         }
 
         if (chest.active == 0 && 
-            timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
+                timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
             chest.active = 1;
         }
 
@@ -680,6 +711,13 @@ void physics(void)
 
 void initTextures(void)
 {
+
+    strcpy(buffer, "./images/rope.ppm");
+    alphaTextureInit(buffer, ropeDeflectorTexture[0], ropeDeflectorImage[0]);
+
+    strcpy(buffer, "./images/rope_bent.ppm");
+    alphaTextureInit(buffer, ropeDeflectorTexture[1], ropeDeflectorImage[1]);
+
     strcpy(buffer, "./images/pinball.ppm");
     textureInit(buffer, pinballTexture, pinballImage);
 
@@ -710,12 +748,41 @@ void initTextures(void)
     strcpy(buffer, "./images/steering_wheel.ppm");
     alphaTextureInit(buffer, steeringWheelTexture, steeringWheelImage);
 
-    strcpy(buffer, "./images/rope.ppm");
-    alphaTextureInit(buffer, ropeDeflectorTexture[0], ropeDeflectorImage[0]);
-    
-    strcpy(buffer, "./images/rope_bent.ppm");
-    alphaTextureInit(buffer, ropeDeflectorTexture[1], ropeDeflectorImage[1]);
+    strcpy(buffer, "./images/smoke0.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[0], smokeSprites[0]);
 
+    strcpy(buffer, "./images/smoke1.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[1], smokeSprites[1]);
+
+    strcpy(buffer, "./images/smoke2.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[2], smokeSprites[2]);
+
+    strcpy(buffer, "./images/smoke3.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[3], smokeSprites[3]);
+
+    strcpy(buffer, "./images/smoke4.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[4], smokeSprites[4]);
+
+    strcpy(buffer, "./images/smoke5.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[5], smokeSprites[5]);
+
+    strcpy(buffer, "./images/smoke6.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[6], smokeSprites[6]);
+
+    strcpy(buffer, "./images/smoke7.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[7], smokeSprites[7]);
+
+    strcpy(buffer, "./images/smoke8.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[8], smokeSprites[8]);
+
+    strcpy(buffer, "./images/smoke9.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[9], smokeSprites[9]);
+
+    strcpy(buffer, "./images/smoke10.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[10], smokeSprites[10]);
+
+    strcpy(buffer, "./images/smoke11.ppm");
+    alphaTextureInit(buffer, smokeSpriteTexture[11], smokeSprites[11]);
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -829,7 +896,6 @@ void drawBall()
         glVertex2f(x, y);
     }
     glEnd();
-
 }
 void drawBumper(Bumper &b)
 {
@@ -840,8 +906,8 @@ void drawBumper(Bumper &b)
     glColor3f(1.0f, 1.0f, 1.0f);
     glTranslated(b.c.pos[0], b.c.pos[1], b.c.pos[2]);
     glBindTexture(GL_TEXTURE_2D, b.state == 0 
-        ? bumperUpTexture 
-        : bumperDownTexture);
+            ? bumperUpTexture 
+            : bumperDownTexture);
     glBegin(GL_POLYGON);
 
     for(angle = 0.0; angle < 360.0; angle+= 2.0) {
@@ -860,9 +926,38 @@ void drawBumper(Bumper &b)
     glEnd();
     glPopMatrix();
 }
+void drawSmoke(Smoke &s)
+{		
+    if(boom) {
+        if (s.frame < SMOKE_SPRITES) {
+            cout << s.frame << " \n";//prints frame # to console for debugging
+            glPushMatrix();
+            glColor3d(1.0, 1.0, 1.0);
+            glTranslated(s.r.pos[0], s.r.pos[1], s.r.pos[2]);
+            glRotatef(s.r.angle, 0, 0, 1);
+            glBindTexture(GL_TEXTURE_2D, smokeSpriteTexture[s.frame]);
+            glEnable(GL_ALPHA_TEST);
+            glAlphaFunc(GL_GREATER, 0.0f);
+            glColor4ub(255,255,255,255);
+
+            glBegin(GL_QUADS);
+            glVertex2d(-s.r.width, -s.r.height); glTexCoord2f(0.0f, 1.0f);
+            glVertex2d(-s.r.width, s.r.height); glTexCoord2f(0.0f, 0.0f); 
+            glVertex2d(s.r.width, s.r.height); glTexCoord2f(1.0f, 0.0f); 
+            glVertex2d(s.r.width, -s.r.height); glTexCoord2f(1.0f, 1.0f); 
+            glEnd();
+
+            glBindTexture(GL_TEXTURE_2D,0);
+            glPopMatrix();
+            s.frame++;	
+        } else {
+            s.frame = 0;
+            boom = false;
+        }
+    }
+}
 void drawCanon(Canon &c)
 {
-    extern GLuint canonTexture;
     glPushMatrix();
     glColor3d(1.0, 1.0, 1.0);
     glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
@@ -887,8 +982,6 @@ void drawCanon(Canon &c)
 //function draws treasure chest object
 void drawChest(TreasureChest &c)
 {
-    extern GLuint openChestTexture_alpha;
-    extern GLuint closeChestTexture_alpha;
     glPushMatrix();
     glColor3d(1.0, 1.0, 1.0);
     glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
@@ -932,7 +1025,7 @@ void render(void)
     glVertex3f(curve.points[1][0], curve.points[1][1], 0);
     glVertex3f(curve.points[2][0], curve.points[2][1], 0);
     glEnd();
-    
+
     glEnd();
     glPopMatrix();
 
@@ -941,6 +1034,10 @@ void render(void)
     drawChest(chest);//drawing chest
     drawSteeringWheel(steeringWheel);
     drawCanon(canon);//draw canon
+
+    if(boom) {
+        drawSmoke(smoke);
+    }
 
     //draw collision rectangles
     glColor3ub(255, 255, 255);
@@ -952,7 +1049,7 @@ void render(void)
     for (int i = 0; i < board.num_deflectors; i++) { 
         drawDeflector(board.deflectors[i]);
     }
-    
+
     //draw bumpers
     for (int i = 0; i < board.num_bumpers; i++) {
         drawBumper(board.bumpers[i]);
@@ -969,8 +1066,9 @@ void render(void)
 
     drawFlipper(flipper);
     drawFlipper(flipper2);
-    
-    drawScore();
+    if(hide) { 
+        drawScore();
+    } 
 }
 
 

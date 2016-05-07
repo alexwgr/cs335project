@@ -3,3 +3,5 @@ Idea is that when you lose 2 balls, water starts flowing, affecting
 gameplay difficulty.
 - build this using waterfall model
 Try to make 2d puff of smoke by making the pixels appear chunk by chunk
+SOUND: set up listener for doppler effects/or surround sound
+- use stack for diff sounds

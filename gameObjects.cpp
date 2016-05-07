@@ -86,8 +86,10 @@ void drawCircle(Circle &c)
     glEnd();
 }
 /*void makeWater(Water *water, int x, int y) {
-    if(water->n >= MAX_PARTICLES)
+    if (water->n >= MAX_PARTICLES) {
         return;
+		}
+		else {
     Particle *p = &water->particle[water->n];
     p->s.center.x = x;
     p->s.center.y = y;
@@ -96,6 +98,7 @@ void drawCircle(Circle &c)
     water->n++;
     water.pos[0] = 150;
     water.pos[1] = 150;
+		}
 }*/
 //function builds Alpha channel for image with no background
 unsigned char *buildAlphaData(Ppmimage *img)

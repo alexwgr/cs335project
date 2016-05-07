@@ -43,6 +43,10 @@ struct Water {
         waterflow = true;//may not need this
     }
 };
+struct Smoke {
+		Rectangle r;
+		int frame;
+};
 struct Circle {
     Vec pos;
     double radius;
