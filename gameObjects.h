@@ -118,7 +118,7 @@ struct Deflector {
     Rectangle r;
     int state; // active = 1
     int direction; // left = 0, right = 1
-
+    timespec collision_time;
     Deflector() {
         state = 0;
         direction = 0;
@@ -163,7 +163,6 @@ double timeDiff(struct timespec *, struct timespec *);
 void timeCopy(struct timespec *, struct timespec *);
 
 //used to set default values 
-void initGameBoard(GameBoard &);
 void initBumpers(GameBoard &);
 void initSteeringWheel(SteeringWheel &);
 
@@ -173,5 +172,5 @@ void drawRectangle(Rectangle &);
 
 //adds a bumper to the board
 void addBumperToBoard(Bumper &, GameBoard &);
-
+void addRectangleToBoard(Rectangle &, GameBoard &);
 #endif

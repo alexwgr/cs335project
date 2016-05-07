@@ -7,11 +7,6 @@
 #include <GL/glx.h>
 #include <cstdlib>
 
-void initGameBoard(GameBoard &g)
-{
-    g.num_rectangles = 0;
-}
-
 void initBumpers(GameBoard &g)
 {
     Bumper b;
@@ -39,6 +34,17 @@ void addBumperToBoard(Bumper &b, GameBoard &g)
     currentBumper->c.radius = b.c.radius;
     currentBumper->state = b.state;
     g.num_bumpers++;
+}
+
+void addRectangleToBoard(Rectangle &r, GameBoard &g)
+{
+    Rectangle *rectangle = &g.rectangles[g.num_rectangles];
+    rectangle->pos[0] = r.pos[0];
+    rectangle->pos[1] = r.pos[1];
+    rectangle->width  = r.width;
+    rectangle->height = r.height;
+    rectangle->angle = r.angle;
+    g.num_rectangles++;
 }
 
 

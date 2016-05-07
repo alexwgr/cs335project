@@ -43,10 +43,8 @@ extern "C" {
 #include "omarO.h"
 #include "hassenS.h"
 
-const int NUM_IMAGES = 9;
-const double CHUTE_WIDTH = 40.0;
 const double CHUTE_THICKNESS = 6.0;
-
+const double CHUTE_WIDTH = 40.0;
 const double FLIPPER_LENGTH = 70.0;
 const double FLIPPER_HEIGHT = 15.0;
 const double FLIPPER_SPEED = 14.8;
@@ -59,8 +57,6 @@ typedef double Flt;
 //#define VecDot(a,b) ((a)[0]*(b)[0]+(a)[1]*(b)[1]+(a)[2]*(b)[2])
 #define VecCopy(a,b) (b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2];
 
-
-
 //X Windows variables
 Display *dpy;
 Window win;
@@ -68,6 +64,7 @@ Window win;
 void initXWindows(void);
 void initOpengl(void);
 void initBalls(void);
+void initGameBoard(GameBoard &);
 void initFlipper(Flipper &, float, float, bool);
 void initTextures(void);
 void initDeflectors(GameBoard &board);
@@ -112,6 +109,7 @@ SteeringWheel steeringWheel;
 TreasureChest chest;
 Canon canon;
 
+const int NUM_IMAGES = 12;
 Ppmimage *OceanImage;
 
 Ppmimage *pinballImage;
@@ -123,6 +121,7 @@ Ppmimage *bumperUpImage;
 Ppmimage *bumperDownImage;
 Ppmimage *canonImage;
 Ppmimage *steeringWheelImage;
+Ppmimage *ropeDeflectorImage[2];
 char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
@@ -132,8 +131,10 @@ char ImageFile[NUM_IMAGES][250] = {
     "Ocean.jpg\0",
     "bumper_up.png\0",
     "bumper_down.png\0",
-    "canon.png\0"
-        "steering_wheel.png\0"
+    "canon.png\0",
+    "steering_wheel.png\0",
+    "rope.png\0",
+    "rope_bent.png\0",
 };
 GLuint OceanTexture;
 
@@ -148,6 +149,7 @@ GLuint bumperUpTexture;
 GLuint bumperDownTexture;
 GLuint canonTexture;
 GLuint steeringWheelTexture;
+GLuint ropeDeflectorTexture[2];
 
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
@@ -347,6 +349,17 @@ void initOpengl(void)
     initialize_fonts();
 
     initTextures();
+}
+
+void initGameBoard(GameBoard &gb) {
+    gb.num_rectangles = 0;
+    
+    Rectangle rec;
+    rec.angle = -50.0;
+    rec.width = 60.0;
+    rec.height = 10.0;
+    MakeVector(130, 125, 0, rec.pos);
+    addRectangleToBoard(rec, gb);
 }
 
 void initBalls(void)
@@ -667,55 +680,42 @@ void physics(void)
 
 void initTextures(void)
 {
-    extern Ppmimage *pinballImage;
-    extern GLuint pinballTexture;
     strcpy(buffer, "./images/pinball.ppm");
     textureInit(buffer, pinballTexture, pinballImage);
 
-    extern Ppmimage *flippers;
-    extern GLuint flippersTexture;
     strcpy(buffer, "./images/flippers.ppm");
     textureInit(buffer, flippersTexture, flippers);
 
-    extern Ppmimage *flippers2;
-    extern GLuint flippersTexture2;
     strcpy(buffer, "./images/flippers2.ppm");
     textureInit(buffer, flippersTexture2, flippers2);
 
-    extern Ppmimage *OceanImage;
-    extern GLuint OceanTexture;
     strcpy(buffer, "./images/Ocean.ppm");
     textureInit(buffer, OceanTexture, OceanImage);
 
-    extern Ppmimage *canonImage;
-    extern GLuint canonTexture;
     strcpy(buffer , "./images/canon.ppm");
     alphaTextureInit(buffer, canonTexture, canonImage);
 
-    extern Ppmimage *openChestImage;
-    extern GLuint openChestTexture_alpha;
     strcpy(buffer, "./images/open-chest2.ppm");
     alphaTextureInit(buffer, openChestTexture_alpha, openChestImage);
 
-    extern Ppmimage *closeChestImage;
-    extern GLuint closeChestTexture_alpha;
     strcpy(buffer, "./images/close-chest2.ppm");
     alphaTextureInit(buffer, closeChestTexture_alpha, closeChestImage);
 
-    extern Ppmimage *bumperUpImage;
-    extern GLuint bumperUpTexture;
     strcpy(buffer, "./images/bumper_up.ppm");
     alphaTextureInit(buffer, bumperUpTexture, bumperUpImage);
 
-    extern Ppmimage *bumperDownImage;
-    extern GLuint bumperDownTexture;
     strcpy(buffer, "./images/bumper_down.ppm");
     alphaTextureInit(buffer, bumperDownTexture, bumperDownImage);
 
-    extern Ppmimage *steeringWheelImage;
-    extern GLuint steeringWheelTexture;
     strcpy(buffer, "./images/steering_wheel.ppm");
     alphaTextureInit(buffer, steeringWheelTexture, steeringWheelImage);
+
+    strcpy(buffer, "./images/rope.ppm");
+    alphaTextureInit(buffer, ropeDeflectorTexture[0], ropeDeflectorImage[0]);
+    
+    strcpy(buffer, "./images/rope_bent.ppm");
+    alphaTextureInit(buffer, ropeDeflectorTexture[1], ropeDeflectorImage[1]);
+
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -748,7 +748,33 @@ void drawSteeringWheel(SteeringWheel &wheel)
 
 void drawDeflector(Deflector &d)
 {
-    drawRectangle(d.r);
+    glPushMatrix();
+    glColor3d(1.0, 1.0, 1.0);
+    glTranslated(d.r.pos[0], d.r.pos[1], d.r.pos[2]);
+    glRotatef(d.r.angle, 0, 0, 1);
+
+    //use d.state to determine which image to bind
+    glBindTexture(GL_TEXTURE_2D, ropeDeflectorTexture[d.state]);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+
+    //enlarge the image beyond the width of the rectangle
+    //get ratio between image height and rectangle height
+    //w = ropeDeflectorImage[0]->width * ratio;
+    double w = d.r.width;
+    double h = d.r.height * 2;
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(-w, -h);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-w,  h);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i( w,  h);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i( w, -h);
+    glEnd();
+
+
+    glPopMatrix();
 }
 
 
@@ -906,9 +932,6 @@ void render(void)
     glVertex3f(curve.points[1][0], curve.points[1][1], 0);
     glVertex3f(curve.points[2][0], curve.points[2][1], 0);
     glEnd();
-
-
-    
     
     glEnd();
     glPopMatrix();
@@ -934,7 +957,6 @@ void render(void)
     for (int i = 0; i < board.num_bumpers; i++) {
         drawBumper(board.bumpers[i]);
     }
-
 
     //draw balls
     glColor3f(1,1,1);
