@@ -117,6 +117,18 @@ struct Canon {
     int state;//use to launch canon
 };
 
+//A rope that flicks out the ball 
+struct Deflector {
+    Rectangle r;
+    int state; // active = 1
+    int direction; // left = 0, right = 1
+
+    Deflector() {
+        state = 0;
+        direction = 0;
+    }
+};
+
 //Does a little spin when the ball moves over it
 struct SteeringWheel {
     Vec pos;
@@ -136,13 +148,19 @@ struct SteeringWheel {
 struct GameBoard {
     Rectangle rectangles[MAX_RECTANGLES];
     Bumper bumpers[MAX_RECTANGLES];
+    Deflector deflectors[MAX_RECTANGLES];
     int num_rectangles;
     int num_bumpers;
+    int num_deflectors;
+
+    GameBoard() {
+        num_rectangles = 0;
+        num_bumpers = 0;
+        num_deflectors = 0;
+    }
 };
 
-
 //functions
-
 unsigned char *buildAlphaData(Ppmimage *);
 //used for timing
 double timeDiff(struct timespec *, struct timespec *);

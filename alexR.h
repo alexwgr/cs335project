@@ -23,11 +23,13 @@
 #include <cmath>
 
 bool isLeft(Vec &, Vec &, Vec &);
-void addCurve(Curve &c, GameBoard &b);
+void addCurve(Curve &, GameBoard &);
+void rectangleSurfaceNormals(Rectangle &, Vec &, Vec &);
 
 void steeringWheelMovement(SteeringWheel &);
 
 int rectangleBallCollision(Rectangle &, Ball &);
+int deflectorBallCollision(Deflector &, Ball &);
 int bumperBallCollision(Bumper &, Ball &);
 int steeringWheelBallCollision(SteeringWheel &, Ball &);
 void flipperBallCollision(Flipper &, Ball &);
