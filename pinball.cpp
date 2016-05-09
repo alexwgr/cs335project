@@ -512,6 +512,8 @@ void checkKeys(XEvent *e)
                 play_sound(alSource);
                 break;
             case XK_b:
+                //start frame timer
+                timeCopy(&smoke.frame_timer, &timeCurrent);
                 boom = true;
 		launch = true;
             case XK_h:
@@ -951,8 +953,17 @@ void drawSmoke(Smoke &s)
 
             glBindTexture(GL_TEXTURE_2D,0);
             glPopMatrix();
-            s.frame++;	
+           
+            //if a 20th of a second has passed
+            if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
+                //reset the timer
+                timeCopy(&s.frame_timer, &timeCurrent);
+                //advance to the next frame
+                s.frame++;
+            }
+
         } else {
+            //animation finished
             s.frame = 0;
             boom = false;
         }
