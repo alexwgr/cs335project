@@ -28,25 +28,25 @@ extern score Scorekeeper;
 void initSmoke(Smoke &s)
 {
     Rectangle *smoke_sprite = &s.r;
-    smoke_sprite->pos[0] = 455.0;
+    smoke_sprite->pos[0] = 460.0;
     smoke_sprite->pos[1] = 150.0;
-    smoke_sprite->width = 20.0;
-    smoke_sprite->height = 40.0;
+    smoke_sprite->width = 30.0;
+    smoke_sprite->height = 50.0;
     smoke_sprite->angle = 0.0;
 
 }
 //play sound when Cannon launches ball
-void KaBoom(Canon &c, Ball &b, ALuint &source)
+void KaBoom(Cannon &c, Ball &b, ALuint &source)
 {
     if (rectangleBallCollision(c.r, b)) {
         play_sound(source);
         //cout << "KABOOM!\n";
     } 
 }
-void initCanon(Canon &c)
+void initCannon(Cannon &c)
 {
     Rectangle *rec = &c.r;
-    rec->pos[0] = 455.0;
+    rec->pos[0] = 460.0;
     rec->pos[1] = 100.0;
     rec->width = 40.0;
     rec->height = 40.0;

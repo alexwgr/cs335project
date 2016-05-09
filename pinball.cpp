@@ -52,6 +52,8 @@ const double FLIPPER_HEIGHT = 15.0;
 const double FLIPPER_SPEED = 14.8;
 const double FLIPPER_REST_ANGLE = -50;
 
+const double CANNON_POS_Y = 100.0;
+
 typedef double Flt;
 //typedef Flt Vec[3];
 #define MakeVector(x,y,z,v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
@@ -77,8 +79,9 @@ void checkKeys(XEvent *e);
 void render(void);
 
 void drawBumper(Bumper &);
-void drawCanon(Canon &);
-void drawSmoke(Smoke &);
+void drawCannon(Cannon &);
+void fireCannon(Cannon &, Smoke &);
+void fireCannonMovement(Cannon &, Smoke &);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
@@ -114,7 +117,7 @@ Flipper flipper, flipper2;
 Rectangle r;
 SteeringWheel steeringWheel;
 TreasureChest chest;
-Canon canon;
+Cannon cannon;
 Smoke smoke;
 
 Ppmimage *OceanImage;
@@ -126,7 +129,7 @@ Ppmimage  *closeChestImage;
 Ppmimage *openChestImage;
 Ppmimage *bumperUpImage;
 Ppmimage *bumperDownImage;
-Ppmimage *canonImage;
+Ppmimage *CannonImage;
 Ppmimage *steeringWheelImage;
 Ppmimage *ropeDeflectorImage[2];
 Ppmimage *smokeSprites[SMOKE_SPRITES];
@@ -139,7 +142,7 @@ char ImageFile[NUM_IMAGES][250] = {
     "Ocean.jpg\0",
     "bumper_up.png\0",
     "bumper_down.png\0",
-    "canon.png\0",
+    "cannon.png\0",
     "steering_wheel.png\0",
     "flippers.png\0",
     "flippers2.jpg\0",
@@ -149,7 +152,7 @@ char ImageFile[NUM_IMAGES][250] = {
     "Ocean.jpg\0",
     "bumper_up.png\0",
     "bumper_down.png\0",
-    "canon.png\0",
+    "cannon.png\0",
     "steering_wheel.png\0",
     "rope.png\0",
     "rope_bent.png\0",
@@ -171,7 +174,7 @@ GLuint openChestTexture_alpha;
 GLuint closeChestTexture_alpha;
 GLuint bumperUpTexture;
 GLuint bumperDownTexture;
-GLuint canonTexture;
+GLuint CannonTexture;
 GLuint smokeSpriteTexture[SMOKE_SPRITES];
 GLuint steeringWheelTexture;
 GLuint ropeDeflectorTexture[2];
@@ -215,7 +218,7 @@ int main(void)
     initBumpers(board);
     initBalls();
     initChest(chest);//initialize chest properties
-    initCanon(canon);
+    initCannon(cannon);
     initSmoke(smoke);
     initSteeringWheel(steeringWheel);
 
@@ -515,7 +518,8 @@ void checkKeys(XEvent *e)
                 //start frame timer
                 timeCopy(&smoke.frame_timer, &timeCurrent);
                 boom = true;
-		launch = true;
+                launch = true;
+                ball1.vel[1] = 20.0;
             case XK_h:
                 hide = true;
                 break;
@@ -661,7 +665,10 @@ void physics(void)
             play_sound(alSource);
         }
     }
-    //KaBoom(canon, ball1, alSource);//when ball is on canon
+    //KaBoom(Cannon, ball1, alSource);//when ball is on cannon
+    if (boom && launch) {
+        fireCannonMovement(cannon, smoke);
+    }
 
     applyMaximumVelocity(ball1);
 
@@ -734,8 +741,8 @@ void initTextures(void)
     strcpy(buffer, "./images/Ocean.ppm");
     textureInit(buffer, OceanTexture, OceanImage);
 
-    strcpy(buffer , "./images/canon.ppm");
-    alphaTextureInit(buffer, canonTexture, canonImage);
+    strcpy(buffer , "./images/cannon.ppm");
+    alphaTextureInit(buffer, CannonTexture, CannonImage);
 
     strcpy(buffer, "./images/open-chest2.ppm");
     alphaTextureInit(buffer, openChestTexture_alpha, openChestImage);
@@ -930,7 +937,20 @@ void drawBumper(Bumper &b)
     glEnd();
     glPopMatrix();
 }
-void drawSmoke(Smoke &s)
+
+void fireCannonMovement(Cannon &c, Smoke &s)
+{
+    //move cannon down for first eighth of animation
+    if (s.frame < SMOKE_SPRITES / 8.0) {
+        c.r.pos[1] -= 5.0;
+        //and up for the rist
+    } else {
+        c.r.pos[1] += 1.0;
+    }
+
+}
+
+void fireCannon(Cannon &c, Smoke &s)
 {		
     if(boom) {
         if (s.frame < SMOKE_SPRITES) {
@@ -938,7 +958,7 @@ void drawSmoke(Smoke &s)
             glPushMatrix();
             glColor3d(1.0, 1.0, 1.0);
             glTranslated(s.r.pos[0], s.r.pos[1], s.r.pos[2]);
-            glRotatef(s.r.angle, 0, 0, 1);
+            glRotatef(s.r.angle + 90.0, 0, 0, 1);
             glBindTexture(GL_TEXTURE_2D, smokeSpriteTexture[s.frame]);
             glEnable(GL_ALPHA_TEST);
             glAlphaFunc(GL_GREATER, 0.0f);
@@ -953,39 +973,44 @@ void drawSmoke(Smoke &s)
 
             glBindTexture(GL_TEXTURE_2D,0);
             glPopMatrix();
-           
+
+
             //if a 20th of a second has passed
             if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
                 //reset the timer
                 timeCopy(&s.frame_timer, &timeCurrent);
                 //advance to the next frame
                 s.frame++;
+
+
+
             }
 
         } else {
             //animation finished
             s.frame = 0;
+            c.r.pos[1] = 100.0;
             boom = false;
         }
     }
 }
-void drawCanon(Canon &c)
+void drawCannon(Cannon &c)
 {
     glPushMatrix();
     glColor3d(1.0, 1.0, 1.0);
     glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
     glRotatef(c.r.angle, 0, 0, 1);
-    glBindTexture(GL_TEXTURE_2D, canonTexture);
+    glBindTexture(GL_TEXTURE_2D, CannonTexture);
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.0f);
     glColor4ub(255,255,255,255);
 
     glBegin(GL_QUADS);
-    glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
-    glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
-    glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
-    glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
+    glVertex2d(-c.r.width - 8, -c.r.height - 8.0); glTexCoord2f(0.0f, 1.0f);
+    glVertex2d(-c.r.width - 8,  c.r.height + 8.0); glTexCoord2f(0.0f, 0.0f); 
+    glVertex2d( c.r.width + 8,  c.r.height + 8.0); glTexCoord2f(1.0f, 0.0f); 
+    glVertex2d( c.r.width + 8, -c.r.height - 8.0); glTexCoord2f(1.0f, 1.0f); 
     glEnd();
 
     glBindTexture(GL_TEXTURE_2D,0);
@@ -1046,11 +1071,10 @@ void render(void)
 
     drawChest(chest);//drawing chest
     drawSteeringWheel(steeringWheel);
-    drawCanon(canon);//draw canon
+    drawCannon(cannon);//draw canon
 
     if(boom && launch) {
-        drawSmoke(smoke);
-        ball1.vel[1] = 20.0;
+        fireCannon(cannon, smoke);
     }
 
     //draw collision rectangles

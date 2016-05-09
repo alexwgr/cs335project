@@ -113,7 +113,7 @@ struct TreasureChest {
 };
 
 //Shoots the ball
-struct Canon {
+struct Cannon {
 								Rectangle r;
 								int state;//use to launch canon
 };
