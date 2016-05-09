@@ -96,6 +96,7 @@ int done=0;
 int xres=780, yres=480;
 int leftButtonDown=0;
 bool boom = false;
+bool launch = false;
 
 char buffer[256];
 
@@ -512,6 +513,7 @@ void checkKeys(XEvent *e)
                 break;
             case XK_b:
                 boom = true;
+		launch = true;
             case XK_h:
                 hide = true;
                 break;
@@ -657,7 +659,7 @@ void physics(void)
             play_sound(alSource);
         }
     }
-    KaBoom(canon, ball1, alSource);//when ball is on canon
+    //KaBoom(canon, ball1, alSource);//when ball is on canon
 
     applyMaximumVelocity(ball1);
 
@@ -1035,8 +1037,9 @@ void render(void)
     drawSteeringWheel(steeringWheel);
     drawCanon(canon);//draw canon
 
-    if(boom) {
+    if(boom && launch) {
         drawSmoke(smoke);
+        ball1.vel[1] = 20.0;
     }
 
     //draw collision rectangles
@@ -1059,7 +1062,7 @@ void render(void)
     glColor3f(1,1,1);
     glPushMatrix();
     glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
-    if (ball1.isVisible) {
+    if (ball1.isVisible && launch) {
         drawBall();
     }
     glPopMatrix();

@@ -14,6 +14,14 @@
 #include "ppm.h"
 #include </usr/include/AL/alut.h>
 using namespace std;
+
+class Sounds {
+	private:
+	ALuint source;
+	ALuint buffer;
+	int sound_number;
+	public:
+};
 //initSmoke sets properties for smoke sprites
 void initSmoke(Smoke &);
 //initChest initializes treasure chest object properties

@@ -19,145 +19,146 @@
 
 //Collision objects
 struct Rectangle {
-    Vec pos;
-    bool collide[4]; //up, down, left, right
-    double width, height, angle;
+								Vec pos;
+								bool collide[4]; //up, down, left, right
+								double width, height, angle;
 
-    Rectangle() { for (int i = 0; i < 4; i++) collide[i] = true; }
+								Rectangle() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
 struct Shape {
-    float width, height;
-    float radius;
-    Vec center;
+								float width, height;
+								float radius;
+								Vec center;
 };
 struct Particle {
-    Shape s;
-    Vec velocity;
+								Shape s;
+								Vec velocity;
 };
 struct Water {
-    bool waterflow;
-    Vec pos;
-    int n;
-    Particle particle[MAX_PARTICLES];
-    Water() {
-        waterflow = true;//may not need this
-    }
+								bool waterflow;
+								Vec pos;
+								int n;
+								Particle particle[MAX_PARTICLES];
+								Water() {
+																waterflow = true;//may not need this
+								}
 };
 struct Smoke {
-		Rectangle r;
-		int frame;
+								Rectangle r;
+								int frame;
+								timespec frame_timer;
 };
 struct Circle {
-    Vec pos;
-    double radius;
+								Vec pos;
+								double radius;
 
 };
 
 //Smacks the ball when you press a button
 struct Flipper {
-	Vec pos;
-	double width, height, angle;
-	double rvel;
-    //direction inverted
-    bool inverted;
-	//rotational velocity; gets added to angle every frame
-	int flipstate;
-	//0 - idle, 1 - going up, 2 - going down
+								Vec pos;
+								double width, height, angle;
+								double rvel;
+								//direction inverted
+								bool inverted;
+								//rotational velocity; gets added to angle every frame
+								int flipstate;
+								//0 - idle, 1 - going up, 2 - going down
 };
 
 
 // A curve that is built from small rectangles
 struct Curve {
-    double width;
-    bool collide[2]; //above, below
-    int npoints;
-    Vec points[3];
+								double width;
+								bool collide[2]; //above, below
+								int npoints;
+								Vec points[3];
 
-    Curve() { for (int i = 0; i < 4; i++) collide[i] = true; }
+								Curve() { for (int i = 0; i < 4; i++) collide[i] = true; }
 };
 
 //The main character of our story
 struct Ball {
-	Vec pos;
-	Vec vel;
-	double radius;
-	double mass;
-    int inPlay; //1 if ball has left launch chute
-    int isVisible; // 0 is hidden, 1 is showing
+								Vec pos;
+								Vec vel;
+								double radius;
+								double mass;
+								int inPlay; //1 if ball has left launch chute
+								int isVisible; // 0 is hidden, 1 is showing
 
-    Ball() {
-        inPlay = 0;
-        isVisible = 1;
-    }
+								Ball() {
+																inPlay = 0;
+																isVisible = 1;
+								}
 };
 
 //A circular object that bounces the ball away
 struct Bumper {
-    Circle c;
-    int state; // 0 up, 1 down
+								Circle c;
+								int state; // 0 up, 1 down
 };
 
 //Opens and awards points after it is hit multiple times
 struct TreasureChest {
-    int state; //0 is closed, 1 is open
-    int active; // 0 if recently collided, 1 if not
-    Rectangle r;
-    int HP; // 3, 2, 1
-    timespec collision_time;
-	TreasureChest() {
-        active = 1;
-		state = 0;
-		HP = 3;
-	}
+								int state; //0 is closed, 1 is open
+								int active; // 0 if recently collided, 1 if not
+								Rectangle r;
+								int HP; // 3, 2, 1
+								timespec collision_time;
+								TreasureChest() {
+																active = 1;
+																state = 0;
+																HP = 3;
+								}
 };
 
 //Shoots the ball
 struct Canon {
-    Rectangle r;
-    int state;//use to launch canon
+								Rectangle r;
+								int state;//use to launch canon
 };
 
 //A rope that flicks out the ball 
 struct Deflector {
-    Rectangle r;
-    int state; // active = 1
-    int direction; // left = 0, right = 1
-    timespec collision_time;
-    Deflector() {
-        state = 0;
-        direction = 0;
-    }
+								Rectangle r;
+								int state; // active = 1
+								int direction; // left = 0, right = 1
+								timespec collision_time;
+								Deflector() {
+																state = 0;
+																direction = 0;
+								}
 };
 
 //Does a little spin when the ball moves over it
 struct SteeringWheel {
-    Vec pos;
-    double inner_radius, outer_radius;
-    double angle, rvel;
-    int state; // 0 is not spinning, 1 is spinning
-    timespec collision_time; //keeps track of how long the ball spins
-    SteeringWheel() {
-        state = 0;
-        angle = 0;
-        rvel = 0;
-    }
+								Vec pos;
+								double inner_radius, outer_radius;
+								double angle, rvel;
+								int state; // 0 is not spinning, 1 is spinning
+								timespec collision_time; //keeps track of how long the ball spins
+								SteeringWheel() {
+																state = 0;
+																angle = 0;
+																rvel = 0;
+								}
 };
 
 
 //Holds all of the repeating objects in the game; collision rectangles, bumpers, etc.
 struct GameBoard {
-    Rectangle rectangles[MAX_RECTANGLES];
-    Bumper bumpers[MAX_RECTANGLES];
-    Deflector deflectors[MAX_RECTANGLES];
-    int num_rectangles;
-    int num_bumpers;
-    int num_deflectors;
+								Rectangle rectangles[MAX_RECTANGLES];
+								Bumper bumpers[MAX_RECTANGLES];
+								Deflector deflectors[MAX_RECTANGLES];
+								int num_rectangles;
+								int num_bumpers;
+								int num_deflectors;
 
-    GameBoard() {
-        num_rectangles = 0;
-        num_bumpers = 0;
-        num_deflectors = 0;
-    }
+								GameBoard() {
+																num_rectangles = 0;
+																num_bumpers = 0;
+																num_deflectors = 0;
+								}
 };
 
 //functions

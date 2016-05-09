@@ -30,7 +30,7 @@ void initSmoke(Smoke &s)
     Rectangle *smoke_sprite = &s.r;
     smoke_sprite->pos[0] = 455.0;
     smoke_sprite->pos[1] = 150.0;
-    smoke_sprite->width = 40.0;
+    smoke_sprite->width = 20.0;
     smoke_sprite->height = 40.0;
     smoke_sprite->angle = 0.0;
 
