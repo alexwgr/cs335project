@@ -383,6 +383,9 @@ void initOpengl(void)
 
 void initGameBoard(GameBoard &gb) {
     gb.num_rectangles = 0;
+    
+    gb.starting_point[0] = xres - CHUTE_THICKNESS - ball1.radius;
+    gb.starting_point[1] = 200;
 
     Rectangle rec;
     rec.angle = -50.0;
