@@ -43,7 +43,7 @@ extern "C" {
 #include "omarO.h"
 #include "hassenS.h"
 
-const int NUM_IMAGES = 34;
+const int NUM_IMAGES = 36;
 const int SMOKE_SPRITES = 12;
 const double CHUTE_THICKNESS = 6.0;
 const double CHUTE_WIDTH = 40.0;
@@ -70,7 +70,10 @@ void initOpengl(void);
 void initBalls(void);
 void initGameBoard(GameBoard &);
 void initFlipper(Flipper &, float, float, bool);
+void initSeaMonster(SeaMonster &);
+
 void initTextures(void);
+
 void initDeflectors(GameBoard &board);
 void cleanupXWindows(void);
 void checkResize(XEvent *e);
@@ -80,8 +83,8 @@ void render(void);
 
 void drawBumper(Bumper &);
 void drawCannon(Cannon &);
-void fireCannon(Cannon &, Smoke &);
-void fireCannonMovement(Cannon &, Smoke &);
+void drawSmoke(Cannon &, Smoke &);
+void drawSmokeMovement(Cannon &, Smoke &);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void drawSteeringWheel(SteeringWheel &);
@@ -89,6 +92,7 @@ void drawDeflector(Deflector &);
 void OceanBackground();
 void drawFlipper(Flipper &f);
 void drawBall();
+void drawRectangleTextureAlpha(Rectangle &, GLuint &);
 
 void physics(void);
 void flipperMovement(Flipper &e);
@@ -119,6 +123,7 @@ SteeringWheel steeringWheel;
 TreasureChest chest;
 Cannon cannon;
 Smoke smoke;
+SeaMonster seaMonster;
 
 Ppmimage *OceanImage;
 
@@ -133,6 +138,7 @@ Ppmimage *CannonImage;
 Ppmimage *steeringWheelImage;
 Ppmimage *ropeDeflectorImage[2];
 Ppmimage *smokeSprites[SMOKE_SPRITES];
+Ppmimage *monsterImages[6];
 char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
@@ -161,7 +167,8 @@ char ImageFile[NUM_IMAGES][250] = {
     "smoke4.png\0","smoke5.png\0",
     "smoke6.png\0","smoke7.png\0",
     "smoke8.png\0","smoke9.png\0",
-    "smoke10.png\0","smoke11.png\0"
+    "smoke10.png\0","smoke11.png\0",
+    "monster0.png\0", "monster3.png\0"
 };
 GLuint OceanTexture;
 
@@ -178,6 +185,7 @@ GLuint CannonTexture;
 GLuint smokeSpriteTexture[SMOKE_SPRITES];
 GLuint steeringWheelTexture;
 GLuint ropeDeflectorTexture[2];
+GLuint monsterTextures[6];
 
 //------------------------OPENAL-----------------//
 //variables below are for AL sound
@@ -194,6 +202,7 @@ double timeSpan=0.0;
 
 int main(void)
 {
+    srand(time(NULL));
     Scorekeeper.points = 0;
     Scorekeeper.balls_left = 3;
 
@@ -221,7 +230,7 @@ int main(void)
     initCannon(cannon);
     initSmoke(smoke);
     initSteeringWheel(steeringWheel);
-
+    initSeaMonster(seaMonster);
 
     init_sound(alBuffer, alSource);
 
@@ -383,7 +392,7 @@ void initOpengl(void)
 
 void initGameBoard(GameBoard &gb) {
     gb.num_rectangles = 0;
-    
+
     gb.starting_point[0] = xres - CHUTE_THICKNESS - ball1.radius;
     gb.starting_point[1] = 200;
 
@@ -403,6 +412,108 @@ void initBalls(void)
     //ball1.vel[0] = 1.6;
     //ball1.vel[1] = 0.0;
     ball1.mass = 1.0;
+
+}
+
+void initSeaMonster(SeaMonster &monster)
+{
+    double h = (double)yres / 3.0;
+    //set up left tentacle
+    MakeVector(-h, h, 0, monster.rectangle[0].pos);
+    monster.rectangle[0].width  = h;
+    monster.rectangle[0].height = h;
+    monster.rectangle[0].angle = 90; 
+    monster.state[0] = -1;
+}
+
+void killSeaMonster(SeaMonster &monster, int monsterNum)
+{
+    if (monster.state[monsterNum] == 1) {
+        monster.state[monsterNum] = 2;
+        timeCopy(&monster.active_time[monsterNum], &timeCurrent);
+    }
+}
+
+void seaMonsterState(SeaMonster &monster)
+{
+    std::cout << "time difference: " << timeDiff(&monster.active_time[0], &timeCurrent) << std::endl;
+    std::cout << "monster state: " << monster.state[0] << std::endl;
+    //just started
+    if (monster.state[0] == -1) {
+        timeCopy(&monster.active_time[0], &timeCurrent);
+        monster.state[0] = 0;
+    }
+
+    switch (monster.state[0]) {
+        //if hidden for 5 seconds
+        case 0: 
+            if (monster.rectangle[0].pos[0] > -(monster.rectangle[0].width)) {
+                monster.rectangle[0].pos[0] -= 2;
+            } else {
+                //monster.rectangle[0].pos[0] = -monster.rectangle[0].width;
+            }
+            if (timeDiff(&monster.active_time[0], &timeCurrent) > 5) {
+                //make active
+                monster.state[0] = 1;
+                //reset timer
+                timeCopy(&monster.active_time[0], &timeCurrent);
+            }
+            break;
+
+            //move right until on screen
+        case 1:
+            if (monster.rectangle[0].pos[0] < 40) {
+                monster.rectangle[0].pos[0] += 2;
+            } else {
+                monster.rectangle[0].pos[0] = 40;
+            }
+
+            if (timeDiff(&monster.active_time[0], &timeCurrent) > 5)
+            {
+                monster.state[0] = 0;
+                timeCopy(&monster.active_time[0], &timeCurrent);
+            }
+            break;
+        case 2:
+            //just got hit
+            if (timeDiff(&monster.active_time[0], &timeCurrent) < 0.5) {
+                monster.rectangle[0].pos[0] += (rand() % 10) - 5;
+                monster.rectangle[0].pos[1] += (rand() % 10) - 5;
+                           
+            } else {
+            //after 0.5 seconds, monster is dead
+                monster.state[0] = 3;
+            }
+            break;
+
+        case 3:
+            //dead
+            if (monster.rectangle[0].pos[1] > -monster.rectangle[0].height) {
+                //monster sinks
+                monster.rectangle[0].pos[1] -= 1;
+            } else {
+                //reset state back to 0
+                monster.state[0] = 0;
+                initSeaMonster(monster);
+                timeCopy(&monster.active_time[0], &timeCurrent);
+            }
+            break;
+    }
+
+
+}
+
+void drawSeaMonster(SeaMonster &monster)
+{
+    //left tentacle
+    if (monster.state[0] < 2) {
+        //draw normal image if not damaged
+        drawRectangleTextureAlpha(monster.rectangle[0], monsterTextures[0]);
+    } else {
+
+        //draw damaged image
+        drawRectangleTextureAlpha(monster.rectangle[0], monsterTextures[3]);
+    }
 
 }
 
@@ -526,6 +637,9 @@ void checkKeys(XEvent *e)
             case XK_h:
                 hide = true;
                 break;
+            case XK_v:
+                killSeaMonster(seaMonster, 0);
+                break;
             case XK_Escape:
                 done=1;
                 break;
@@ -608,6 +722,8 @@ void physics(void)
     flipperMovement(flipper2);
     flipperBallCollision(flipper2, ball1);
 
+    seaMonsterState(seaMonster);
+
     //rectangle collisions
     bool collided = false;
     for (int i = 0; i < board.num_rectangles; i++) {
@@ -670,7 +786,7 @@ void physics(void)
     }
     //KaBoom(Cannon, ball1, alSource);//when ball is on cannon
     if (boom && launch) {
-        fireCannonMovement(cannon, smoke);
+        drawSmokeMovement(cannon, smoke);
     }
 
     applyMaximumVelocity(ball1);
@@ -797,6 +913,37 @@ void initTextures(void)
 
     strcpy(buffer, "./images/smoke11.ppm");
     alphaTextureInit(buffer, smokeSpriteTexture[11], smokeSprites[11]);
+
+    sprintf(buffer, "./images/monster%d.ppm", 0);
+    alphaTextureInit(buffer, monsterTextures[0], monsterImages[0]);
+
+    sprintf(buffer, "./images/monster%d.ppm", 3);
+    alphaTextureInit(buffer, monsterTextures[3], monsterImages[3]);
+}
+
+void drawRectangleTextureAlpha(Rectangle &r, GLuint &textureId)
+{
+
+    glPushMatrix();
+    //glColor3d(1.0, 1.0, 1.0);
+    glTranslated(r.pos[0], r.pos[1], r.pos[2]);
+    glRotatef(r.angle, 0, 0, 1);
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+
+    glBegin(GL_QUADS);
+    glVertex2d(-r.width, -r.height); glTexCoord2f(0.0f, 1.0f);
+    glVertex2d(-r.width,  r.height); glTexCoord2f(0.0f, 0.0f); 
+    glVertex2d( r.width,  r.height); glTexCoord2f(1.0f, 0.0f); 
+    glVertex2d( r.width, -r.height); glTexCoord2f(1.0f, 1.0f); 
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPopMatrix();
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -941,7 +1088,7 @@ void drawBumper(Bumper &b)
     glPopMatrix();
 }
 
-void fireCannonMovement(Cannon &c, Smoke &s)
+void drawSmokeMovement(Cannon &c, Smoke &s)
 {
     //move cannon down for first eighth of animation
     if (s.frame < SMOKE_SPRITES / 8.0) {
@@ -953,31 +1100,12 @@ void fireCannonMovement(Cannon &c, Smoke &s)
 
 }
 
-void fireCannon(Cannon &c, Smoke &s)
+void drawSmoke(Cannon &c, Smoke &s)
 {		
     if(boom) {
         if (s.frame < SMOKE_SPRITES) {
             cout << s.frame << " \n";//prints frame # to console for debugging
-            glPushMatrix();
-            glColor3d(1.0, 1.0, 1.0);
-            glTranslated(s.r.pos[0], s.r.pos[1], s.r.pos[2]);
-            glRotatef(s.r.angle + 90.0, 0, 0, 1);
-            glBindTexture(GL_TEXTURE_2D, smokeSpriteTexture[s.frame]);
-            glEnable(GL_ALPHA_TEST);
-            glAlphaFunc(GL_GREATER, 0.0f);
-            glColor4ub(255,255,255,255);
-
-            glBegin(GL_QUADS);
-            glVertex2d(-s.r.width, -s.r.height); glTexCoord2f(0.0f, 1.0f);
-            glVertex2d(-s.r.width, s.r.height); glTexCoord2f(0.0f, 0.0f); 
-            glVertex2d(s.r.width, s.r.height); glTexCoord2f(1.0f, 0.0f); 
-            glVertex2d(s.r.width, -s.r.height); glTexCoord2f(1.0f, 1.0f); 
-            glEnd();
-
-            glBindTexture(GL_TEXTURE_2D,0);
-            glPopMatrix();
-
-
+            drawRectangleTextureAlpha(s.r, smokeSpriteTexture[s.frame]);
             //if a 20th of a second has passed
             if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
                 //reset the timer
@@ -999,55 +1127,18 @@ void fireCannon(Cannon &c, Smoke &s)
 }
 void drawCannon(Cannon &c)
 {
-    glPushMatrix();
-    glColor3d(1.0, 1.0, 1.0);
-    glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
-    glRotatef(c.r.angle, 0, 0, 1);
-    glBindTexture(GL_TEXTURE_2D, CannonTexture);
-
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
-    glColor4ub(255,255,255,255);
-
-    glBegin(GL_QUADS);
-    glVertex2d(-c.r.width - 8, -c.r.height - 8.0); glTexCoord2f(0.0f, 1.0f);
-    glVertex2d(-c.r.width - 8,  c.r.height + 8.0); glTexCoord2f(0.0f, 0.0f); 
-    glVertex2d( c.r.width + 8,  c.r.height + 8.0); glTexCoord2f(1.0f, 0.0f); 
-    glVertex2d( c.r.width + 8, -c.r.height - 8.0); glTexCoord2f(1.0f, 1.0f); 
-    glEnd();
-
-    glBindTexture(GL_TEXTURE_2D,0);
-    glPopMatrix();
-
+    drawRectangleTextureAlpha(c.r, CannonTexture);
 }
 //function draws treasure chest object
 void drawChest(TreasureChest &c)
 {
-    glPushMatrix();
-    glColor3d(1.0, 1.0, 1.0);
-    glTranslated(c.r.pos[0], c.r.pos[1], c.r.pos[2]);
-    glRotatef(c.r.angle, 0, 0, 1);
 
     if (c.state == 1) {
-        glBindTexture(GL_TEXTURE_2D, openChestTexture_alpha);
+        drawRectangleTextureAlpha(c.r, openChestTexture_alpha);
     }
-    else if(c.state == 0) {
-        glBindTexture(GL_TEXTURE_2D, closeChestTexture_alpha);
+    else if (c.state == 0) {
+        drawRectangleTextureAlpha(c.r, closeChestTexture_alpha);
     }
-
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
-    glColor4ub(255,255,255,255);
-
-    glBegin(GL_QUADS);
-    glVertex2d(-c.r.width, -c.r.height); glTexCoord2f(0.0f, 1.0f);
-    glVertex2d(-c.r.width, c.r.height); glTexCoord2f(0.0f, 0.0f); 
-    glVertex2d(c.r.width, c.r.height); glTexCoord2f(1.0f, 0.0f); 
-    glVertex2d(c.r.width, -c.r.height); glTexCoord2f(1.0f, 1.0f); 
-    glEnd();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glPopMatrix();
 }
 void render(void)
 {
@@ -1072,12 +1163,13 @@ void render(void)
 
     OceanBackground();
 
+    drawSeaMonster(seaMonster);
     drawChest(chest);//drawing chest
     drawSteeringWheel(steeringWheel);
     drawCannon(cannon);//draw canon
 
     if(boom && launch) {
-        fireCannon(cannon, smoke);
+        drawSmoke(cannon, smoke);
     }
 
     //draw collision rectangles

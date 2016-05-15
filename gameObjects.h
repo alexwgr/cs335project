@@ -144,8 +144,15 @@ struct SteeringWheel {
     }
 };
 
+struct SeaMonster {
+    //left tentacle, right tentacle, head
+    Rectangle rectangle[3];
+    int state[3]; //0 - hiding, 1 - visible, 2 - damaged
+    timespec active_time[3]; 
+};
 
-//Holds all of the repeating objects in the game; collision rectangles, bumpers, etc.
+//Holds all of the repeating objects in the game:
+//collision rectangles, bumpers, etc.
 struct GameBoard {
     Rectangle rectangles[MAX_RECTANGLES];
     Bumper bumpers[MAX_RECTANGLES];
