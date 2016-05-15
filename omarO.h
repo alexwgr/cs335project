@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string.h>
 #include <math.h>
+#include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
 #include "gameObjects.h"
@@ -15,6 +16,10 @@
 #include </usr/include/AL/alut.h>
 using namespace std;
 
+const int SMOKE_SPRITES = 12;
+const int FLAG_SPRITES = 6;
+extern GLuint smokeSpriteTexture[];
+extern GLuint flagSpriteTexture[];
 class Sounds {
 	private:
 	ALuint source;
@@ -22,8 +27,10 @@ class Sounds {
 	int sound_number;
 	public:
 };
+void initFlag(Flag &);
 //initSmoke sets properties for smoke sprites
 void initSmoke(Smoke &);
+void smokeAnimation(Smoke &, timespec );
 //initChest initializes treasure chest object properties
 void initChest(TreasureChest &);
 //ballChestCollision plays sound when ball collides with chest

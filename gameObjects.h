@@ -48,6 +48,11 @@ struct Smoke {
     int frame;
     timespec frame_timer;
 };
+struct Flag {
+	Rectangle r;
+	int flagFrame;
+	timespec flagFrameTimer;
+};
 struct Circle {
     Vec pos;
     double radius;

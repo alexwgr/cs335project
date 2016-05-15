@@ -43,8 +43,8 @@ extern "C" {
 #include "omarO.h"
 #include "hassenS.h"
 
-const int NUM_IMAGES = 34;
-const int SMOKE_SPRITES = 12;
+const int NUM_IMAGES = 40;
+//const int SMOKE_SPRITES = 12;
 const double CHUTE_THICKNESS = 6.0;
 const double CHUTE_WIDTH = 40.0;
 const double FLIPPER_LENGTH = 70.0;
@@ -100,6 +100,7 @@ int xres=780, yres=480;
 int leftButtonDown=0;
 bool boom = false;
 bool launch = false;
+int ballInPlay = 0;
 
 char buffer[256];
 
@@ -119,6 +120,7 @@ SteeringWheel steeringWheel;
 TreasureChest chest;
 Cannon cannon;
 Smoke smoke;
+Flag flag;
 
 Ppmimage *OceanImage;
 
@@ -133,6 +135,7 @@ Ppmimage *CannonImage;
 Ppmimage *steeringWheelImage;
 Ppmimage *ropeDeflectorImage[2];
 Ppmimage *smokeSprites[SMOKE_SPRITES];
+Ppmimage *flagSprites[FLAG_SPRITES];
 char ImageFile[NUM_IMAGES][250] = {
     "flippers.png\0",
     "flippers2.jpg\0",
@@ -161,7 +164,10 @@ char ImageFile[NUM_IMAGES][250] = {
     "smoke4.png\0","smoke5.png\0",
     "smoke6.png\0","smoke7.png\0",
     "smoke8.png\0","smoke9.png\0",
-    "smoke10.png\0","smoke11.png\0"
+    "smoke10.png\0","smoke11.png\0",
+		"flag1.png\0", "flag2.png\0",
+		"flag3.png\0", "flag4.png\0",
+		"flag5.png\0", "flag6.png\0"
 };
 GLuint OceanTexture;
 
@@ -176,6 +182,7 @@ GLuint bumperUpTexture;
 GLuint bumperDownTexture;
 GLuint CannonTexture;
 GLuint smokeSpriteTexture[SMOKE_SPRITES];
+GLuint flagSpriteTexture[FLAG_SPRITES];
 GLuint steeringWheelTexture;
 GLuint ropeDeflectorTexture[2];
 
@@ -220,6 +227,7 @@ int main(void)
     initChest(chest);//initialize chest properties
     initCannon(cannon);
     initSmoke(smoke);
+		initFlag(flag);
     initSteeringWheel(steeringWheel);
 
 
@@ -522,7 +530,10 @@ void checkKeys(XEvent *e)
                 timeCopy(&smoke.frame_timer, &timeCurrent);
                 boom = true;
                 launch = true;
-                ball1.vel[1] = 20.0;
+							if(ballInPlay < 1) {
+                	ball1.vel[1] = 20.0;
+									ballInPlay++;
+							}
             case XK_h:
                 hide = true;
                 break;
@@ -957,7 +968,8 @@ void fireCannon(Cannon &c, Smoke &s)
 {		
     if(boom) {
         if (s.frame < SMOKE_SPRITES) {
-            cout << s.frame << " \n";//prints frame # to console for debugging
+						smokeAnimation(s, timeCurrent);
+           /* cout << s.frame << " \n";//prints frame # to console for debugging
             glPushMatrix();
             glColor3d(1.0, 1.0, 1.0);
             glTranslated(s.r.pos[0], s.r.pos[1], s.r.pos[2]);
@@ -977,25 +989,20 @@ void fireCannon(Cannon &c, Smoke &s)
             glBindTexture(GL_TEXTURE_2D,0);
             glPopMatrix();
 
-
             //if a 20th of a second has passed
             if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
                 //reset the timer
                 timeCopy(&s.frame_timer, &timeCurrent);
                 //advance to the next frame
                 s.frame++;
-
-
-
-            }
-
+            }*/
         } else {
             //animation finished
             s.frame = 0;
             c.r.pos[1] = 100.0;
             boom = false;
         }
-    }
+    }	
 }
 void drawCannon(Cannon &c)
 {

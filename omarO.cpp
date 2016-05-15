@@ -25,6 +25,15 @@ extern score Scorekeeper;
 //initSmoke sets properties for smoke sprites
 //all sprites at same position to loop through each frame
 
+void initFlag(Flag &f)
+{
+	Rectangle *flagSprite = &f.r;
+	flagSprite->pos[0] = 450.0;
+	flagSprite->pos[1] = 150.0;
+	flagSprite->width = 30.0;
+	flagSprite->height = 50.0;
+	flagSprite->angle = 0.0;
+}
 void initSmoke(Smoke &s)
 {
     Rectangle *smoke_sprite = &s.r;
@@ -34,6 +43,36 @@ void initSmoke(Smoke &s)
     smoke_sprite->height = 50.0;
     smoke_sprite->angle = 0.0;
 
+}
+void smokeAnimation(Smoke &s, timespec timeCurrent)
+{   
+						cout << s.frame << " \n";//prints frame # to console for debugging
+            glPushMatrix();
+            glColor3d(1.0, 1.0, 1.0);
+            glTranslated(s.r.pos[0], s.r.pos[1], s.r.pos[2]);
+            glRotatef(s.r.angle + 90.0, 0, 0, 1);
+            glBindTexture(GL_TEXTURE_2D, smokeSpriteTexture[s.frame]);
+            glEnable(GL_ALPHA_TEST);
+            glAlphaFunc(GL_GREATER, 0.0f);
+            glColor4ub(255,255,255,255);
+
+            glBegin(GL_QUADS);
+            glVertex2d(-s.r.width, -s.r.height); glTexCoord2f(0.0f, 1.0f);
+            glVertex2d(-s.r.width, s.r.height); glTexCoord2f(0.0f, 0.0f); 
+            glVertex2d(s.r.width, s.r.height); glTexCoord2f(1.0f, 0.0f); 
+            glVertex2d(s.r.width, -s.r.height); glTexCoord2f(1.0f, 1.0f); 
+            glEnd();
+
+            glBindTexture(GL_TEXTURE_2D,0);
+            glPopMatrix();
+
+            //if a 20th of a second has passed
+            if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
+                //reset the timer
+                timeCopy(&s.frame_timer, &timeCurrent);
+                //advance to the next frame
+                s.frame++;
+						} 
 }
 //play sound when Cannon launches ball
 void KaBoom(Cannon &c, Ball &b, ALuint &source)
