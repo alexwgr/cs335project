@@ -13,6 +13,7 @@
 #include "vector.h"
 #include "time.h"
 #include "ppm.h"
+#include <GL/glx.h>
 
 #define MAX_RECTANGLES 900
 #define MAX_PARTICLES 800
@@ -47,6 +48,7 @@ struct Smoke {
     Rectangle r;
     int frame;
     timespec frame_timer;
+    int state; //1 = active, 0 = not
 };
 struct Flag {
 	Rectangle r;
@@ -150,10 +152,19 @@ struct SteeringWheel {
 };
 
 struct SeaMonster {
-    //left tentacle, right tentacle, head
-    Rectangle rectangle[3];
-    int state[3]; //0 - hiding, 1 - visible, 2 - damaged
-    timespec active_time[3]; 
+    Rectangle rectangle;
+    int state; //0 - hiding, 1 - active, 2 - damaged
+    timespec active_time;
+    
+    Vec hiding_pos, active_pos, dead_pos;
+
+    Smoke bloodspurts[50]; // such violence!
+    int num_bloodspurts;
+
+    SeaMonster() 
+    {
+        num_bloodspurts = 0;
+    }
 };
 
 //Holds all of the repeating objects in the game:
@@ -188,6 +199,7 @@ void initSteeringWheel(SteeringWheel &);
 //simple filled shapes, good for debugging
 void drawCircle(Circle &);
 void drawRectangle(Rectangle &);
+void drawRectangleTextureAlpha(Rectangle &, GLuint &);
 
 //adds a bumper to the board
 void addBumperToBoard(Bumper &, GameBoard &);

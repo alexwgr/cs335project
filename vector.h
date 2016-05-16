@@ -26,4 +26,5 @@ void VecRotate(Vec &, double angle, Vec &);
 void VecAdd(Vec &, Vec &, Vec &);
 double VecMagnitude(Vec &);
 void VecBtn(Vec &, Vec &, Vec &);
+void VecCopy(Vec&, Vec&);
 #endif
