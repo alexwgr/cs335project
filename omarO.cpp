@@ -22,18 +22,18 @@ extern "C" {
 }
 using namespace std;
 extern score Scorekeeper;
-//initSmoke sets properties for smoke sprites
-//all sprites at same position to loop through each frame
 
 void initFlag(Flag &f)
 {
 	Rectangle *flagSprite = &f.r;
-	flagSprite->pos[0] = 450.0;
-	flagSprite->pos[1] = 150.0;
+	flagSprite->pos[0] = 420.0;
+	flagSprite->pos[1] = 620.0;
 	flagSprite->width = 30.0;
 	flagSprite->height = 50.0;
 	flagSprite->angle = 0.0;
 }
+//initSmoke sets properties for smoke sprites
+//all sprites at same position to loop through each frame
 void initSmoke(Smoke &s)
 {
     Rectangle *smoke_sprite = &s.r;
@@ -44,6 +44,7 @@ void initSmoke(Smoke &s)
     smoke_sprite->angle = 0.0;
 
 }
+//renders a sequence of smoke sprites with loop 
 void smokeAnimation(Smoke &s, timespec timeCurrent)
 {   
 						cout << s.frame << " \n";//prints frame # to console for debugging
@@ -74,14 +75,7 @@ void smokeAnimation(Smoke &s, timespec timeCurrent)
                 s.frame++;
 						} 
 }
-//play sound when Cannon launches ball
-void KaBoom(Cannon &c, Ball &b, ALuint &source)
-{
-    if (rectangleBallCollision(c.r, b)) {
-        play_sound(source);
-        //cout << "KABOOM!\n";
-    } 
-}
+
 void initCannon(Cannon &c)
 {
     Rectangle *rec = &c.r;
@@ -152,8 +146,8 @@ int clean_sound(ALuint &buffer, ALuint &source)
 void initChest(TreasureChest &chest)
 {
     Rectangle *rec = &chest.r;
-    rec->pos[0] = 100.0;
-    rec->pos[1] = 420.0;
+    rec->pos[0] = 240.0;
+    rec->pos[1] = 620.0;
     rec->width = 40.0;
     rec->height = 40.0;
     rec->angle = 0.0;
