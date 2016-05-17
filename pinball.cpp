@@ -102,14 +102,16 @@ int xres=780, yres=480;
 int leftButtonDown=0;
 bool boom = false;
 bool launch = false;
-int ballInPlay = 0;
+//
+bool pauseGame = false;
+int cannonFired = 0;
 
 char buffer[256];
 
 Vec leftButtonPos;
 
 score Scorekeeper;
-
+bool gameNotOver = true;
 GameBoard board;
 Curve curve, curve2;
 
@@ -294,6 +296,9 @@ int main(void)
             physicsCountdown -= physicsRate;
         }
         render();
+	//when the ball hit the bottom of the page
+	//gameover 
+	//lose one ball count
         glXSwapBuffers(dpy, win);
     }
     cleanupXWindows();
@@ -399,7 +404,7 @@ void initOpengl(void)
 void initGameBoard(GameBoard &gb) {
     gb.num_rectangles = 0;
 
-    gb.starting_point[0] = xres - CHUTE_THICKNESS - ball1.radius;
+    gb.starting_point[0] = xres - CHUTE_THICKNESS - ball1.radius - 15;
     gb.starting_point[1] = 200;
 
     Rectangle rec;
@@ -458,9 +463,10 @@ void killSeaMonster(SeaMonster &monster)
 void seaMonsterState(SeaMonster &monster)
 {
 
-    std::cout << "time difference: " << timeDiff(&monster.active_time, &timeCurrent) << std::endl;
+    /*std::cout << "time difference: " << timeDiff(&monster.active_time, &timeCurrent) << std::endl;
     std::cout << "monster state: " << monster.state << std::endl;
     //just started
+    */
     if (monster.state == -1) {
         timeCopy(&monster.active_time, &timeCurrent);
         monster.state = 0;
@@ -661,12 +667,13 @@ void checkKeys(XEvent *e)
                 smoke.state = 1;
                 boom = true;
                 launch = true;
-                if(ballInPlay < 1) {
+                if(cannonFired < 1) {
                     ball1.vel[1] = 20.0;
-                    ballInPlay++;
+                    cannonFired++;
                 }
             case XK_h:
                 hide = true;
+		pauseGame ^= 1;
                 break;
             case XK_v:
                 killSeaMonster(seaMonster);
@@ -744,8 +751,9 @@ void flipperMovement(Flipper &f)
 void physics(void)
 {
     //gravity
+    if(ball1.inPlay){
     ball1.vel[1] += -0.2;
-
+    }
     //flipper physics
     flipperMovement(flipper);
     flipperBallCollision(flipper, ball1);
@@ -835,6 +843,8 @@ void physics(void)
         ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
         ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
     }
+
+	gameOver(board, ball1, Scorekeeper);
 
     //Check for collision with window edges
 
@@ -1216,9 +1226,12 @@ void render(void)
     glColor3f(1,1,1);
     glPushMatrix();
     glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
+    
+
     if (ball1.isVisible && launch) {
         drawBall();
     }
+    //drawBall();
     glPopMatrix();
 
     drawFlipper(flipper);
