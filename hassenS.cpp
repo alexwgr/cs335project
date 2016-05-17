@@ -23,6 +23,8 @@ extern "C" {
 #include "fonts.h"
 }
 
+using namespace std;
+
 extern Ppmimage *canonImage;
 extern GLuint canonTexture;
 extern score Scorekeeper;
@@ -35,10 +37,34 @@ extern GLuint flippersTexture;
 extern GLuint flippersTexture2;
 extern GLuint pinballTexture;
 extern Ball ball1;
+extern bool cannonFired;
+extern bool launch;
+extern bool gameNotOver;
+extern bool boom;
 extern int xres;
 extern int yres;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
+
+void gameOver(GameBoard &gb, Ball &ball1, score &s)
+{
+    if(ball1.pos[1] < 0.0 + ball1.radius) {
+	ball1.pos[0] = gb.starting_point[0];
+	ball1.pos[1] = gb.starting_point[1];
+	s.balls_left--;
+	cout << "hit the fucking ground" << endl;
+	ball1.inPlay = 0;
+	cannonFired = 0;
+	launch = false;
+	boom = false;
+	ball1.vel[0] = 0;
+	ball1.vel[1] = 0;
+    }
+    if(s.balls_left == 0) {
+	gameNotOver = false;
+	cout << "is it working or naaaaah" << endl;
+    }
+}
 
 void addScore(score *s, int add)
 {

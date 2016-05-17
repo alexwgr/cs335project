@@ -28,5 +28,6 @@ void addScore(score *, int);
 void initScore(score *);
 //display score
 void drawScore();
-
+//another try
+void gameOver(GameBoard &, Ball &, score &);
 #endif

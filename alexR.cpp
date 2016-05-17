@@ -20,7 +20,7 @@
 #include <cmath>
 #include <GL/glx.h>
 
-#define MAX_VELOCITY 30.0
+#define MAX_VELOCITY 25.0
 #define MAX_BUMPERS 20
 
 extern double xres, yres;
