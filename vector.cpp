@@ -17,6 +17,11 @@ void MakeVector(double x, double y, double z, Vec &v)
     v[2] = z;
     
 }
+void VecCopy(Vec &dest, Vec &source)
+{
+    dest[0] = source[0];
+    dest[1] = source[1];
+}
 double VecDot(Vec &vec1, Vec &vec2)
 {
     return vec1[0] * vec2[0] + vec1[1] * vec2[1];

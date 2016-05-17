@@ -132,6 +132,32 @@ unsigned char *buildAlphaData(Ppmimage *img)
         }
         return newdata;
 }
+
+void drawRectangleTextureAlpha(Rectangle &r, GLuint &textureId)
+{
+
+    glPushMatrix();
+    //glColor3d(1.0, 1.0, 1.0);
+    glTranslated(r.pos[0], r.pos[1], r.pos[2]);
+    glRotatef(r.angle, 0, 0, 1);
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    //glColor4ub(255,255,255,255);
+
+    glBegin(GL_QUADS);
+    glVertex2d(-r.width, -r.height); glTexCoord2f(0.0f, 1.0f);
+    glVertex2d(-r.width,  r.height); glTexCoord2f(0.0f, 0.0f); 
+    glVertex2d( r.width,  r.height); glTexCoord2f(1.0f, 0.0f); 
+    glVertex2d( r.width, -r.height); glTexCoord2f(1.0f, 1.0f); 
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPopMatrix();
+}
+
 double timeDiff(struct timespec *start, struct timespec *end) 
 {
     return (double)(end->tv_sec - start->tv_sec ) +

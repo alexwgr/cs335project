@@ -41,39 +41,25 @@ void initSmoke(Smoke &s)
     smoke_sprite->pos[1] = 150.0;
     smoke_sprite->width = 30.0;
     smoke_sprite->height = 50.0;
-    smoke_sprite->angle = 0.0;
+    smoke_sprite->angle = 90.0;
 
 }
 //renders a sequence of smoke sprites with loop 
 void smokeAnimation(Smoke &s, timespec timeCurrent)
 {   
-						cout << s.frame << " \n";//prints frame # to console for debugging
-            glPushMatrix();
-            glColor3d(1.0, 1.0, 1.0);
-            glTranslated(s.r.pos[0], s.r.pos[1], s.r.pos[2]);
-            glRotatef(s.r.angle + 90.0, 0, 0, 1);
-            glBindTexture(GL_TEXTURE_2D, smokeSpriteTexture[s.frame]);
-            glEnable(GL_ALPHA_TEST);
-            glAlphaFunc(GL_GREATER, 0.0f);
-            glColor4ub(255,255,255,255);
-
-            glBegin(GL_QUADS);
-            glVertex2d(-s.r.width, -s.r.height); glTexCoord2f(0.0f, 1.0f);
-            glVertex2d(-s.r.width, s.r.height); glTexCoord2f(0.0f, 0.0f); 
-            glVertex2d(s.r.width, s.r.height); glTexCoord2f(1.0f, 0.0f); 
-            glVertex2d(s.r.width, -s.r.height); glTexCoord2f(1.0f, 1.0f); 
-            glEnd();
-
-            glBindTexture(GL_TEXTURE_2D,0);
-            glPopMatrix();
-
-            //if a 20th of a second has passed
-            if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
-                //reset the timer
-                timeCopy(&s.frame_timer, &timeCurrent);
-                //advance to the next frame
-                s.frame++;
-						} 
+    cout << s.frame << " \n";//prints frame # to console for debugging
+    if (s.frame < SMOKE_SPRITES) {
+        drawRectangleTextureAlpha(s.r, smokeSpriteTexture[s.frame]);
+        //if a 20th of a second has passed
+        if (timeDiff(&s.frame_timer, &timeCurrent) > 1.0/20.0) {
+            //reset the timer
+            timeCopy(&s.frame_timer, &timeCurrent);
+            //advance to the next frame
+            s.frame++;
+        } 
+    } else {
+        s.state = 0;
+    }
 }
 
 void initCannon(Cannon &c)
@@ -156,7 +142,6 @@ void initChest(TreasureChest &chest)
 int ballChestCollision(TreasureChest &chest, Ball &b, ALuint &source)
 {
     if (VecMagnitude(b.vel) > 1) {
-        cout << "YOU JUST GOT 500PTS!!\n";
         play_sound(source);
         if (chest.HP > 0) {
             chest.HP--;

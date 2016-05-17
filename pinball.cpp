@@ -59,7 +59,6 @@ typedef double Flt;
 #define MakeVector(x,y,z,v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
 #define VecNegate(a) (a)[0]=(-(a)[0]); (a)[1]=(-(a)[1]); (a)[2]=(-(a)[2]);
 //#define VecDot(a,b) ((a)[0]*(b)[0]+(a)[1]*(b)[1]+(a)[2]*(b)[2])
-#define VecCopy(a,b) (b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2];
 
 //X Windows variables
 Display *dpy;
@@ -93,7 +92,6 @@ void drawDeflector(Deflector &);
 void OceanBackground();
 void drawFlipper(Flipper &f);
 void drawBall();
-void drawRectangleTextureAlpha(Rectangle &, GLuint &);
 
 void physics(void);
 void flipperMovement(Flipper &e);
@@ -426,104 +424,123 @@ void initBalls(void)
 
 void initSeaMonster(SeaMonster &monster)
 {
-				double h = (double)yres / 3.0;
-				//set up left tentacle
-				MakeVector(-h, h, 0, monster.rectangle[0].pos);
-				monster.rectangle[0].width  = h;
-				monster.rectangle[0].height = h;
-				monster.rectangle[0].angle = 90; 
-				monster.state[0] = -1;
+    double h = (double)yres / 3.0;
+    monster.rectangle.width  = h;
+    monster.rectangle.height = h;
+    monster.rectangle.angle = 90; 
+    monster.state = -1;
+
+    //set up left tentacle
+    MakeVector(-h, h, 0, monster.rectangle.pos);
+    MakeVector(-monster.rectangle.width, h, 0, monster.hiding_pos);
+    MakeVector(40, h, 0, monster.active_pos);
+    MakeVector(40, -monster.rectangle.height, 0, monster.dead_pos);
+
+
+    monster.num_bloodspurts = 1;
+    Smoke *blood = &monster.bloodspurts[0];
+    blood->state = 0;
+    MakeVector(100, 100, 0, blood->r.pos);
+    blood->r.angle = 0;
+    blood->frame = 0;
+
 }
 
-void killSeaMonster(SeaMonster &monster, int monsterNum)
+void killSeaMonster(SeaMonster &monster)
 {
-				if (monster.state[monsterNum] == 1) {
-								monster.state[monsterNum] = 2;
-								timeCopy(&monster.active_time[monsterNum], &timeCurrent);
-				}
+    if (monster.state == 1) {
+        monster.state = 2;
+        timeCopy(&monster.active_time, &timeCurrent);
+    }
 }
+
+
 
 void seaMonsterState(SeaMonster &monster)
 {
-				std::cout << "time difference: " << timeDiff(&monster.active_time[0], &timeCurrent) << std::endl;
-				std::cout << "monster state: " << monster.state[0] << std::endl;
-				//just started
-				if (monster.state[0] == -1) {
-								timeCopy(&monster.active_time[0], &timeCurrent);
-								monster.state[0] = 0;
-				}
 
-				switch (monster.state[0]) {
-								//if hidden for 5 seconds
-								case 0: 
-												if (monster.rectangle[0].pos[0] > -(monster.rectangle[0].width)) {
-																monster.rectangle[0].pos[0] -= 2;
-												} else {
-																//monster.rectangle[0].pos[0] = -monster.rectangle[0].width;
-												}
-												if (timeDiff(&monster.active_time[0], &timeCurrent) > 5) {
-																//make active
-																monster.state[0] = 1;
-																//reset timer
-																timeCopy(&monster.active_time[0], &timeCurrent);
-												}
-												break;
+    std::cout << "time difference: " << timeDiff(&monster.active_time, &timeCurrent) << std::endl;
+    std::cout << "monster state: " << monster.state << std::endl;
+    //just started
+    if (monster.state == -1) {
+        timeCopy(&monster.active_time, &timeCurrent);
+        monster.state = 0;
+    }
 
-												//move right until on screen
-								case 1:
-												if (monster.rectangle[0].pos[0] < 40) {
-																monster.rectangle[0].pos[0] += 2;
-												} else {
-																monster.rectangle[0].pos[0] = 40;
-												}
+    switch (monster.state) {
+        //if hidden for 5 seconds
+        case 0: 
+            if (monster.rectangle.pos[0] > -(monster.rectangle.width)) {
+                monster.rectangle.pos[0] -= 2;
+            } else {
+                //monster.rectangle.pos[0] = -monster.rectangle.width;
+            }
+            if (timeDiff(&monster.active_time, &timeCurrent) > 5) {
+                //make active
+                monster.state = 1;
+                //reset timer
+                timeCopy(&monster.active_time, &timeCurrent);
+            }
+            break;
 
-												if (timeDiff(&monster.active_time[0], &timeCurrent) > 5)
-												{
-																monster.state[0] = 0;
-																timeCopy(&monster.active_time[0], &timeCurrent);
-												}
-												break;
-								case 2:
-												//just got hit
-												if (timeDiff(&monster.active_time[0], &timeCurrent) < 0.5) {
-																monster.rectangle[0].pos[0] += (rand() % 10) - 5;
-																monster.rectangle[0].pos[1] += (rand() % 10) - 5;
+            //move right until on screen
+        case 1:
+            if (monster.rectangle.pos[0] < 40) {
+                monster.rectangle.pos[0] += 2;
+            } else {
+                monster.rectangle.pos[0] = 40;
+            }
 
-												} else {
-																//after 0.5 seconds, monster is dead
-																monster.state[0] = 3;
-												}
-												break;
+            if (timeDiff(&monster.active_time, &timeCurrent) > 5)
+            {
+                monster.state = 0;
+                timeCopy(&monster.active_time, &timeCurrent);
+            }
+            break;
+        case 2:
+            //just got hit
+            if (timeDiff(&monster.active_time, &timeCurrent) < 0.5) {
+                //monster.rectangle.pos[0] += (rand() % 10) - 5;
+                //monster.rectangle.pos[1] += (rand() % 10) - 5;
 
-								case 3:
-												//dead
-												if (monster.rectangle[0].pos[1] > -monster.rectangle[0].height) {
-																//monster sinks
-																monster.rectangle[0].pos[1] -= 1;
-												} else {
-																//reset state back to 0
-																monster.state[0] = 0;
-																initSeaMonster(monster);
-																timeCopy(&monster.active_time[0], &timeCurrent);
-												}
-												break;
-				}
+            } else {
+                //after 0.5 seconds, monster is dead
+                monster.state = 3;
+            }
+            break;
 
+        case 3:
+            //dead
+            if (monster.rectangle.pos[1] > -monster.rectangle.height) {
+                //monster sinks
+                monster.rectangle.pos[1] -= 1;
+            } else {
+                //reset state back to 0
+                monster.state = 0;
+                initSeaMonster(monster);
+                timeCopy(&monster.active_time, &timeCurrent);
+            }
+            break;
+    }
 
 }
 
 void drawSeaMonster(SeaMonster &monster)
 {
-				//left tentacle
-				if (monster.state[0] < 2) {
-								//draw normal image if not damaged
-								drawRectangleTextureAlpha(monster.rectangle[0], monsterTextures[0]);
-				} else {
-
-								//draw damaged image
-								drawRectangleTextureAlpha(monster.rectangle[0], monsterTextures[3]);
-				}
-
+    glPushMatrix();
+    //left tentacle
+    if (monster.state < 2) {
+        //draw normal image if not damaged
+        drawRectangleTextureAlpha(monster.rectangle, monsterTextures[0]);
+    } else {
+        if (monster.state == 2)
+            glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+        else 
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        //draw damaged image
+        drawRectangleTextureAlpha(monster.rectangle, monsterTextures[3]);
+    }
+    glPopMatrix();
 }
 
 void initDeflectors(GameBoard &board)
@@ -604,80 +621,81 @@ void checkMouse(XEvent *e)
 
 void checkKeys(XEvent *e)
 {
-				int key = XLookupKeysym(&e->xkey, 0);
+    int key = XLookupKeysym(&e->xkey, 0);
 
-				if (e->type == KeyPress) {
-								switch(key) {
-												case XK_Left:
-																ball1.vel[0] -= 1.0;
-																break;
-												case XK_Right:
-																ball1.vel[0] += 1.0;
-																break;
-												case XK_Up:
-																ball1.vel[1] = 20.0;
-																break;
-												case XK_Down:
-																ball1.vel[1] -= 1.0;
-																break;
-												case XK_s:
-																//press s to slow the balls
-																ball1.vel[0] *= 0.5;
-																ball1.vel[1] *= 0.5;
-																ball2.vel[0] *= 0.5;
-																ball2.vel[1] *= 0.5;
-																break;
-												case XK_f:
-																//press s to slow the balls
-																flipper.flipstate = 1;
-																play_sound(alSource);
-																break;
-												case XK_k:
-																//flipper 2
-																flipper2.flipstate = 1;
-																play_sound(alSource);
-																break;
-												case XK_b:
-																//start frame timer
-																timeCopy(&smoke.frame_timer, &timeCurrent);
-																boom = true;
-																launch = true;
-																if(ballInPlay < 1) {
-																				ball1.vel[1] = 20.0;
-																				ballInPlay++;
-																}
-												case XK_h:
-																hide = true;
-																break;
-												case XK_v:
-																killSeaMonster(seaMonster, 0);
-																break;
-												case XK_Escape:
-																done=1;
-																break;
-								}
+    if (e->type == KeyPress) {
+        switch(key) {
+            case XK_Left:
+                ball1.vel[0] -= 1.0;
+                break;
+            case XK_Right:
+                ball1.vel[0] += 1.0;
+                break;
+            case XK_Up:
+                ball1.vel[1] = 20.0;
+                break;
+            case XK_Down:
+                ball1.vel[1] -= 1.0;
+                break;
+            case XK_s:
+                //press s to slow the balls
+                ball1.vel[0] *= 0.5;
+                ball1.vel[1] *= 0.5;
+                ball2.vel[0] *= 0.5;
+                ball2.vel[1] *= 0.5;
+                break;
+            case XK_f:
+                //press s to slow the balls
+                flipper.flipstate = 1;
+                play_sound(alSource);
+                break;
+            case XK_k:
+                //flipper 2
+                flipper2.flipstate = 1;
+                play_sound(alSource);
+                break;
+            case XK_b:
+                //start frame timer
+                timeCopy(&smoke.frame_timer, &timeCurrent);
+                smoke.state = 1;
+                boom = true;
+                launch = true;
+                if(ballInPlay < 1) {
+                    ball1.vel[1] = 20.0;
+                    ballInPlay++;
+                }
+            case XK_h:
+                hide = true;
+                break;
+            case XK_v:
+                killSeaMonster(seaMonster);
+                break;
+            case XK_Escape:
+                done=1;
+                break;
+        }
 
-				}
-				else if (e->type == KeyRelease)
-				{
-								char keys[32];
-								XQueryKeymap(dpy, keys);
+    }
+    else if (e->type == KeyRelease)
+    {
+        char keys[32];
+        XQueryKeymap(dpy, keys);
 
-								if (!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
-								{
-												// Stuff to do on KeyRelease
-												switch (key) {
-																case XK_f:
-																				//press s to slow the balls
-																				flipper.flipstate = 2;
-																				break;
-																case XK_k:
-																				//flipper 2
-																				flipper2.flipstate = 2;
-																				break;
-												}
-								}
-				}
+        if (!(keys[e->xkey.keycode>>3] & (0x1 << (e->xkey.keycode % 8))))
+        {
+            // Stuff to do on KeyRelease
+            switch (key) {
+                case XK_f:
+                    //press s to slow the balls
+                    flipper.flipstate = 2;
+                    break;
+                case XK_k:
+                    //flipper 2
+                    flipper2.flipstate = 2;
+                    break;
+            }
+        }
+    }
 }
 
 
@@ -724,131 +742,131 @@ void flipperMovement(Flipper &f)
 
 void physics(void)
 {
-				//gravity
-				ball1.vel[1] += -0.2;
+    //gravity
+    ball1.vel[1] += -0.2;
 
-				//flipper physics
-				flipperMovement(flipper);
-				flipperBallCollision(flipper, ball1);
-				//flipper2 physics
-				flipperMovement(flipper2);
-				flipperBallCollision(flipper2, ball1);
+    //flipper physics
+    flipperMovement(flipper);
+    flipperBallCollision(flipper, ball1);
+    //flipper2 physics
+    flipperMovement(flipper2);
+    flipperBallCollision(flipper2, ball1);
 
-				seaMonsterState(seaMonster);
+    seaMonsterState(seaMonster);
 
-				//rectangle collisions
-				bool collided = false;
-				for (int i = 0; i < board.num_rectangles; i++) {
-								if (rectangleBallCollision(board.rectangles[i], ball1)) {
-												collided = true;
+    //rectangle collisions
+    bool collided = false;
+    for (int i = 0; i < board.num_rectangles; i++) {
+        if (rectangleBallCollision(board.rectangles[i], ball1)) {
+            collided = true;
 
-								}
-				}
+        }
+    }
 
-				//treasure chest collision
-				if (rectangleBallCollision(chest.r, ball1)) {
+    //treasure chest collision
+    if (rectangleBallCollision(chest.r, ball1)) {
 
-								if (chest.active == 1) {
-												timeCopy(&chest.collision_time, &timeCurrent);
-												chest.active = 0;
+        if (chest.active == 1) {
+            timeCopy(&chest.collision_time, &timeCurrent);
+            chest.active = 0;
 
-												if (ballChestCollision(chest, ball1, alSource)) {
-																collided = true;
-												}
-								}
+            if (ballChestCollision(chest, ball1, alSource)) {
+                collided = true;
+            }
+        }
 
-								if (chest.active == 0 && 
-																timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
-												chest.active = 1;
-								}
+        if (chest.active == 0 && 
+                timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
+            chest.active = 1;
+        }
 
-				}	
+    }	
 
-				//bumper collision
-				for (int i = 0; i < board.num_bumpers; i++) {
-								if (bumperBallCollision(board.bumpers[i], ball1)) {
+    //bumper collision
+    for (int i = 0; i < board.num_bumpers; i++) {
+        if (bumperBallCollision(board.bumpers[i], ball1)) {
 
-								}
-				}
+        }
+    }
 
-				//deflector collisions
-				for (int i = 0; i < board.num_rectangles; i++) {
-								if (deflectorBallCollision(board.deflectors[i], ball1)) {
-								}
-				}
+    //deflector collisions
+    for (int i = 0; i < board.num_rectangles; i++) {
+        if (deflectorBallCollision(board.deflectors[i], ball1)) {
+        }
+    }
 
-				//steering wheel collision
-				steeringWheelBallCollision(steeringWheel, ball1);
-				steeringWheelMovement(steeringWheel);
+    //steering wheel collision
+    steeringWheelBallCollision(steeringWheel, ball1);
+    steeringWheelMovement(steeringWheel);
 
-				if (collided) {
-								//apply roll
-								double momentum = ball1.vel[0] * 0.6;
-								Vec mv;
-								MakeVector(1, 0, 0, mv);
-								VecScale(mv, momentum, mv);
-								VecAdd(ball1.vel, mv, ball1.vel);
+    if (collided) {
+        //apply roll
+        double momentum = ball1.vel[0] * 0.6;
+        Vec mv;
+        MakeVector(1, 0, 0, mv);
+        VecScale(mv, momentum, mv);
+        VecAdd(ball1.vel, mv, ball1.vel);
 
-				}
+    }
 
-				for (int i = 0; i < board.num_bumpers; i++) {
-								if (bumperBallCollision(board.bumpers[i], ball1)) {
-												play_sound(alSource);
-								}
-				}
-				//KaBoom(Cannon, ball1, alSource);//when ball is on cannon
-				if (boom && launch) {
-								drawSmokeMovement(cannon, smoke);
-				}
+    for (int i = 0; i < board.num_bumpers; i++) {
+        if (bumperBallCollision(board.bumpers[i], ball1)) {
+            play_sound(alSource);
+        }
+    }
+    //KaBoom(Cannon, ball1, alSource);//when ball is on cannon
+    if (boom && launch && !ball1.inPlay) {
+        drawSmokeMovement(cannon, smoke);
+    }
 
-				applyMaximumVelocity(ball1);
+    applyMaximumVelocity(ball1);
 
-				//set ball inPlay flag if ball is left of launch chute
-				if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
-								ball1.inPlay = 1;
-				}
+    //set ball inPlay flag if ball is left of launch chute
+    if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
+        ball1.inPlay = 1;
+    }
 
-				//Update position
-				ball1.pos[0] += ball1.vel[0];
-				ball1.pos[1] += ball1.vel[1];
-				if (leftButtonDown) {
-								//make ball go toward mouse pointer position
-								ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
-								ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
-				}
+    //Update position
+    ball1.pos[0] += ball1.vel[0];
+    ball1.pos[1] += ball1.vel[1];
+    if (leftButtonDown) {
+        //make ball go toward mouse pointer position
+        ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
+        ball1.vel[1] = (leftButtonPos[1] - ball1.pos[1]) * 0.5;
+    }
 
-				//Check for collision with window edges
+    //Check for collision with window edges
 
-				//right board edge shifts left if the ball is in play 
-				//and has left the chute
-				double boardEdge = ball1.inPlay 
-								? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) 
-								: xres - ball1.radius;
+    //right board edge shifts left if the ball is in play 
+    //and has left the chute
+    double boardEdge = ball1.inPlay 
+        ? xres - (CHUTE_WIDTH + CHUTE_THICKNESS + ball1.radius + 0.5) 
+        : xres - ball1.radius;
 
-				//left window edge
-				if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
-								ball1.pos[0] = ball1.radius;
-								ball1.vel[0] *= -0.2;
-				}
+    //left window edge
+    if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
+        ball1.pos[0] = ball1.radius;
+        ball1.vel[0] *= -0.2;
+    }
 
-				//right window edge
-				else if (ball1.pos[0] >= boardEdge && ball1.vel[0] > 0.0) {
-								ball1.pos[0] = boardEdge;
-								ball1.vel[0] *= - 0.2;
-				}
+    //right window edge
+    else if (ball1.pos[0] >= boardEdge && ball1.vel[0] > 0.0) {
+        ball1.pos[0] = boardEdge;
+        ball1.vel[0] *= - 0.2;
+    }
 
-				//bottom window edge
-				//Hassen 
-				if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
-								ball1.pos[1] = ball1.radius;
-								ball1.vel[1] *= - 0.2;
-				}
+    //bottom window edge
+    //Hassen 
+    if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
+        ball1.pos[1] = ball1.radius;
+        ball1.vel[1] *= - 0.2;
+    }
 
-				//top window edge
-				else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
-								ball1.pos[1] = yres - ball1.radius;
-								ball1.vel[1] *= -0.2;
-				}
+    //top window edge
+    else if	(ball1.pos[1] >= (Flt)yres-ball1.radius && ball1.vel[1] > 0.0) {
+        ball1.pos[1] = yres - ball1.radius;
+        ball1.vel[1] *= -0.2;
+    }
 }
 
 void initTextures(void)
@@ -949,31 +967,6 @@ void initTextures(void)
 
 				sprintf(buffer, "./images/flag6.ppm");
 				alphaTextureInit(buffer, flagSpriteTexture[5], flagSprites[5]);
-}
-
-void drawRectangleTextureAlpha(Rectangle &r, GLuint &textureId)
-{
-
-				glPushMatrix();
-				//glColor3d(1.0, 1.0, 1.0);
-				glTranslated(r.pos[0], r.pos[1], r.pos[2]);
-				glRotatef(r.angle, 0, 0, 1);
-
-				glBindTexture(GL_TEXTURE_2D, textureId);
-
-				glEnable(GL_ALPHA_TEST);
-				glAlphaFunc(GL_GREATER, 0.0f);
-				glColor4ub(255,255,255,255);
-
-				glBegin(GL_QUADS);
-				glVertex2d(-r.width, -r.height); glTexCoord2f(0.0f, 1.0f);
-				glVertex2d(-r.width,  r.height); glTexCoord2f(0.0f, 0.0f); 
-				glVertex2d( r.width,  r.height); glTexCoord2f(1.0f, 0.0f); 
-				glVertex2d( r.width, -r.height); glTexCoord2f(1.0f, 1.0f); 
-				glEnd();
-
-				glBindTexture(GL_TEXTURE_2D, 0);
-				glPopMatrix();
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -1172,16 +1165,17 @@ void drawSmokeMovement(Cannon &c, Smoke &s)
 
 void drawSmoke(Cannon &c, Smoke &s)
 {		
-				if(boom) {
-								if (s.frame < SMOKE_SPRITES) {
-												smokeAnimation(s, timeCurrent);
-								} else {
-												//animation finished
-												s.frame = 0;
-												c.r.pos[1] = 100.0;
-												boom = false;
-								}
-				}	
+    if(s.state == 1) {
+        if (s.frame < SMOKE_SPRITES) {
+            smokeAnimation(s, timeCurrent);
+    
+        } else {
+            //animation finished
+            s.frame = 0;
+            c.r.pos[1] = 100.0;
+            boom = false;
+        }
+    }	
 }
 void drawCannon(Cannon &c)
 {
@@ -1200,66 +1194,67 @@ void drawChest(TreasureChest &c)
 }
 void render(void)
 {
-				//	Rect re;
-				glClear(GL_COLOR_BUFFER_BIT);
 
-				//Curve
-				glLineWidth(2.5);
-				glColor3ub(150, 10, 10);
-				glPushMatrix();
-				glBegin(GL_LINES);
-				glVertex3f(curve.points[0][0], curve.points[0][1],0);
-				glVertex3f(curve.points[1][0], curve.points[1][1],0);
-				glEnd();
-				glBegin(GL_LINES);
-				glVertex3f(curve.points[1][0], curve.points[1][1], 0);
-				glVertex3f(curve.points[2][0], curve.points[2][1], 0);
-				glEnd();
+    //	Rect re;
+    glClear(GL_COLOR_BUFFER_BIT);
 
-				glEnd();
-				glPopMatrix();
+    //Curve
+    glLineWidth(2.5);
+    glColor3ub(150, 10, 10);
+    glPushMatrix();
+    glBegin(GL_LINES);
+    glVertex3f(curve.points[0][0], curve.points[0][1],0);
+    glVertex3f(curve.points[1][0], curve.points[1][1],0);
+    glEnd();
+    glBegin(GL_LINES);
+    glVertex3f(curve.points[1][0], curve.points[1][1], 0);
+    glVertex3f(curve.points[2][0], curve.points[2][1], 0);
+    glEnd();
 
-				OceanBackground();
-				flagAnimation(flag);
-				drawSeaMonster(seaMonster);
-				drawChest(chest);//drawing chest
-				drawSteeringWheel(steeringWheel);
-				drawCannon(cannon);//draw canon
+    glEnd();
+    glPopMatrix();
 
-				if(boom && launch) {
-								drawSmoke(cannon, smoke);
-				}
+    OceanBackground();
+		flagAnimation(flag);
+    drawSeaMonster(seaMonster);
+    drawChest(chest);//drawing chest
+    drawSteeringWheel(steeringWheel);
+    drawCannon(cannon);//draw canon
 
-				//draw collision rectangles
-				glColor3ub(255, 255, 255);
-				for (int i = 0; i < board.num_rectangles; i++) {
-								drawRectangle(board.rectangles[i]);
-				}
+    if(boom && launch && !ball1.inPlay) {
+        drawSmoke(cannon, smoke);
+    }
 
-				//draw deflectors
-				for (int i = 0; i < board.num_deflectors; i++) { 
-								drawDeflector(board.deflectors[i]);
-				}
+    //draw collision rectangles
+    glColor3ub(255, 255, 255);
+    for (int i = 0; i < board.num_rectangles; i++) {
+        drawRectangle(board.rectangles[i]);
+    }
 
-				//draw bumpers
-				for (int i = 0; i < board.num_bumpers; i++) {
-								drawBumper(board.bumpers[i]);
-				}
+    //draw deflectors
+    for (int i = 0; i < board.num_deflectors; i++) { 
+        drawDeflector(board.deflectors[i]);
+    }
 
-				//draw balls
-				glColor3f(1,1,1);
-				glPushMatrix();
-				glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
-				if (ball1.isVisible && launch) {
-								drawBall();
-				}
-				glPopMatrix();
+    //draw bumpers
+    for (int i = 0; i < board.num_bumpers; i++) {
+        drawBumper(board.bumpers[i]);
+    }
 
-				drawFlipper(flipper);
-				drawFlipper(flipper2);
-				if(hide) { 
-								drawScore();
-				} 
+    //draw balls
+    glColor3f(1,1,1);
+    glPushMatrix();
+    glTranslated(ball1.pos[0], ball1.pos[1], ball1.pos[2]);
+    if (ball1.isVisible && launch) {
+        drawBall();
+    }
+    glPopMatrix();
+
+    drawFlipper(flipper);
+    drawFlipper(flipper2);
+    if(hide) { 
+        drawScore();
+    } 
 }
 
 
