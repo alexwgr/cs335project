@@ -137,7 +137,7 @@ void drawRectangleTextureAlpha(Rectangle &r, GLuint &textureId)
 {
 
     glPushMatrix();
-    //glColor3d(1.0, 1.0, 1.0);
+    glColor3d(1.0, 1.0, 1.0);
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
     glRotatef(r.angle, 0, 0, 1);
 

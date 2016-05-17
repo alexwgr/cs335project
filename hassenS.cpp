@@ -49,20 +49,18 @@ extern int yres;
 void gameOver(GameBoard &gb, Ball &ball1, score &s)
 {
     if(ball1.pos[1] < 0.0 + ball1.radius) {
-	ball1.pos[0] = gb.starting_point[0];
-	ball1.pos[1] = gb.starting_point[1];
-	s.balls_left--;
-	cout << "hit the fucking ground" << endl;
-	ball1.inPlay = 0;
-	cannonFired = 0;
-	launch = false;
-	boom = false;
-	ball1.vel[0] = 0;
-	ball1.vel[1] = 0;
+        ball1.pos[0] = gb.starting_point[0];
+        ball1.pos[1] = gb.starting_point[1];
+        s.balls_left--;
+        ball1.inPlay = 0;
+        cannonFired = 0;
+        launch = false;
+        boom = false;
+        ball1.vel[0] = 0;
+        ball1.vel[1] = 0;
     }
     if(s.balls_left == 0) {
-	gameNotOver = false;
-	cout << "is it working or naaaaah" << endl;
+        gameNotOver = false;
     }
 }
 
@@ -76,11 +74,11 @@ void risingScore(score *s)
 {
     //rising points increments until it reaches the same amount as score
     if (s->points > s->rising_points) {
-	s->rising_points += 10;
+        s->rising_points += 10;
     }
     else 
-	//if rising matches score don't increment anymore
-	s->rising_points = s->points;
+        //if rising matches score don't increment anymore
+        s->rising_points = s->points;
 }
 
 void initScore(score *s)
@@ -122,7 +120,7 @@ void alphaTextureInit(char *fileTexture, GLuint &textureID, Ppmimage *fileT)
     //makes image transparent 
     unsigned char * alphaData = buildAlphaData(fileT);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-	    GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
+            GL_RGBA, GL_UNSIGNED_BYTE, alphaData);
     free(alphaData);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -143,7 +141,7 @@ void textureInit(char *fileTexture, GLuint &textureID, Ppmimage *fileT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     //non transparent image 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
-	    GL_RGB, GL_UNSIGNED_BYTE, fileT->data);
+            GL_RGB, GL_UNSIGNED_BYTE, fileT->data);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
