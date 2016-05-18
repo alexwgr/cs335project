@@ -122,7 +122,9 @@ struct TreasureChest {
 //Shoots the ball
 struct Cannon {
     Rectangle r;
-    int state;//use to launch canon
+    Smoke smoke;
+    int active;//use to launch canon
+    int firing; // if firing
 };
 
 //A rope that flicks out the ball 

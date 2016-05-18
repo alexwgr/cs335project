@@ -64,12 +64,21 @@ void smokeAnimation(Smoke &s, timespec timeCurrent)
 
 void initCannon(Cannon &c)
 {
+    c.active = 1;
+
     Rectangle *rec = &c.r;
     rec->pos[0] = 460.0;
     rec->pos[1] = 100.0;
     rec->width = 40.0;
     rec->height = 40.0;
     rec->angle = 0.0;
+    
+    Rectangle *smoke_sprite = &c.smoke.r;
+    smoke_sprite->pos[0] = 460.0;
+    smoke_sprite->pos[1] = 150.0;
+    smoke_sprite->width = 30.0;
+    smoke_sprite->height = 50.0;
+    smoke_sprite->angle = 90.0;
 }
 /****** SOUND *****/
 //function creates sound source and buffer

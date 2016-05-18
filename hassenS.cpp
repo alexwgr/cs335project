@@ -43,6 +43,7 @@ extern bool gameNotOver;
 extern bool boom;
 extern int xres;
 extern int yres;
+extern Cannon cannon;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
 
@@ -58,6 +59,7 @@ void gameOver(GameBoard &gb, Ball &ball1, score &s)
         boom = false;
         ball1.vel[0] = 0;
         ball1.vel[1] = 0;
+        cannon.active = 1;
     }
     if(s.balls_left == 0) {
         gameNotOver = false;

@@ -84,8 +84,7 @@ void resetGame(void);
 
 void drawBumper(Bumper &);
 void drawCannon(Cannon &);
-void drawSmoke(Cannon &, Smoke &);
-void drawSmokeMovement(Cannon &, Smoke &);
+void drawCannonMovement(Cannon &, Smoke &);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void flagAnimation(Flag &);
@@ -428,6 +427,7 @@ void resetGame()
     launch = false;
     ball1.inPlay = false;
     cannonFired = false;
+    cannon.active = 1;
 
 }
 
@@ -695,14 +695,16 @@ void checkKeys(XEvent *e)
                 play_sound(alSource);
                 break;
             case XK_b:
-                //start frame timer
-                timeCopy(&smoke.frame_timer, &timeCurrent);
-                smoke.state = 1;
-                boom = true;
-                launch = true;
-                if(cannonFired < 1) {
-                    ball1.vel[1] = 20.0;
-                    cannonFired++;
+                if (gameNotOver && cannon.active) {
+                    //start frame timer
+                    timeCopy(&smoke.frame_timer, &timeCurrent);
+                    cannon.firing = 1;
+                    boom = true;
+                    launch = true;
+                    if(cannonFired < 1) {
+                        ball1.vel[1] = 20.0;
+                        cannonFired++;
+                    }
                 }
                 break;
             case XK_h:
@@ -857,15 +859,13 @@ void physics(void)
         }
     }
     //KaBoom(Cannon, ball1, alSource);//when ball is on cannon
-    if (boom && launch && !ball1.inPlay) {
-        drawSmokeMovement(cannon, smoke);
-    }
 
     applyMaximumVelocity(ball1);
 
     //set ball inPlay flag if ball is left of launch chute
     if (ball1.pos[0] < xres - CHUTE_WIDTH - CHUTE_THICKNESS) {
         ball1.inPlay = 1;
+        cannon.active = 0;
     }
     
     if (!pauseGame || !gameNotOver) {
@@ -1205,35 +1205,41 @@ void drawBumper(Bumper &b)
     glPopMatrix();
 }
 
-void drawSmokeMovement(Cannon &c, Smoke &s)
+void drawCannonMovement(Cannon &c)
 {
-    //move cannon down for first eighth of animation
-    if (s.frame < SMOKE_SPRITES / 8.0) {
-        c.r.pos[1] -= 5.0;
+    if (c.firing == 1)
+    {
+        //move cannon down for first eighth of animation
+        if (c.smoke.frame < SMOKE_SPRITES / 8.0) {
+            c.r.pos[1] -= 10.0;
         //and up for the rist
-    } else {
-        c.r.pos[1] += 1.0;
-    }
-
-}
-
-void drawSmoke(Cannon &c, Smoke &s)
-{		
-    if(s.state == 1) {
-        if (s.frame < SMOKE_SPRITES) {
-            smokeAnimation(s, timeCurrent);
-
         } else {
-            //animation finished
-            s.frame = 0;
-            c.r.pos[1] = 100.0;
-            boom = false;
+            c.r.pos[1] += 1.0;
         }
-    }	
+    }
 }
+
 void drawCannon(Cannon &c)
 {
     drawRectangleTextureAlpha(c.r, CannonTexture);
+    
+    //smoke
+    if(c.firing) {
+        c.smoke.state = 1;
+        if (c.smoke.frame < SMOKE_SPRITES) {
+            smokeAnimation(c.smoke, timeCurrent);
+
+        } else {
+            //animation finished
+            c.smoke.frame = 0;
+            c.r.pos[1] = 100.0;
+            boom = false;
+            c.smoke.state = 0;
+            c.firing = 0;
+        }
+        drawCannonMovement(c);
+    }
+
 }
 //function draws treasure chest object
 void drawChest(TreasureChest &c)
@@ -1290,9 +1296,6 @@ void render(void)
     drawSteeringWheel(steeringWheel);
     drawCannon(cannon);//draw canon
 
-    if(boom && launch && !ball1.inPlay) {
-        drawSmoke(cannon, smoke);
-    }
 
     //draw collision rectangles
     glColor3ub(255, 255, 255);
