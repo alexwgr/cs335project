@@ -92,10 +92,12 @@ struct Ball {
     double mass;
     int inPlay; //1 if ball has left launch chute
     int isVisible; // 0 is hidden, 1 is showing
-
+    int hasGravity;
+    
     Ball() {
         inPlay = 0;
         isVisible = 1;
+        hasGravity = 1;
     }
 };
 
@@ -121,10 +123,14 @@ struct TreasureChest {
 
 //Shoots the ball
 struct Cannon {
+    timespec timer;
+    Vec direction;
+    Vec resting_pos;
     Rectangle r;
     Smoke smoke;
     int active;//use to launch canon
     int firing; // if firing
+    int loaded;
 };
 
 //A rope that flicks out the ball 
@@ -178,6 +184,7 @@ struct GameBoard {
     int num_rectangles;
     int num_bumpers;
     int num_deflectors;
+    Vec center;
 
     Vec starting_point;
 

@@ -20,12 +20,12 @@
 #include <cmath>
 #include <GL/glx.h>
 
-#define MAX_VELOCITY 25.0
 #define MAX_BUMPERS 20
 
 extern double xres, yres;
 extern struct timespec timeCurrent;
 extern Flipper flipper, flipper2;
+extern GameBoard board;
 
 /* This adds a curve to the game board */
 /* It uses beizer curves to rectangles at a set number of steps */
@@ -145,8 +145,8 @@ int bumperBallCollision(Bumper &b, Ball &ba)
 //---------steering wheel functions---------------//
 void initSteeringWheel(SteeringWheel &wheel)
 {
-    wheel.pos[0] = 235;
-    wheel.pos[1] = 300;
+    wheel.pos[0] = board.center[0];
+    wheel.pos[1] = board.center[1];
     wheel.inner_radius = 7;
     wheel.outer_radius = 70;
 }
@@ -221,6 +221,25 @@ int deflectorBallCollision(Deflector &d, Ball &b)
     return 0;
 }
 
+bool insideRectangle(Rectangle &r, Ball &b)
+{
+    Vec zero;
+    MakeVector(0, 0, 0, zero);
+
+    //unit axis vectors
+    Vec vert, horz;
+    rectangleSurfaceNormals(r, vert, horz);
+
+    Vec between;
+    VecBtn(r.pos, b.pos, between);
+    double projectX = VecProject(between, horz);
+    double projectY = VecProject(between, vert);
+
+    //check collision
+    return (projectX > -(r.width + b.radius) && projectX < r.width + b.radius
+            && projectY > -(b.radius + r.height) 
+            && projectY < b.radius + r.height); 
+}
 
 /* Handles the physics for a circle colliding with a rectangle */
 int rectangleBallCollision(Rectangle &r, Ball &b)
@@ -230,28 +249,27 @@ int rectangleBallCollision(Rectangle &r, Ball &b)
 
     Vec corner[4];
 
-    float angle = r.angle;
+    //float angle = r.angle;
     //unit axis vectors
     Vec vert, horz, gravity;
-    MakeVector(0, 1, 0, vert);
+    rectangleSurfaceNormals(r, vert, horz);
+    /*MakeVector(0, 1, 0, vert);
     MakeVector(1, 0, 0, horz);
-
+    */
     MakeVector(0, -1, 0, gravity);
 
     //rotated
-    VecRotate(vert, angle, vert);
-    VecRotate(horz, angle, horz);
+    //VecRotate(vert, angle, vert);
+    //VecRotate(horz, angle, horz);
 
     Vec between, dV, rNorm;
     VecBtn(r.pos, b.pos, between);
-    double projectX = VecProject(between, horz);
-    double projectY = VecProject(between, vert);
     double currentSpeed = VecMagnitude(b.vel);
+    //double projectX = VecProject(between, horz);
+    //double projectY = VecProject(between, vert);
 
     //check collision
-    if (projectX > -(r.width + b.radius) && projectX < r.width + b.radius
-            && projectY > -(b.radius + r.height) 
-            && projectY < b.radius + r.height) {
+    if (insideRectangle(r, b)) {
 
         getRectangleCorners(r, corner[0], corner[1], corner[2], corner[3]);
 

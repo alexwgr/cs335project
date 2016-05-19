@@ -36,7 +36,7 @@ void initChest(TreasureChest &);
 //ballChestCollision plays sound when ball collides with chest
 int ballChestCollision(TreasureChest &, Ball &, ALuint &);
 //initCanon initializes canon object properties
-void initCannon(Cannon & );
+void initLauncher(Cannon & );
 //KaBoom function will play canon launching sounds
 void KaBoom(Cannon &, Ball &, ALuint &);
 //init_sound creates soudn source and buffer

@@ -7,21 +7,30 @@
 #include <GL/glx.h>
 #include <cstdlib>
 
+extern int xres, yres;
+
 void initBumpers(GameBoard &g)
 {
     Bumper b;
-    MakeVector(300, 500, 0, b.c.pos);
+    MakeVector(g.center[0], yres - 300, 0, b.c.pos);
     b.c.radius = 20;
     b.state = 0;
-
     addBumperToBoard(b, g);
 
-    MakeVector(200, 500, 0, b.c.pos);
-
+    MakeVector(g.center[0] - 75, yres - 200, 0, b.c.pos);
     addBumperToBoard(b, g);
 
-    MakeVector(250, 400, 0, b.c.pos);
+    MakeVector(g.center[0] + 75, yres - 200, 0, b.c.pos);
+    addBumperToBoard(b, g);
+    
+    MakeVector(g.center[0] - 220, 550, 0, b.c.pos);
+    addBumperToBoard(b, g);
 
+    MakeVector(g.center[0] - 220, 450, 0, b.c.pos);
+    addBumperToBoard(b, g);
+    
+    MakeVector(g.center[0] - 320, 500, 0, b.c.pos);
+    b.c.radius = 10.0;
     addBumperToBoard(b, g);
 
 }

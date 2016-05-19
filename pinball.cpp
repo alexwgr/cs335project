@@ -54,6 +54,7 @@ const double FLIPPER_REST_ANGLE = -50;
 
 const double CANNON_POS_Y = 100.0;
 
+
 typedef double Flt;
 //typedef Flt Vec[3];
 #define MakeVector(x,y,z,v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
@@ -67,9 +68,11 @@ Window win;
 void initXWindows(void);
 void initOpengl(void);
 void initBalls(void);
+void initCannons(void);
 void initGameBoard(GameBoard &);
 void initFlipper(Flipper &, float, float, bool);
 void initSeaMonster(SeaMonster &);
+
 
 void initTextures(void);
 
@@ -94,13 +97,15 @@ void OceanBackground();
 void drawFlipper(Flipper &f);
 void drawBall();
 
+
+void cannonPhysics(Cannon &cannon, Ball &ball);
 void physics(void);
 void flipperMovement(Flipper &e);
 
 bool hide = false;
 
 int done=0;
-int xres=780, yres=480;
+int xres=780, yres=900;
 int leftButtonDown=0;
 bool boom = false;
 bool launch = false;
@@ -125,6 +130,7 @@ Rectangle r;
 SteeringWheel steeringWheel;
 TreasureChest chest;
 Cannon cannon;
+Cannon boardCannon;
 Smoke smoke;
 Flag flag;
 SeaMonster seaMonster;
@@ -242,10 +248,11 @@ int main(void)
 
     initGameBoard(board);
     initDeflectors(board);
+    initCannons();
     initBumpers(board);
     initBalls();
     initChest(chest);//initialize chest properties
-    initCannon(cannon);
+    initLauncher(cannon);
     initSmoke(smoke);
     initFlag(flag);
     initSteeringWheel(steeringWheel);
@@ -259,9 +266,9 @@ int main(void)
     r.height = 5.0;
     r.angle = 0.0;
 
-    curve.points[0][0] = xres; curve.points[0][1] = 500;
-    curve.points[1][0] = xres; curve.points[1][1] = 600;
-    curve.points[2][0] = xres - 100; curve.points[2][1] = 600;
+    curve.points[0][0] = xres; curve.points[0][1] = yres - 200;
+    curve.points[1][0] = xres; curve.points[1][1] = yres - 100;
+    curve.points[2][0] = xres - 100; curve.points[2][1] = yres - 100;
     curve.width = 8.0;
     curve.npoints = 10;
 
@@ -285,8 +292,8 @@ int main(void)
 
     std::cout << "num rectangles " << board.num_rectangles << endl;
 
-    initFlipper(flipper, 170, 100, false);
-    initFlipper(flipper2, xres - 170, 100, true);
+    initFlipper(flipper, board.center[0] - 75, 100, false);
+    initFlipper(flipper2, board.center[0] + 75, 100, true);
 
     clock_gettime(CLOCK_REALTIME, &timePause);
     clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -353,7 +360,7 @@ void initXWindows(void)
     Colormap cmap;
     XSetWindowAttributes swa;
 
-    setupScreenRes(480, 700);
+    setupScreenRes(xres, yres);
     dpy = XOpenDisplay(NULL);
     if (dpy == NULL) {
         printf("\n\tcannot connect to X server\n\n");
@@ -431,18 +438,85 @@ void resetGame()
 
 }
 
+void initCannons() 
+{
+    boardCannon.resting_pos[0] = xres - 100.0;
+    boardCannon.resting_pos[1] = 550.0;
+    Rectangle *rec = &boardCannon.r;
+    VecCopy(rec->pos, boardCannon.resting_pos);
+    rec->width = 40.0;
+    rec->height = 40.0;
+    rec->angle = 90.0;
+    
+    boardCannon.active = 1;
+    boardCannon.loaded = 0;
+    Vec vert;
+    MakeVector(0, 1, 0, vert);
+    VecRotate(vert, boardCannon.r.angle, vert);
+
+    VecCopy(boardCannon.direction, vert);
+
+
+
+    Rectangle *smoke_sprite = &boardCannon.smoke.r;
+    smoke_sprite->pos[0] = boardCannon.resting_pos[0];
+    smoke_sprite->pos[1] = boardCannon.resting_pos[1];
+    smoke_sprite->width = 30.0;
+    smoke_sprite->height = 50.0;
+    smoke_sprite->angle = 90.0 + boardCannon.r.angle;
+    
+}
+
 void initGameBoard(GameBoard &gb) {
-    gb.num_rectangles = 0;
+    gb.center[0] = ((double)xres - CHUTE_THICKNESS - CHUTE_WIDTH) / 2.0 + monsterGutter;
+    gb.center[1] = (double)yres / 2.0;
 
     gb.starting_point[0] = xres - CHUTE_THICKNESS - ball1.radius - 15;
     gb.starting_point[1] = 200;
 
+    gb.num_rectangles = 0;
+    
     Rectangle rec;
+    
+    //1st rec
     rec.angle = -50.0;
     rec.width = 60.0;
     rec.height = 10.0;
-    MakeVector(130, 125, 0, rec.pos);
+    MakeVector(gb.center[0] - 125, 135, 0, rec.pos);
     addRectangleToBoard(rec, gb);
+    //2nd rec
+    rec.angle = 50.0;
+    MakeVector(gb.center[0] + 125, 135, 0, rec.pos);
+    addRectangleToBoard(rec, gb);
+    
+    /****SIDE BOX******/
+    rec.angle = 0;
+    rec.width = 30;
+    rec.height = 7;
+    MakeVector(gb.center[0] - 350, 400, 0, rec.pos);
+    addRectangleToBoard(rec,gb);
+
+    rec.angle = 0;
+    rec.width = 30;
+    rec.height = 7;
+    MakeVector(gb.center[0] - 230, 400, 0, rec.pos);
+    addRectangleToBoard(rec,gb);
+    
+    rec.angle = 0;
+    rec.width = 80;
+    rec.height = 7;
+    MakeVector(gb.center[0] - 300, 600, 0, rec.pos);
+    addRectangleToBoard(rec,gb);
+
+    
+    curve.points[0][0] = gb.center[0] - 350; curve.points[0][1] = 350;
+    curve.points[1][0] = gb.center[0] - 350; curve.points[1][1] = 200;
+    curve.points[2][0] = gb.center[0] - 150; curve.points[2][1] = 200;
+    curve.width = 8.0;
+    curve.npoints = 10;
+
+    // Add chute to board
+    addCurve(curve, board);
 }
 
 void initBalls(void)
@@ -581,13 +655,13 @@ void drawSeaMonster(SeaMonster &monster)
 void initDeflectors(GameBoard &board)
 {
     Deflector *deflector = &board.deflectors[0];
-    MakeVector(140, 200, 0, deflector->r.pos);
+    MakeVector(board.center[0] + 20, 240, 0, deflector->r.pos);
     deflector->r.angle = -70.0;
     deflector->r.width = 40;
     deflector->r.height = 5;
 
     deflector++;
-    MakeVector(340, 200, 0, deflector->r.pos);
+    MakeVector(board.center[0] - 20, 240, 0, deflector->r.pos);
     deflector->r.angle = 70.0;
     deflector->r.width = 40;
     deflector->r.height = 5;
@@ -672,7 +746,7 @@ void checkKeys(XEvent *e)
                 ball1.vel[0] += 1.0;
                 break;
             case XK_Up:
-                ball1.vel[1] = 20.0;
+                ball1.vel[1] = MAX_VELOCITY;
                 break;
             case XK_Down:
                 ball1.vel[1] -= 1.0;
@@ -784,10 +858,38 @@ void flipperMovement(Flipper &f)
     }
 }
 
+void cannonPhysics(Cannon &can, Ball &ball)
+{
+    if (insideRectangle(can.r, ball) && !can.loaded) {
+        can.loaded = 1;
+        ball.vel[0] = 0;
+        ball.vel[1] = 0;
+        VecScale(can.direction, can.r.height + ball.radius, ball.pos);
+        VecAdd(ball.pos, can.r.pos, ball.pos);
+        ball.isVisible = 1;
+        ball.hasGravity = 0;
+        timeCopy(&can.timer, &timeCurrent);
+
+
+    }
+
+    if (can.loaded && !can.firing
+        && timeDiff(&can.timer, &timeCurrent) > 1.0) {
+        
+        can.loaded = 0;
+        can.firing = 1;
+
+        ball1.hasGravity = 1;
+        ball.isVisible = 1;
+        VecScale(can.direction, 15.0, ball.vel);
+
+    }
+}
+
 void physics(void)
 {
     //gravity
-    if(ball1.inPlay && !pauseGame){
+    if(ball1.inPlay && !pauseGame && ball1.hasGravity){
         ball1.vel[1] += -0.2;
     }
     //flipper physics
@@ -843,6 +945,10 @@ void physics(void)
     steeringWheelBallCollision(steeringWheel, ball1);
     steeringWheelMovement(steeringWheel);
 
+
+    //cannons
+    cannonPhysics(boardCannon, ball1);
+
     if (collided) {
         //apply roll
         double momentum = ball1.vel[0] * 0.6;
@@ -892,8 +998,8 @@ void physics(void)
         : xres - ball1.radius;
 
     //left window edge
-    if (ball1.pos[0] < ball1.radius && ball1.vel[0] < 0.0) {
-        ball1.pos[0] = ball1.radius;
+    if (ball1.pos[0] < ball1.radius + monsterGutter && ball1.vel[0] < 0.0) {
+        ball1.pos[0] = ball1.radius + monsterGutter;
         ball1.vel[0] *= -0.2;
     }
 
@@ -1232,7 +1338,7 @@ void drawCannon(Cannon &c)
         } else {
             //animation finished
             c.smoke.frame = 0;
-            c.r.pos[1] = 100.0;
+            VecCopy(c.r.pos, c.resting_pos);
             boom = false;
             c.smoke.state = 0;
             c.firing = 0;
@@ -1255,6 +1361,8 @@ void drawChest(TreasureChest &c)
 void render(void)
 {
     
+    
+
     if (pauseGame || !gameNotOver) {
         Rectangle screen;
         screen.width = yres;
@@ -1294,9 +1402,20 @@ void render(void)
     drawSeaMonster(seaMonster);
     drawChest(chest);//drawing chest
     drawSteeringWheel(steeringWheel);
-    drawCannon(cannon);//draw canon
+    drawCannon(cannon);//draw canon 
+    drawCannon(boardCannon);
 
-
+    //show board edge for debug
+    glPushMatrix();
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glVertex2i(monsterGutter, 0);
+    glVertex2i(monsterGutter, yres);
+    glVertex2i(monsterGutter + 10, yres);
+    glVertex2i(monsterGutter + 10, 0);
+    glEnd();
+    glPopMatrix();
+    
     //draw collision rectangles
     glColor3ub(255, 255, 255);
     for (int i = 0; i < board.num_rectangles; i++) {
@@ -1328,6 +1447,8 @@ void render(void)
     drawFlipper(flipper);
     drawFlipper(flipper2);
     drawScore();
+    
+    
 }
 
 

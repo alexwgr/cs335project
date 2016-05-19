@@ -22,12 +22,14 @@ extern "C" {
 }
 using namespace std;
 extern score Scorekeeper;
+extern GameBoard board;
+extern int xres, yres;
 
 void initFlag(Flag &f)
 {
 	Rectangle *flagSprite = &f.r;
-	flagSprite->pos[0] = 420.0;
-	flagSprite->pos[1] = 620.0;
+	flagSprite->pos[0] = board.center[0] + 30.0;
+	flagSprite->pos[1] = 290.0;
 	flagSprite->width = 30.0;
 	flagSprite->height = 50.0;
 	flagSprite->angle = 0.0;
@@ -62,24 +64,26 @@ void smokeAnimation(Smoke &s, timespec timeCurrent)
     }
 }
 
-void initCannon(Cannon &c)
+void initLauncher(Cannon &c)
 {
     c.active = 1;
 
     Rectangle *rec = &c.r;
-    rec->pos[0] = 460.0;
-    rec->pos[1] = 100.0;
+    c.resting_pos[0] = xres - 20.0;
+    c.resting_pos[1] = 100.0;
+    VecCopy(rec->pos, c.resting_pos);
     rec->width = 40.0;
     rec->height = 40.0;
     rec->angle = 0.0;
     
     Rectangle *smoke_sprite = &c.smoke.r;
-    smoke_sprite->pos[0] = 460.0;
+    smoke_sprite->pos[0] = c.resting_pos[0];
     smoke_sprite->pos[1] = 150.0;
     smoke_sprite->width = 30.0;
     smoke_sprite->height = 50.0;
     smoke_sprite->angle = 90.0;
 }
+
 /****** SOUND *****/
 //function creates sound source and buffer
 int init_sound(ALuint &buffer, ALuint &source)
@@ -141,8 +145,8 @@ int clean_sound(ALuint &buffer, ALuint &source)
 void initChest(TreasureChest &chest)
 {
     Rectangle *rec = &chest.r;
-    rec->pos[0] = 240.0;
-    rec->pos[1] = 620.0;
+    rec->pos[0] = board.center[0];
+    rec->pos[1] = yres - 100;
     rec->width = 40.0;
     rec->height = 40.0;
     rec->angle = 0.0;

@@ -22,12 +22,16 @@
 #include <iostream>
 #include <cmath>
 
+const double monsterGutter = 90.0;
+const double  MAX_VELOCITY = 25.0;
+
 bool isLeft(Vec &, Vec &, Vec &);
 void addCurve(Curve &, GameBoard &);
 void rectangleSurfaceNormals(Rectangle &, Vec &, Vec &);
 
 void steeringWheelMovement(SteeringWheel &);
 
+bool insideRectangle(Rectangle&, Ball &);
 int rectangleBallCollision(Rectangle &, Ball &);
 int deflectorBallCollision(Deflector &, Ball &);
 int bumperBallCollision(Bumper &, Ball &);
