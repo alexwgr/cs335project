@@ -19,9 +19,10 @@
 #include <cstring>
 #include <cmath>
 #include <GL/glx.h>
-
+#include "hassenS.h"
 #define MAX_BUMPERS 20
 
+extern score Scorekeeper;
 extern double xres, yres;
 extern struct timespec timeCurrent;
 extern Flipper flipper, flipper2;
@@ -133,7 +134,7 @@ int bumperBallCollision(Bumper &b, Ball &ba)
         VecNormalize(between, dV);
         VecScale(dV, 12, ba.vel);
         b.state = 1;
-        
+        addScore(&Scorekeeper,30); 
         return 1;
     }
     else {
@@ -170,6 +171,7 @@ int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
     //if inside inner radius
     if (VecMagnitude(between) < ball.radius + wheel.inner_radius) {
         wheel.rvel = (VecMagnitude(ball.vel) / MAX_VELOCITY) * 10.0;
+	addScore(&Scorekeeper, 5);
         return 1;
     }
         
