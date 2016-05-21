@@ -43,7 +43,7 @@ extern "C" {
 #include "omarO.h"
 #include "hassenS.h"
 
-const int NUM_IMAGES = 44;
+const int NUM_IMAGES = 46;
 //const int SMOKE_SPRITES = 12;
 const double CHUTE_THICKNESS = 6.0;
 const double CHUTE_WIDTH = 40.0;
@@ -146,7 +146,9 @@ Ppmimage *controlsImage;
 Ppmimage *pinballImage;
 Ppmimage *flippers;
 Ppmimage *flippers2;
-Ppmimage  *closeChestImage;
+Ppmimage *closeChestImage;
+Ppmimage *closeChestImage2;
+Ppmimage *closeChestImage3;
 Ppmimage *openChestImage;
 Ppmimage *bumperUpImage;
 Ppmimage *bumperDownImage;
@@ -191,7 +193,8 @@ char ImageFile[NUM_IMAGES][250] = {
     "flag5.png\0", "flag6.png\0",
     "monster0.png\0", "monster3.png\0",
     "GameControls.png\0",
-    "GameOver.png\0"
+    "GameOver.png\0",
+    "close-chest21.jpg\0", "close-chest212.jpg\0"
 };
 GLuint OceanTexture;
 
@@ -204,6 +207,8 @@ GLuint closeChestTexture;
 GLuint openChestTexture;
 GLuint openChestTexture_alpha;
 GLuint closeChestTexture_alpha;
+GLuint closeChestTexture_alpha2;
+GLuint closeChestTexture_alpha3;
 GLuint bumperUpTexture;
 GLuint bumperDownTexture;
 GLuint CannonTexture;
@@ -666,7 +671,7 @@ void drawSeaMonster(SeaMonster &monster)
 {
     glPushMatrix();
 
-    drawCircle(monster.collision_circle);
+    //drawCircle(monster.collision_circle);
 
     //left tentacle
     if (monster.state < 3) {
@@ -1142,6 +1147,12 @@ void initTextures(void)
     strcpy(buffer, "./images/close-chest2.ppm");
     alphaTextureInit(buffer, closeChestTexture_alpha, closeChestImage);
 
+    strcpy(buffer, "./images/close-chest21.ppm");
+    alphaTextureInit(buffer, closeChestTexture_alpha2, closeChestImage2);
+    
+    strcpy(buffer, "./images/close-chest212.ppm");
+    alphaTextureInit(buffer, closeChestTexture_alpha3, closeChestImage3); 
+
     strcpy(buffer, "./images/bumper_up.ppm");
     alphaTextureInit(buffer, bumperUpTexture, bumperUpImage);
 
@@ -1474,7 +1485,12 @@ void drawChest(TreasureChest &c)
         drawRectangleTextureAlpha(c.r, openChestTexture_alpha);
     }
     else if (c.state == 0) {
-        drawRectangleTextureAlpha(c.r, closeChestTexture_alpha);
+        if (c.HP == 3)
+            drawRectangleTextureAlpha(c.r, closeChestTexture_alpha);
+        if (c.HP == 2)
+            drawRectangleTextureAlpha(c.r, closeChestTexture_alpha2);
+        if (c.HP == 1)
+            drawRectangleTextureAlpha(c.r, closeChestTexture_alpha3);
     }
 }
 void render(void)
