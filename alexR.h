@@ -31,6 +31,7 @@ void rectangleSurfaceNormals(Rectangle &, Vec &, Vec &);
 
 void steeringWheelMovement(SteeringWheel &);
 
+bool insideCircle(double, Vec &, Ball &);
 bool insideRectangle(Rectangle&, Ball &);
 int rectangleBallCollision(Rectangle &, Ball &);
 int deflectorBallCollision(Deflector &, Ball &);

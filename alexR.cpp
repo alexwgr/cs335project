@@ -162,13 +162,20 @@ void steeringWheelMovement(SteeringWheel &wheel)
     }
 }
 
-int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
+bool insideCircle(double radius, Vec &center, Ball &ball) 
 {
     Vec between;
-    VecBtn(wheel.pos, ball.pos, between);
+    VecBtn(center, ball.pos, between);
     
     //if inside inner radius
-    if (VecMagnitude(between) < ball.radius + wheel.inner_radius) {
+    return (VecMagnitude(between) < ball.radius + radius);
+ 
+
+}
+
+int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
+{
+    if (insideCircle(wheel.inner_radius, wheel.pos, ball)) {
         wheel.rvel = (VecMagnitude(ball.vel) / MAX_VELOCITY) * 10.0;
         return 1;
     }
@@ -373,7 +380,7 @@ void flipperBallCollision(Flipper &f, Ball &b)
 		//the horizontal distance from the pivot point of the flipper (torque)
 		//and the speed at which the flipper is rotating 
 		speed = 0.5 * VecMagnitude(b.vel) + 
-            pow((projectX / f.width) + 0.5, 4) * (f.rvel / 10);
+            pow((projectX / f.width) + 0.5, 2) * (f.rvel / 10);
 		VecScale(vert, speed, dV);
 		VecAdd(b.vel, dV, b.vel);
 

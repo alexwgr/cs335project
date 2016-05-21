@@ -67,6 +67,7 @@ void smokeAnimation(Smoke &s, timespec timeCurrent)
 void initLauncher(Cannon &c)
 {
     c.active = 1;
+    MakeVector(0, 1, 0, c.direction);
 
     Rectangle *rec = &c.r;
     c.resting_pos[0] = xres - 20.0;

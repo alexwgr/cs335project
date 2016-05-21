@@ -13,10 +13,12 @@
 #include "vector.h"
 #include "time.h"
 #include "ppm.h"
+//#include "alexR.h"
 #include <GL/glx.h>
 
 #define MAX_RECTANGLES 900
 #define MAX_PARTICLES 800
+#define MAX_CANNONS 10
 
 //Collision objects
 struct Rectangle {
@@ -127,6 +129,7 @@ struct Cannon {
     Vec direction;
     Vec resting_pos;
     Rectangle r;
+    Circle collision_circle;
     Smoke smoke;
     int active;//use to launch canon
     int firing; // if firing
@@ -181,9 +184,11 @@ struct GameBoard {
     Rectangle rectangles[MAX_RECTANGLES];
     Bumper bumpers[MAX_RECTANGLES];
     Deflector deflectors[MAX_RECTANGLES];
+    Cannon cannons[MAX_CANNONS];
     int num_rectangles;
     int num_bumpers;
     int num_deflectors;
+    int num_cannons;
     Vec center;
 
     Vec starting_point;
@@ -192,6 +197,7 @@ struct GameBoard {
         num_rectangles = 0;
         num_bumpers = 0;
         num_deflectors = 0;
+        num_cannons = 0;
     }
 };
 

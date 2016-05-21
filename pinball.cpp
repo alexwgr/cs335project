@@ -88,6 +88,7 @@ void resetGame(void);
 void drawBumper(Bumper &);
 void drawCannon(Cannon &);
 void drawCannonMovement(Cannon &, Smoke &);
+void rotateCannon(Cannon &c, double angle);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void flagAnimation(Flag &);
@@ -98,6 +99,7 @@ void drawFlipper(Flipper &f);
 void drawBall();
 
 
+void fireCannon(Cannon &, Ball &);
 void cannonPhysics(Cannon &cannon, Ball &ball);
 void physics(void);
 void flipperMovement(Flipper &e);
@@ -115,6 +117,7 @@ int cannonFired = 0;
 
 char buffer[256];
 
+Vec tmp;
 Vec leftButtonPos;
 
 score Scorekeeper;
@@ -440,6 +443,7 @@ void resetGame()
 
 void initCannons() 
 {
+
     boardCannon.resting_pos[0] = xres - 100.0;
     boardCannon.resting_pos[1] = 550.0;
     Rectangle *rec = &boardCannon.r;
@@ -456,7 +460,10 @@ void initCannons()
 
     VecCopy(boardCannon.direction, vert);
 
+    VecCopy(boardCannon.collision_circle.pos, boardCannon.r.pos);
 
+
+    boardCannon.collision_circle.radius = 20.0;
 
     Rectangle *smoke_sprite = &boardCannon.smoke.r;
     smoke_sprite->pos[0] = boardCannon.resting_pos[0];
@@ -486,23 +493,24 @@ void initGameBoard(GameBoard &gb) {
     addRectangleToBoard(rec, gb);
     //2nd rec
     rec.angle = 50.0;
-    MakeVector(gb.center[0] + 125, 135, 0, rec.pos);
+    rec.width = 165.0;
+    MakeVector(gb.center[0] + 180, 210, 0, rec.pos);
     addRectangleToBoard(rec, gb);
     
     /****SIDE BOX******/
-    rec.angle = 0;
+    rec.angle = -30;
     rec.width = 30;
     rec.height = 7;
     MakeVector(gb.center[0] - 350, 400, 0, rec.pos);
     addRectangleToBoard(rec,gb);
 
-    rec.angle = 0;
+    rec.angle = 30;
     rec.width = 30;
     rec.height = 7;
     MakeVector(gb.center[0] - 230, 400, 0, rec.pos);
     addRectangleToBoard(rec,gb);
     
-    rec.angle = 0;
+    rec.angle = -20;
     rec.width = 80;
     rec.height = 7;
     MakeVector(gb.center[0] - 300, 600, 0, rec.pos);
@@ -655,18 +663,27 @@ void drawSeaMonster(SeaMonster &monster)
 void initDeflectors(GameBoard &board)
 {
     Deflector *deflector = &board.deflectors[0];
-    MakeVector(board.center[0] + 20, 240, 0, deflector->r.pos);
+    MakeVector(board.center[0] - 120, 350, 0, deflector->r.pos);
     deflector->r.angle = -70.0;
     deflector->r.width = 40;
     deflector->r.height = 5;
 
     deflector++;
-    MakeVector(board.center[0] - 20, 240, 0, deflector->r.pos);
+    MakeVector(board.center[0] + 120, 350, 0, deflector->r.pos);
     deflector->r.angle = 70.0;
     deflector->r.width = 40;
     deflector->r.height = 5;
 
-    board.num_deflectors = 2;
+    deflector++;
+    MakeVector(
+        xres - 100, 
+        yres - 50, 0, 
+        deflector->r.pos);
+    deflector->r.angle = 90.0;
+    deflector->r.width = 50.0;
+    deflector->r.height = 5.0;
+
+    board.num_deflectors = 3;
 }
 
 void initFlipper(Flipper &f, float xpos, float ypos, bool inverted=false)
@@ -769,6 +786,7 @@ void checkKeys(XEvent *e)
                 play_sound(alSource);
                 break;
             case XK_b:
+                //fire main launcher
                 if (gameNotOver && cannon.active) {
                     //start frame timer
                     timeCopy(&smoke.frame_timer, &timeCurrent);
@@ -779,6 +797,10 @@ void checkKeys(XEvent *e)
                         ball1.vel[1] = 20.0;
                         cannonFired++;
                     }
+                }
+                //fire secondary cannon
+                else if (boardCannon.loaded && !boardCannon.firing) {
+                    fireCannon(boardCannon, ball1);
                 }
                 break;
             case XK_h:
@@ -860,21 +882,23 @@ void flipperMovement(Flipper &f)
 
 void cannonPhysics(Cannon &can, Ball &ball)
 {
-    if (insideRectangle(can.r, ball) && !can.loaded) {
-        can.loaded = 1;
-        ball.vel[0] = 0;
-        ball.vel[1] = 0;
-        VecScale(can.direction, can.r.height + ball.radius, ball.pos);
-        VecAdd(ball.pos, can.r.pos, ball.pos);
-        ball.isVisible = 1;
-        ball.hasGravity = 0;
-        timeCopy(&can.timer, &timeCurrent);
+    if (insideCircle(can.collision_circle.radius, can.collision_circle.pos, ball)) { 
+        if (!can.loaded) {
+            can.loaded = 1;
+            ball.vel[0] = 0;
+            ball.vel[1] = 0;
+            ball.isVisible = 0;
+            ball.hasGravity = 0;
+            timeCopy(&can.timer, &timeCurrent);
+            VecScale(can.direction, can.r.height + ball.radius, ball.pos);
+            VecAdd(ball.pos, can.r.pos, ball.pos);
+        }
 
 
     }
 
     if (can.loaded && !can.firing
-        && timeDiff(&can.timer, &timeCurrent) > 1.0) {
+        && timeDiff(&can.timer, &timeCurrent) > 10.0) {
         
         can.loaded = 0;
         can.firing = 1;
@@ -884,6 +908,15 @@ void cannonPhysics(Cannon &can, Ball &ball)
         VecScale(can.direction, 15.0, ball.vel);
 
     }
+}
+
+void fireCannon(Cannon &can, Ball &ball) {
+        can.loaded = 0;
+        can.firing = 1;
+
+        ball1.hasGravity = 1;
+        ball.isVisible = 1;
+        VecScale(can.direction, 15.0, ball.vel);
 }
 
 void physics(void)
@@ -948,6 +981,22 @@ void physics(void)
 
     //cannons
     cannonPhysics(boardCannon, ball1);
+
+    
+    static bool cannonGoesUp = true;
+    //make cannon move up and down
+    if (boardCannon.r.angle > 45.0 + 90.0) {
+        cannonGoesUp = false;
+    }
+    if (boardCannon.r.angle < -65.0 + 90.0) {
+        cannonGoesUp = true;
+    }
+
+    if (!boardCannon.firing) {
+        rotateCannon(boardCannon, cannonGoesUp ? 1.0 : -1.0);
+    }
+    
+
 
     if (collided) {
         //apply roll
@@ -1311,16 +1360,30 @@ void drawBumper(Bumper &b)
     glPopMatrix();
 }
 
+void rotateCannon(Cannon &c, double angle) {
+    c.r.angle += angle;
+    VecRotate(c.direction, angle, c.direction);
+    c.smoke.r.angle += angle;
+
+    VecCopy(c.smoke.r.pos, c.r.pos);
+    VecScale(c.direction, c.r.height + ball1.radius, tmp);
+    VecAdd(tmp, c.r.pos, c.smoke.r.pos);
+
+}
+
 void drawCannonMovement(Cannon &c)
 {
     if (c.firing == 1)
     {
         //move cannon down for first eighth of animation
         if (c.smoke.frame < SMOKE_SPRITES / 8.0) {
-            c.r.pos[1] -= 10.0;
+            VecScale(c.direction, -10.0, tmp);
+            VecAdd(c.r.pos, tmp, c.r.pos);
+            //c.r.pos[1] -= 10.0;
         //and up for the rist
         } else {
-            c.r.pos[1] += 1.0;
+            VecAdd(c.r.pos, c.direction, c.r.pos);
+            //c.r.pos[1] += 1.0;
         }
     }
 }
