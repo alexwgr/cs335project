@@ -92,6 +92,7 @@ void rotateCannon(Cannon &c, double angle);
 void drawChest(TreasureChest &);
 void drawFlipper(const Flipper &);
 void flagAnimation(Flag &);
+void flagPhysics(Flag &, Ball &);
 void drawSteeringWheel(SteeringWheel &);
 void drawDeflector(Deflector &);
 void OceanBackground();
@@ -311,14 +312,14 @@ int main(void)
 
 
         //if (!pauseGame) {
-            clock_gettime(CLOCK_REALTIME, &timeCurrent);
-            timeSpan = timeDiff(&timeStart, &timeCurrent);
-            timeCopy(&timeStart, &timeCurrent);
-            physicsCountdown += timeSpan;
-            while(physicsCountdown >= physicsRate) {
-                physics();
-                physicsCountdown -= physicsRate;
-            }
+        clock_gettime(CLOCK_REALTIME, &timeCurrent);
+        timeSpan = timeDiff(&timeStart, &timeCurrent);
+        timeCopy(&timeStart, &timeCurrent);
+        physicsCountdown += timeSpan;
+        while(physicsCountdown >= physicsRate) {
+            physics();
+            physicsCountdown -= physicsRate;
+        }
 
         //}
         render();
@@ -451,7 +452,7 @@ void initCannons()
     rec->width = 40.0;
     rec->height = 40.0;
     rec->angle = 90.0;
-    
+
     boardCannon.active = 1;
     boardCannon.loaded = 0;
     Vec vert;
@@ -471,7 +472,7 @@ void initCannons()
     smoke_sprite->width = 30.0;
     smoke_sprite->height = 50.0;
     smoke_sprite->angle = 90.0 + boardCannon.r.angle;
-    
+
 }
 
 void initGameBoard(GameBoard &gb) {
@@ -482,9 +483,9 @@ void initGameBoard(GameBoard &gb) {
     gb.starting_point[1] = 200;
 
     gb.num_rectangles = 0;
-    
+
     Rectangle rec;
-    
+
     //1st rec
     rec.angle = -50.0;
     rec.width = 60.0;
@@ -496,7 +497,7 @@ void initGameBoard(GameBoard &gb) {
     rec.width = 165.0;
     MakeVector(gb.center[0] + 180, 210, 0, rec.pos);
     addRectangleToBoard(rec, gb);
-    
+
     /****SIDE BOX******/
     rec.angle = -30;
     rec.width = 30;
@@ -509,16 +510,16 @@ void initGameBoard(GameBoard &gb) {
     rec.height = 7;
     MakeVector(gb.center[0] - 230, 400, 0, rec.pos);
     addRectangleToBoard(rec,gb);
-    
+
     rec.angle = -20;
     rec.width = 80;
     rec.height = 7;
     MakeVector(gb.center[0] - 300, 600, 0, rec.pos);
     addRectangleToBoard(rec,gb);
 
-    
-    curve.points[0][0] = gb.center[0] - 350; curve.points[0][1] = 350;
-    curve.points[1][0] = gb.center[0] - 350; curve.points[1][1] = 200;
+
+    curve.points[0][0] = gb.center[0] - 360; curve.points[0][1] = 350;
+    curve.points[1][0] = gb.center[0] - 360; curve.points[1][1] = 200;
     curve.points[2][0] = gb.center[0] - 150; curve.points[2][1] = 200;
     curve.width = 8.0;
     curve.npoints = 10;
@@ -539,7 +540,7 @@ void initBalls(void)
 }
 
 void initSeaMonster(SeaMonster &monster)
-{
+{   
     double h = (double)yres / 3.0;
     monster.rectangle.width  = h;
     monster.rectangle.height = h;
@@ -552,7 +553,6 @@ void initSeaMonster(SeaMonster &monster)
     MakeVector(40, h, 0, monster.active_pos);
     MakeVector(40, -monster.rectangle.height, 0, monster.dead_pos);
 
-
     monster.num_bloodspurts = 1;
     Smoke *blood = &monster.bloodspurts[0];
     blood->state = 0;
@@ -560,6 +560,9 @@ void initSeaMonster(SeaMonster &monster)
     blood->r.angle = 0;
     blood->frame = 0;
 
+    MakeVector(-h + 90, 550, 0,
+            monster.collision_circle.pos);
+    monster.collision_circle.radius = 60.0;
 }
 
 void killSeaMonster(SeaMonster &monster)
@@ -570,7 +573,22 @@ void killSeaMonster(SeaMonster &monster)
     }
 }
 
+void seaMonsterPhysics(SeaMonster &monster, Ball &ball)
+{
 
+    if (monster.state == 1 &&
+            insideCircle(monster.collision_circle.radius,
+                monster.collision_circle.pos, ball)) {
+        monster.state = 2;
+        timeCopy(&monster.active_time, &timeCurrent);
+
+    }
+    if (monster.HP == 0) {
+        monster.HP = 3;
+        monster.state = 3;
+        timeCopy(&monster.active_time, &timeCurrent);
+    }
+}
 
 void seaMonsterState(SeaMonster &monster)
 {
@@ -589,10 +607,9 @@ void seaMonsterState(SeaMonster &monster)
         case 0: 
             if (monster.rectangle.pos[0] > -(monster.rectangle.width)) {
                 monster.rectangle.pos[0] -= 2;
-            } else {
-                //monster.rectangle.pos[0] = -monster.rectangle.width;
+                monster.collision_circle.pos[0] -= 2.0;
             }
-            if (timeDiff(&monster.active_time, &timeCurrent) > 5) {
+            if (timeDiff(&monster.active_time, &timeCurrent) > 10) {
                 //make active
                 monster.state = 1;
                 //reset timer
@@ -603,12 +620,13 @@ void seaMonsterState(SeaMonster &monster)
             //move right until on screen
         case 1:
             if (monster.rectangle.pos[0] < 40) {
-                monster.rectangle.pos[0] += 2;
+                monster.rectangle.pos[0] += 2.0;
+                monster.collision_circle.pos[0] += 2.0;
             } else {
                 monster.rectangle.pos[0] = 40;
             }
 
-            if (timeDiff(&monster.active_time, &timeCurrent) > 5)
+            if (timeDiff(&monster.active_time, &timeCurrent) > 15)
             {
                 monster.state = 0;
                 timeCopy(&monster.active_time, &timeCurrent);
@@ -617,12 +635,14 @@ void seaMonsterState(SeaMonster &monster)
         case 2:
             //just got hit
             if (timeDiff(&monster.active_time, &timeCurrent) < 0.5) {
-                //monster.rectangle.pos[0] += (rand() % 10) - 5;
-                //monster.rectangle.pos[1] += (rand() % 10) - 5;
+                monster.rectangle.pos[0] += (rand() % 10) - 5;
+                monster.rectangle.pos[1] += (rand() % 10) - 5;
 
             } else {
                 //after 0.5 seconds, monster is dead
-                monster.state = 3;
+                monster.HP--;
+                monster.state = 0;
+                timeCopy(&monster.active_time, &timeCurrent);
             }
             break;
 
@@ -645,15 +665,20 @@ void seaMonsterState(SeaMonster &monster)
 void drawSeaMonster(SeaMonster &monster)
 {
     glPushMatrix();
+
+    drawCircle(monster.collision_circle);
+
     //left tentacle
-    if (monster.state < 2) {
+    if (monster.state < 3) {
         //draw normal image if not damaged
-        drawRectangleTextureAlpha(monster.rectangle, monsterTextures[0]);
-    } else {
         if (monster.state == 2)
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
         else 
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        drawRectangleTextureAlpha(monster.rectangle, monsterTextures[0]);
+    } else {
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         //draw damaged image
         drawRectangleTextureAlpha(monster.rectangle, monsterTextures[3]);
     }
@@ -676,14 +701,26 @@ void initDeflectors(GameBoard &board)
 
     deflector++;
     MakeVector(
-        xres - 100, 
-        yres - 50, 0, 
-        deflector->r.pos);
+            xres - 100, 
+            yres - 50, 0, 
+            deflector->r.pos);
     deflector->r.angle = 90.0;
     deflector->r.width = 50.0;
     deflector->r.height = 5.0;
 
-    board.num_deflectors = 3;
+    deflector++;
+    MakeVector(board.center[0] + 160, 200, 0, deflector->r.pos);
+    deflector->r.angle = 50;
+    deflector->r.width = 30.0;
+    deflector->r.height = 5.0;
+
+    deflector++;
+    MakeVector(monsterGutter + 60, yres - 290, 0, deflector->r.pos);
+    deflector->r.angle = -20;
+    deflector->r.width = 30;
+    deflector->r.height = 5.0;
+
+    board.num_deflectors = 5;
 }
 
 void initFlipper(Flipper &f, float xpos, float ypos, bool inverted=false)
@@ -898,8 +935,8 @@ void cannonPhysics(Cannon &can, Ball &ball)
     }
 
     if (can.loaded && !can.firing
-        && timeDiff(&can.timer, &timeCurrent) > 10.0) {
-        
+            && timeDiff(&can.timer, &timeCurrent) > 10.0) {
+
         can.loaded = 0;
         can.firing = 1;
 
@@ -911,12 +948,12 @@ void cannonPhysics(Cannon &can, Ball &ball)
 }
 
 void fireCannon(Cannon &can, Ball &ball) {
-        can.loaded = 0;
-        can.firing = 1;
+    can.loaded = 0;
+    can.firing = 1;
 
-        ball1.hasGravity = 1;
-        ball.isVisible = 1;
-        VecScale(can.direction, 15.0, ball.vel);
+    ball1.hasGravity = 1;
+    ball.isVisible = 1;
+    VecScale(can.direction, 15.0, ball.vel);
 }
 
 void physics(void)
@@ -977,12 +1014,13 @@ void physics(void)
     //steering wheel collision
     steeringWheelBallCollision(steeringWheel, ball1);
     steeringWheelMovement(steeringWheel);
-
+    
+    flagPhysics(flag, ball1);
 
     //cannons
     cannonPhysics(boardCannon, ball1);
 
-    
+
     static bool cannonGoesUp = true;
     //make cannon move up and down
     if (boardCannon.r.angle > 45.0 + 90.0) {
@@ -995,7 +1033,7 @@ void physics(void)
     if (!boardCannon.firing) {
         rotateCannon(boardCannon, cannonGoesUp ? 1.0 : -1.0);
     }
-    
+
 
 
     if (collided) {
@@ -1022,14 +1060,16 @@ void physics(void)
         ball1.inPlay = 1;
         cannon.active = 0;
     }
-    
+
+    seaMonsterPhysics(seaMonster, ball1);
+
     if (!pauseGame || !gameNotOver) {
-    //Update position
+        //Update position
         ball1.pos[0] += ball1.vel[0];
         ball1.pos[1] += ball1.vel[1];
         seaMonsterState(seaMonster);
     }
-    
+
     if (leftButtonDown) {
         //make ball go toward mouse pointer position
         ball1.vel[0] = (leftButtonPos[0] - ball1.pos[0]) * 0.5;
@@ -1249,15 +1289,28 @@ void OceanBackground()
     glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
     glEnd();
 }
+
+void flagPhysics(Flag &f, Ball &b)
+{
+    if (insideRectangle(f.r, b)) {
+        f.state = 1;
+    }
+}
+
 void flagAnimation(Flag &f)
-{		//Flag properties
+{		
+    //Flag properties
     //int flagFrame
     //timespec flagFrameTimer
     //Rectangle r
-    if(f.flagFrame < FLAG_SPRITES) {
+    if(f.flagFrame < FLAG_SPRITES * 2) {
         //cout << "flag: " << f.flagFrame << endl;
         glPushMatrix();
         glColor3d(1.0, 1.0, 1.0);
+        
+        f.r.angle = 90;
+        drawRectangleTextureAlpha(f.r, flagSpriteTexture[f.flagFrame % FLAG_SPRITES]);
+    /*
         glTranslated(f.r.pos[0], f.r.pos[1], f.r.pos[2]);
         glRotatef(f.r.angle + 90.0, 0, 0, 1);
         glBindTexture(GL_TEXTURE_2D, flagSpriteTexture[f.flagFrame]);
@@ -1272,23 +1325,26 @@ void flagAnimation(Flag &f)
         glVertex2d(f.r.width, -f.r.height); glTexCoord2f(1.0f, 1.0f); 
         glEnd();
 
-        glBindTexture(GL_TEXTURE_2D,0);
+      glBindTexture(GL_TEXTURE_2D,0);*/
         glPopMatrix();
 
-        //if a 20th of a second has passed
-        if (timeDiff(&f.flagFrameTimer, &timeCurrent) > 1.0/20.0) {
-            //reset the timer
-            timeCopy(&f.flagFrameTimer, &timeCurrent);
-            //advance to the next frame
-            f.flagFrame++;
+        if (f.state == 1) {
+            //if a 20th of a second has passed
+            if (timeDiff(&f.flagFrameTimer, &timeCurrent) > 1.0/20.0) {
+                //reset the timer
+                timeCopy(&f.flagFrameTimer, &timeCurrent);
+                //advance to the next frame
+                f.flagFrame++;
+            }   
         }
-    }
-    else {
+    } else {
+        f.state = 0;
         f.flagFrame = 0;
     }
 
-
 }
+
+
 //Display Image 
 void drawFlipper(Flipper &f)
 {
@@ -1380,7 +1436,7 @@ void drawCannonMovement(Cannon &c)
             VecScale(c.direction, -10.0, tmp);
             VecAdd(c.r.pos, tmp, c.r.pos);
             //c.r.pos[1] -= 10.0;
-        //and up for the rist
+            //and up for the rist
         } else {
             VecAdd(c.r.pos, c.direction, c.r.pos);
             //c.r.pos[1] += 1.0;
@@ -1391,7 +1447,7 @@ void drawCannonMovement(Cannon &c)
 void drawCannon(Cannon &c)
 {
     drawRectangleTextureAlpha(c.r, CannonTexture);
-    
+
     //smoke
     if(c.firing) {
         c.smoke.state = 1;
@@ -1423,8 +1479,8 @@ void drawChest(TreasureChest &c)
 }
 void render(void)
 {
-    
-    
+
+
 
     if (pauseGame || !gameNotOver) {
         Rectangle screen;
@@ -1434,7 +1490,7 @@ void render(void)
         screen.pos[1] = (double)yres / 2.0;
         screen.angle = 90;        
         drawRectangleTextureAlpha(screen, 
-            gameNotOver ? controlsTexture: gameOverTexture);
+                gameNotOver ? controlsTexture: gameOverTexture);
 
 
         return;
@@ -1462,8 +1518,8 @@ void render(void)
 
     OceanBackground();
     flagAnimation(flag);
-    drawSeaMonster(seaMonster);
     drawChest(chest);//drawing chest
+    drawSeaMonster(seaMonster);
     drawSteeringWheel(steeringWheel);
     drawCannon(cannon);//draw canon 
     drawCannon(boardCannon);
@@ -1478,7 +1534,7 @@ void render(void)
     glVertex2i(monsterGutter + 10, 0);
     glEnd();
     glPopMatrix();
-    
+
     //draw collision rectangles
     glColor3ub(255, 255, 255);
     for (int i = 0; i < board.num_rectangles; i++) {
@@ -1510,8 +1566,8 @@ void render(void)
     drawFlipper(flipper);
     drawFlipper(flipper2);
     drawScore();
-    
-    
+
+
 }
 
 

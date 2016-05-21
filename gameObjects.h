@@ -55,7 +55,14 @@ struct Smoke {
 struct Flag {
 	Rectangle r;
 	int flagFrame;
+    int state; //1 = waving, 0 = still
 	timespec flagFrameTimer;
+
+    Flag() 
+    {
+        flagFrame = 0;
+        state = 0;
+    }
 };
 struct Circle {
     Vec pos;
@@ -165,15 +172,20 @@ struct SteeringWheel {
 struct SeaMonster {
     Rectangle rectangle;
     int state; //0 - hiding, 1 - active, 2 - damaged
+    int HP;
+
     timespec active_time;
     
     Vec hiding_pos, active_pos, dead_pos;
+    
+    Circle collision_circle;
 
     Smoke bloodspurts[50]; // such violence!
     int num_bloodspurts;
 
     SeaMonster() 
     {
+        HP = 3;
         num_bloodspurts = 0;
     }
 };

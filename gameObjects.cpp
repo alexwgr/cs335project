@@ -77,6 +77,8 @@ void drawRectangle(Rectangle &r)
 /* This draws circles for debugging */
 void drawCircle(Circle &c)
 {
+    glPushMatrix();
+    glTranslated(c.pos[0], c.pos[1], 0);
     int i;
     double verts[32][2];
     int n=32;
@@ -93,6 +95,7 @@ void drawCircle(Circle &c)
         glVertex2f(verts[i][0]*c.radius, verts[i][1]*c.radius);
     }
     glEnd();
+    glPopMatrix();
 }
 /*void makeWater(Water *water, int x, int y) {
     if (water->n >= MAX_PARTICLES) {
@@ -146,7 +149,7 @@ void drawRectangleTextureAlpha(Rectangle &r, GLuint &textureId)
 {
 
     glPushMatrix();
-    glColor3d(1.0, 1.0, 1.0);
+    //glColor3d(1.0, 1.0, 1.0);
     glTranslated(r.pos[0], r.pos[1], r.pos[2]);
     glRotatef(r.angle, 0, 0, 1);
 
