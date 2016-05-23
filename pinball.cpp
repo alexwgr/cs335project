@@ -136,6 +136,7 @@ Cannon boardCannon;
 Smoke smoke;
 Flag flag;
 SeaMonster seaMonster;
+Sounds gameSounds;
 
 Ppmimage *OceanImage;
 
@@ -216,10 +217,6 @@ GLuint steeringWheelTexture;
 GLuint ropeDeflectorTexture[2];
 GLuint monsterTextures[6];
 
-//------------------------OPENAL-----------------//
-//variables below are for AL sound
-ALuint alBuffer;
-ALuint alSource;
 
 //Setup timers
 const double physicsRate = 1.0 / 60.0;
@@ -264,8 +261,13 @@ int main(void)
     initFlag(flag);
     initSteeringWheel(steeringWheel);
     initSeaMonster(seaMonster);
+		
+		gameSounds.initOpenAL();
+		gameSounds.listener();
+		gameSounds.createBuffers();
+		gameSounds.loadSounds();
+		gameSounds.generateSource();
 
-    init_sound(alBuffer, alSource);
 
     r.pos[0] = 200.0;
     r.pos[1] = 220.0;
@@ -304,6 +306,7 @@ int main(void)
 
     clock_gettime(CLOCK_REALTIME, &timePause);
     clock_gettime(CLOCK_REALTIME, &timeStart);
+		gameSounds.playSound((char *)"soundtrack\0");
     while(!done) {
         while(XPending(dpy)) {
             XEvent e;
@@ -330,7 +333,7 @@ int main(void)
     }
     cleanupXWindows();
     cleanup_fonts();
-    clean_sound(alBuffer, alSource);
+		gameSounds.cleanUpSound();
     for(int i = 0; i < NUM_IMAGES; i++) {
         strcpy(filename, ImageFile[i]);
         char *period = strchr(filename, '.');
@@ -818,12 +821,12 @@ void checkKeys(XEvent *e)
             case XK_f:
                 //press s to slow the balls
                 flipper.flipstate = 1;
-                play_sound(alSource);
+								gameSounds.playSound((char *)"flippers\0");
                 break;
             case XK_k:
                 //flipper 2
                 flipper2.flipstate = 1;
-                play_sound(alSource);
+								gameSounds.playSound((char *)"flippers\0");
                 break;
             case XK_b:
                 //fire main launcher
@@ -989,7 +992,7 @@ void physics(void)
             timeCopy(&chest.collision_time, &timeCurrent);
             chest.active = 0;
 
-            if (ballChestCollision(chest, ball1, alSource)) {
+            if (ballChestCollision(chest, ball1)) {
                 collided = true;
             }
         }
@@ -1004,7 +1007,7 @@ void physics(void)
     //bumper collision
     for (int i = 0; i < board.num_bumpers; i++) {
         if (bumperBallCollision(board.bumpers[i], ball1)) {
-
+						gameSounds.playSound((char *)"barrels2\0");
         }
     }
 
@@ -1051,7 +1054,6 @@ void physics(void)
 
     for (int i = 0; i < board.num_bumpers; i++) {
         if (bumperBallCollision(board.bumpers[i], ball1)) {
-            play_sound(alSource);
         }
     }
     //KaBoom(Cannon, ball1, alSource);//when ball is on cannon

@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string.h>
+#include <cstring>
 #include <math.h>
 #include <ctime>
 #include <unistd.h>
@@ -18,14 +19,27 @@ using namespace std;
 
 const int SMOKE_SPRITES = 12;
 const int FLAG_SPRITES = 6;
+const int BUFFERS = 5;
+const int NUM_WAVS = 5;
+const int NUM_SOURCES = 5;
 extern GLuint smokeSpriteTexture[];
 extern GLuint flagSpriteTexture[];
 class Sounds {
 	private:
-	ALuint source;
-	ALuint buffer;
-	int sound_number;
+		ALuint buffers[BUFFERS];
+		ALuint source[NUM_SOURCES];
+		char wavFiles[NUM_WAVS][100];
+		char soundNames[NUM_WAVS][100];
+		int sound_number;
 	public:
+		Sounds();
+		int initOpenAL();
+		int createBuffers();
+		void loadSounds();
+		void cleanUpSound();
+		void playSound(char *);
+		int generateSource();
+		void listener();
 };
 void initFlag(Flag &);
 //initSmoke sets properties for smoke sprites
@@ -34,15 +48,9 @@ void smokeAnimation(Smoke &, timespec );
 //initChest initializes treasure chest object properties
 void initChest(TreasureChest &);
 //ballChestCollision plays sound when ball collides with chest
-int ballChestCollision(TreasureChest &, Ball &, ALuint &);
+int ballChestCollision(TreasureChest &, Ball &);
 //initCanon initializes canon object properties
-void initLauncher(Cannon & );
-//KaBoom function will play canon launching sounds
-void KaBoom(Cannon &, Ball &, ALuint &);
+void initCannon(Cannon & );
+void initLauncher(Cannon &);
 //init_sound creates soudn source and buffer
-int init_sound(ALuint &, ALuint &);
-//plays sound
-void play_sound(ALuint &);
-//clean up source and buffer
-int clean_sound(ALuint &, ALuint &);
 #endif
