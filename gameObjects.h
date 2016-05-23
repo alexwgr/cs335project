@@ -195,7 +195,7 @@ struct Whirlpool {
     int state;
     Vec pos;
     double inner_radius, outer_radius;
-}
+};
 
 //Holds all of the repeating objects in the game:
 //collision rectangles, bumpers, etc.
