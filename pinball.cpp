@@ -586,12 +586,14 @@ void seaMonsterPhysics(SeaMonster &monster, Ball &ball)
             insideCircle(monster.collision_circle.radius,
                 monster.collision_circle.pos, ball)) {
         monster.state = 2;
+	addScore(&Scorekeeper, 50);
         timeCopy(&monster.active_time, &timeCurrent);
 
     }
     if (monster.HP == 0) {
         monster.HP = 3;
         monster.state = 3;
+	addScore(&Scorekeeper, 1000);
         timeCopy(&monster.active_time, &timeCurrent);
     }
 }
@@ -1001,8 +1003,12 @@ void physics(void)
                 timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
             chest.active = 1;
         }
+    }   
 
-    }	
+    if(chest.state == 1 && timeDiff(&chest.collision_time, &timeCurrent) > 10) {
+        chest.state = 0;
+        chest.HP = 3;
+    } 
 
     //bumper collision
     for (int i = 0; i < board.num_bumpers; i++) {
@@ -1104,7 +1110,7 @@ void physics(void)
     }
 
     //bottom window edge
-    //Hassen 
+    
     if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
         ball1.pos[1] = ball1.radius;
         ball1.vel[1] *= - 0.2;
@@ -1305,6 +1311,7 @@ void flagPhysics(Flag &f, Ball &b)
 {
     if (insideRectangle(f.r, b)) {
         f.state = 1;
+	addScore(&Scorekeeper, 10);
     }
 }
 
