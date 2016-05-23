@@ -30,8 +30,6 @@
 #include <X11/keysym.h>
 #include <GL/glx.h>
 
-
-
 extern "C" {
 #include "fonts.h"
 }
@@ -524,8 +522,8 @@ void initGameBoard(GameBoard &gb) {
 
 
     curve.points[0][0] = gb.center[0] - 360; curve.points[0][1] = 350;
-    curve.points[1][0] = gb.center[0] - 360; curve.points[1][1] = 200;
-    curve.points[2][0] = gb.center[0] - 150; curve.points[2][1] = 200;
+    curve.points[1][0] = gb.center[0] - 360; curve.points[1][1] = 180;
+    curve.points[2][0] = gb.center[0] - 150; curve.points[2][1] = 180;
     curve.width = 8.0;
     curve.npoints = 10;
 
@@ -1500,13 +1498,14 @@ void render(void)
 
     if (pauseGame || !gameNotOver) {
         Rectangle screen;
-        screen.width = yres;
-        screen.height = xres;
+        screen.width = yres / 2.0;
+        screen.height = xres / 2.0;
         screen.pos[0] = (double)xres / 2.0;
         screen.pos[1] = (double)yres / 2.0;
         screen.angle = 90;        
+        glColor4d(1.0,1.0,1.0,1.0);
         drawRectangleTextureAlpha(screen, 
-                gameNotOver ? controlsTexture: gameOverTexture);
+            gameNotOver ? controlsTexture: gameOverTexture);
 
 
         return;
