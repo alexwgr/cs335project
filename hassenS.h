@@ -30,4 +30,6 @@ void initScore(score *);
 void drawScore();
 //another try
 void gameOver(GameBoard &, Ball &, score &);
+
+void showMainMenu();
 #endif

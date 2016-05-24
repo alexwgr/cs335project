@@ -41,7 +41,7 @@ extern "C" {
 #include "omarO.h"
 #include "hassenS.h"
 
-const int NUM_IMAGES = 46;
+const int NUM_IMAGES = 47;
 //const int SMOKE_SPRITES = 12;
 const double CHUTE_THICKNESS = 6.0;
 const double CHUTE_WIDTH = 40.0;
@@ -112,6 +112,7 @@ bool boom = false;
 bool launch = false;
 //
 bool pauseGame = false;
+bool MainMenuOn;
 int cannonFired = 0;
 
 char buffer[256];
@@ -140,6 +141,7 @@ Sounds gameSounds;
 
 Ppmimage *OceanImage;
 
+Ppmimage *MainMenuImage;
 Ppmimage *gameOverImage;
 Ppmimage *controlsImage;
 Ppmimage *pinballImage;
@@ -193,10 +195,12 @@ char ImageFile[NUM_IMAGES][250] = {
     "monster0.png\0", "monster3.png\0",
     "GameControls.png\0",
     "GameOver.png\0",
+    "MainMenu.png\0",
     "close-chest21.jpg\0", "close-chest212.jpg\0"
 };
 GLuint OceanTexture;
 
+GLuint MainMenuTexture;
 GLuint gameOverTexture;
 GLuint controlsTexture;
 GLuint flippersTexture;
@@ -228,11 +232,12 @@ double timeSpan=0.0;
 
 int main(void)
 {
+
     srand(time(NULL));
     Scorekeeper.points = 0;
     Scorekeeper.balls_left = 3;
 
-
+    MainMenuOn = 1;
     pauseGame = 0;
 
     char syscall_buffer[256];
@@ -261,12 +266,12 @@ int main(void)
     initFlag(flag);
     initSteeringWheel(steeringWheel);
     initSeaMonster(seaMonster);
-		
-		gameSounds.initOpenAL();
-		gameSounds.listener();
-		gameSounds.createBuffers();
-		gameSounds.loadSounds();
-		gameSounds.generateSource();
+
+    gameSounds.initOpenAL();
+    gameSounds.listener();
+    gameSounds.createBuffers();
+    gameSounds.loadSounds();
+    gameSounds.generateSource();
 
 
     r.pos[0] = 200.0;
@@ -306,7 +311,7 @@ int main(void)
 
     clock_gettime(CLOCK_REALTIME, &timePause);
     clock_gettime(CLOCK_REALTIME, &timeStart);
-		gameSounds.playSound((char *)"soundtrack\0");
+    gameSounds.playSound((char *)"soundtrack\0");
     while(!done) {
         while(XPending(dpy)) {
             XEvent e;
@@ -333,7 +338,7 @@ int main(void)
     }
     cleanupXWindows();
     cleanup_fonts();
-		gameSounds.cleanUpSound();
+    gameSounds.cleanUpSound();
     for(int i = 0; i < NUM_IMAGES; i++) {
         strcpy(filename, ImageFile[i]);
         char *period = strchr(filename, '.');
@@ -586,14 +591,14 @@ void seaMonsterPhysics(SeaMonster &monster, Ball &ball)
             insideCircle(monster.collision_circle.radius,
                 monster.collision_circle.pos, ball)) {
         monster.state = 2;
-	addScore(&Scorekeeper, 50);
+        addScore(&Scorekeeper, 50);
         timeCopy(&monster.active_time, &timeCurrent);
 
     }
     if (monster.HP == 0) {
         monster.HP = 3;
         monster.state = 3;
-	addScore(&Scorekeeper, 1000);
+        addScore(&Scorekeeper, 1000);
         timeCopy(&monster.active_time, &timeCurrent);
     }
 }
@@ -604,7 +609,7 @@ void seaMonsterState(SeaMonster &monster)
     /*std::cout << "time difference: " << timeDiff(&monster.active_time, &timeCurrent) << std::endl;
       std::cout << "monster state: " << monster.state << std::endl;
     //just started
-     */
+    */
     if (monster.state == -1) {
         timeCopy(&monster.active_time, &timeCurrent);
         monster.state = 0;
@@ -797,16 +802,32 @@ void checkKeys(XEvent *e)
     if (e->type == KeyPress) {
         switch(key) {
             case XK_1:
+                if (MainMenuOn == 1) {
+                    MainMenuOn = 0;
+                    pauseGame = 0;
+                    resetGame();
+                }
                 if (!gameNotOver) {
                     resetGame();
                 }
                 break;
+
+            case XK_2:
+                if (MainMenuOn == 1) {
+                    done = 1;
+                }
+                if (!gameNotOver || pauseGame) {
+                    MainMenuOn = 1;
+                    pauseGame = 1;
+                    resetGame();
+                }
+                
             case XK_Left:
                 ball1.vel[0] -= 1.0;
                 break;
             case XK_Right:
                 ball1.vel[0] += 1.0;
-                break;
+                binmMainmenireak;
             case XK_Up:
                 ball1.vel[1] = MAX_VELOCITY;
                 break;
@@ -823,12 +844,12 @@ void checkKeys(XEvent *e)
             case XK_f:
                 //press s to slow the balls
                 flipper.flipstate = 1;
-								gameSounds.playSound((char *)"flippers\0");
+                gameSounds.playSound((char *)"flippers\0");
                 break;
             case XK_k:
                 //flipper 2
                 flipper2.flipstate = 1;
-								gameSounds.playSound((char *)"flippers\0");
+                gameSounds.playSound((char *)"flippers\0");
                 break;
             case XK_b:
                 //fire main launcher
@@ -1013,7 +1034,7 @@ void physics(void)
     //bumper collision
     for (int i = 0; i < board.num_bumpers; i++) {
         if (bumperBallCollision(board.bumpers[i], ball1)) {
-						gameSounds.playSound((char *)"barrels2\0");
+            gameSounds.playSound((char *)"barrels2\0");
         }
     }
 
@@ -1026,7 +1047,7 @@ void physics(void)
     //steering wheel collision
     steeringWheelBallCollision(steeringWheel, ball1);
     steeringWheelMovement(steeringWheel);
-    
+
     flagPhysics(flag, ball1);
 
     //cannons
@@ -1110,7 +1131,7 @@ void physics(void)
     }
 
     //bottom window edge
-    
+
     if (ball1.pos[1] < ball1.radius && ball1.vel[1] < 0.0) {
         ball1.pos[1] = ball1.radius;
         ball1.vel[1] *= - 0.2;
@@ -1155,7 +1176,7 @@ void initTextures(void)
 
     strcpy(buffer, "./images/close-chest21.ppm");
     alphaTextureInit(buffer, closeChestTexture_alpha2, closeChestImage2);
-    
+
     strcpy(buffer, "./images/close-chest212.ppm");
     alphaTextureInit(buffer, closeChestTexture_alpha3, closeChestImage3); 
 
@@ -1233,6 +1254,9 @@ void initTextures(void)
 
     sprintf(buffer, "./images/GameOver.ppm");
     alphaTextureInit(buffer, gameOverTexture, gameOverImage);
+
+    sprintf(buffer, "./images/MainMenu.ppm");
+    alphaTextureInit(buffer, MainMenuTexture, MainMenuImage);
 }
 
 void drawSteeringWheel(SteeringWheel &wheel)
@@ -1311,7 +1335,7 @@ void flagPhysics(Flag &f, Ball &b)
 {
     if (insideRectangle(f.r, b)) {
         f.state = 1;
-	addScore(&Scorekeeper, 10);
+        addScore(&Scorekeeper, 10);
     }
 }
 
@@ -1325,25 +1349,25 @@ void flagAnimation(Flag &f)
         //cout << "flag: " << f.flagFrame << endl;
         glPushMatrix();
         glColor3d(1.0, 1.0, 1.0);
-        
+
         f.r.angle = 90;
         drawRectangleTextureAlpha(f.r, flagSpriteTexture[f.flagFrame % FLAG_SPRITES]);
-    /*
-        glTranslated(f.r.pos[0], f.r.pos[1], f.r.pos[2]);
-        glRotatef(f.r.angle + 90.0, 0, 0, 1);
-        glBindTexture(GL_TEXTURE_2D, flagSpriteTexture[f.flagFrame]);
-        glEnable(GL_ALPHA_TEST);
-        glAlphaFunc(GL_GREATER, 0.0f);
-        glColor4ub(255,255,255,255);
+        /*
+           glTranslated(f.r.pos[0], f.r.pos[1], f.r.pos[2]);
+           glRotatef(f.r.angle + 90.0, 0, 0, 1);
+           glBindTexture(GL_TEXTURE_2D, flagSpriteTexture[f.flagFrame]);
+           glEnable(GL_ALPHA_TEST);
+           glAlphaFunc(GL_GREATER, 0.0f);
+           glColor4ub(255,255,255,255);
 
-        glBegin(GL_QUADS);
-        glVertex2d(-f.r.width, -f.r.height); glTexCoord2f(0.0f, 1.0f);
-        glVertex2d(-f.r.width, f.r.height); glTexCoord2f(0.0f, 0.0f); 
-        glVertex2d(f.r.width, f.r.height); glTexCoord2f(1.0f, 0.0f); 
-        glVertex2d(f.r.width, -f.r.height); glTexCoord2f(1.0f, 1.0f); 
-        glEnd();
+           glBegin(GL_QUADS);
+           glVertex2d(-f.r.width, -f.r.height); glTexCoord2f(0.0f, 1.0f);
+           glVertex2d(-f.r.width, f.r.height); glTexCoord2f(0.0f, 0.0f); 
+           glVertex2d(f.r.width, f.r.height); glTexCoord2f(1.0f, 0.0f); 
+           glVertex2d(f.r.width, -f.r.height); glTexCoord2f(1.0f, 1.0f); 
+           glEnd();
 
-      glBindTexture(GL_TEXTURE_2D,0);*/
+           glBindTexture(GL_TEXTURE_2D,0);*/
         glPopMatrix();
 
         if (f.state == 1) {
@@ -1502,8 +1526,10 @@ void drawChest(TreasureChest &c)
 }
 void render(void)
 {
-
-
+    if(MainMenuOn == 1) {
+        showMainMenu();
+        return;
+    }
 
     if (pauseGame || !gameNotOver) {
         Rectangle screen;
@@ -1514,7 +1540,7 @@ void render(void)
         screen.angle = 90;        
         glColor4d(1.0,1.0,1.0,1.0);
         drawRectangleTextureAlpha(screen, 
-            gameNotOver ? controlsTexture: gameOverTexture);
+                gameNotOver ? controlsTexture: gameOverTexture);
 
 
         return;
