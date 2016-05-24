@@ -115,9 +115,9 @@ void drawScore()
     re.center = 0;
     //Display Scoreboard in red
     risingScore(&Scorekeeper);
-    ggprint8b(&re, 16, 0x00ff0000, "Ball: %i", Scorekeeper.balls_left); 
+    ggprint16(&re, 22, 0x00ff0000, "Balls Left: %i", Scorekeeper.balls_left); 
     //displaying the points in increments of 10
-    ggprint8b(&re, 16, 0x00ff0000, "Score: %i", Scorekeeper.rising_points);
+    ggprint16(&re, 22, 0x00ff0000, "Score: %i", Scorekeeper.rising_points);
 }
 
 //Transparent pictures

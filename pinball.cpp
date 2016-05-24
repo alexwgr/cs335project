@@ -827,7 +827,7 @@ void checkKeys(XEvent *e)
                 break;
             case XK_Right:
                 ball1.vel[0] += 1.0;
-                binmMainmenireak;
+                break;
             case XK_Up:
                 ball1.vel[1] = MAX_VELOCITY;
                 break;
