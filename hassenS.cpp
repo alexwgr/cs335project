@@ -1,5 +1,5 @@
 //Author: Hassen Seid
-//May 02,
+//2016,
 //Roles and Resp
 // - Texture Maps 
 // - Tutorial is going to be one of the options that appear in the main menu which teaches the player how to play the game
@@ -32,7 +32,9 @@ extern Ppmimage *OceanImage;
 extern Ppmimage *pinballImage;
 extern Ppmimage *flippers;
 extern Ppmimage *flippers2;
+extern Ppmimage *MainMenu;
 extern GLuint OceanTexture;
+extern GLuint MainMenuTexture;
 extern GLuint flippersTexture;
 extern GLuint flippersTexture2;
 extern GLuint pinballTexture;
@@ -41,12 +43,26 @@ extern bool cannonFired;
 extern bool launch;
 extern bool gameNotOver;
 extern bool boom;
+extern bool MainMenuOn;
 extern int xres;
 extern int yres;
 extern Cannon cannon;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
 
+void showMainMenu() 
+{
+    
+    Rectangle screen;
+    screen.width = (double)yres / 2.0;
+    screen.height = (double)xres / 2.0;
+    screen.pos[0] = (double)xres / 2.0;
+    screen.pos[1] = (double)yres / 2.0;
+    screen.angle = 90;
+    glColor4d(1.0,1.0,1.0,1.0);
+    drawRectangleTextureAlpha(screen, MainMenuTexture);
+   
+}
 void gameOver(GameBoard &gb, Ball &ball1, score &s)
 {
     if(ball1.pos[1] < 0.0 + ball1.radius) {
@@ -99,9 +115,9 @@ void drawScore()
     re.center = 0;
     //Display Scoreboard in red
     risingScore(&Scorekeeper);
-    ggprint8b(&re, 16, 0x00ff0000, "Ball: %i", Scorekeeper.balls_left); 
+    ggprint16(&re, 22, 0x00ff0000, "Balls Left: %i", Scorekeeper.balls_left); 
     //displaying the points in increments of 10
-    ggprint8b(&re, 16, 0x00ff0000, "Score: %i", Scorekeeper.rising_points);
+    ggprint16(&re, 22, 0x00ff0000, "Score: %i", Scorekeeper.rising_points);
 }
 
 //Transparent pictures
