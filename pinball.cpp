@@ -164,7 +164,7 @@ char ImageFile[NUM_IMAGES][250] = {
     "pinball.png\0",
     "open-chest2.png\0",
     "close-chest2.png\0",
-    "Ocean.jpg\0",
+    "board.png\0",
     "bumper_up.png\0",
     "bumper_down.png\0",
     "cannon.png\0",
@@ -174,7 +174,7 @@ char ImageFile[NUM_IMAGES][250] = {
     "pinball.png\0",
     "open-chest2.png\0",
     "close-chest2.png\0",
-    "Ocean.jpg\0",
+    "board.png\0",
     "bumper_up.png\0",
     "bumper_down.png\0",
     "cannon.png\0",
@@ -1135,7 +1135,7 @@ void initTextures(void)
     strcpy(buffer, "./images/flippers2.ppm");
     textureInit(buffer, flippersTexture2, flippers2);
 
-    strcpy(buffer, "./images/Ocean.ppm");
+    strcpy(buffer, "./images/board.ppm");
     textureInit(buffer, OceanTexture, OceanImage);
 
     strcpy(buffer , "./images/cannon.ppm");
@@ -1555,7 +1555,7 @@ void render(void)
     //draw collision rectangles
     glColor3ub(255, 255, 255);
     for (int i = 0; i < board.num_rectangles; i++) {
-        drawRectangle(board.rectangles[i]);
+        //drawRectangle(board.rectangles[i]);
     }
 
     //draw deflectors
