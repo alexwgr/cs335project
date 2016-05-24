@@ -987,6 +987,13 @@ void physics(void)
         }
     }
 
+    if (chest.active == 0) {
+        if (timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
+            chest.active = 1;
+
+        }
+        
+    }
     //treasure chest collision
     if (rectangleBallCollision(chest.r, ball1)) {
 
@@ -999,13 +1006,10 @@ void physics(void)
             }
         }
 
-        if (chest.active == 0 && 
-                timeDiff(&chest.collision_time, &timeCurrent) > 0.5) {
-            chest.active = 1;
-        }
+
     }   
 
-    if(chest.state == 1 && timeDiff(&chest.collision_time, &timeCurrent) > 10) {
+    if(chest.state == 1 && timeDiff(&chest.collision_time, &timeCurrent) > 5) {
         chest.state = 0;
         chest.HP = 3;
     } 
