@@ -178,7 +178,7 @@ int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
 {
     if (insideCircle(wheel.inner_radius, wheel.pos, ball)) {
         wheel.rvel = (VecMagnitude(ball.vel) / MAX_VELOCITY) * 10.0;
-	addScore(&Scorekeeper, 5);
+	addScore(&Scorekeeper, 50);
         return 1;
     }
         

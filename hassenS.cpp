@@ -76,7 +76,7 @@ void risingScore(score *s)
 {
     //rising points increments until it reaches the same amount as score
     if (s->points > s->rising_points) {
-        s->rising_points += 10;
+        s->rising_points += 30;
     }
     else 
         //if rising matches score don't increment anymore
