@@ -113,6 +113,7 @@ bool launch = false;
 //
 bool pauseGame = false;
 bool MainMenuOn;
+bool gameStarted = false;
 int cannonFired = 0;
 
 char buffer[256];
@@ -806,9 +807,11 @@ void checkKeys(XEvent *e)
                     MainMenuOn = 0;
                     pauseGame = 0;
                     resetGame();
+                    gameStarted = 1;
                 }
                 if (!gameNotOver) {
                     resetGame();
+                    gameStarted = 1;
                 }
                 break;
 
@@ -820,6 +823,7 @@ void checkKeys(XEvent *e)
                     pauseGame = 1;
                     MainMenuOn = 1;
                     resetGame();
+                    gameStarted = 0;
                 }
                 break;
                 
@@ -871,8 +875,12 @@ void checkKeys(XEvent *e)
                 }
                 break;
             case XK_h:
-                hide = true;
-                pauseGame ^= 1;
+                if (!gameStarted) {
+                    MainMenuOn ^= 1;
+                } else {
+                    hide = true;
+                    pauseGame ^= 1;
+                }
                 break;
             case XK_v:
                 killSeaMonster(seaMonster);
