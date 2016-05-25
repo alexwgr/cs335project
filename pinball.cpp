@@ -848,15 +848,19 @@ void checkKeys(XEvent *e)
                 ball2.vel[1] *= 0.5;
                 break;
             case XK_f:
-                //press s to slow the balls
-                flipper.flipstate = 1;
-                gameSounds.playSound((char *)"flippers\0");
+                if (!pauseGame && gameStarted) { 
+                    //press s to slow the balls
+                    flipper.flipstate = 1;
+                    gameSounds.playSound((char *)"flippers\0");
+                }
                 break;
             case XK_k:
-                //flipper 2
-                flipper2.flipstate = 1;
-                gameSounds.playSound((char *)"flippers\0");
-                break;
+                if (!pauseGame && gameStarted) {
+                    //flipper 2
+                    flipper2.flipstate = 1;
+                    gameSounds.playSound((char *)"flippers\0");
+                    break;
+                }
             case XK_b:
                 //fire main launcher
                 if (gameNotOver && !pauseGame && cannon.active) {
