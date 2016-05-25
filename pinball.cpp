@@ -649,6 +649,7 @@ void seaMonsterState(SeaMonster &monster)
         case 2:
             //just got hit
             if (timeDiff(&monster.active_time, &timeCurrent) < 0.5) {
+								gameSounds.playSound((char *)"monster\0");
                 monster.rectangle.pos[0] += (rand() % 10) - 5;
                 monster.rectangle.pos[1] += (rand() % 10) - 5;
 
@@ -864,6 +865,7 @@ void checkKeys(XEvent *e)
                     cannon.firing = 1;
                     boom = true;
                     launch = true;
+								gameSounds.playSound((char *)"cannon\0");
                     if(cannonFired < 1) {
                         ball1.vel[1] = 20.0;
                         cannonFired++;
@@ -871,6 +873,7 @@ void checkKeys(XEvent *e)
                 }
                 //fire secondary cannon
                 else if (boardCannon.loaded && !boardCannon.firing) {
+								gameSounds.playSound((char *)"cannon\0");
                     fireCannon(boardCannon, ball1);
                 }
                 break;
@@ -1040,6 +1043,7 @@ void physics(void)
     }   
 
     if(chest.state == 1 && timeDiff(&chest.collision_time, &timeCurrent) > 5) {
+								gameSounds.playSound((char *)"chest\0");
         chest.state = 0;
         chest.HP = 3;
     } 

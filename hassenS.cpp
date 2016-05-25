@@ -47,6 +47,7 @@ extern bool MainMenuOn;
 extern int xres;
 extern int yres;
 extern Cannon cannon;
+extern Sounds gameSounds;
 #define FLIPPER_LENGTH 70.0
 #define FLIPPER_HEIGHT 15.0
 
@@ -66,6 +67,7 @@ void showMainMenu()
 void gameOver(GameBoard &gb, Ball &ball1, score &s)
 {
     if(ball1.pos[1] < 0.0 + ball1.radius) {
+								gameSounds.playSound((char *)"splash\0");
         ball1.pos[0] = gb.starting_point[0];
         ball1.pos[1] = gb.starting_point[1];
         s.balls_left--;

@@ -15,6 +15,7 @@
 #include "vector.h"
 #include "gameObjects.h"
 #include "alexR.h"
+#include "omarO.h"
 #include <iostream>
 #include <cstring>
 #include <cmath>
@@ -27,6 +28,7 @@ extern double xres, yres;
 extern struct timespec timeCurrent;
 extern Flipper flipper, flipper2;
 extern GameBoard board;
+extern Sounds gameSounds;
 
 /* This adds a curve to the game board */
 /* It uses beizer curves to rectangles at a set number of steps */
@@ -177,6 +179,7 @@ bool insideCircle(double radius, Vec &center, Ball &ball)
 int steeringWheelBallCollision(SteeringWheel &wheel, Ball &ball)
 {
     if (insideCircle(wheel.inner_radius, wheel.pos, ball)) {
+								gameSounds.playSound((char *)"wheel\0");
         wheel.rvel = (VecMagnitude(ball.vel) / MAX_VELOCITY) * 10.0;
 	addScore(&Scorekeeper, 50);
         return 1;
@@ -208,6 +211,7 @@ int deflectorBallCollision(Deflector &d, Ball &b)
     if (projectX > -(d.r.width + b.radius) && projectX < d.r.width + b.radius
             && projectY > -(b.radius + d.r.height) 
             && projectY < b.radius + d.r.height) {
+								gameSounds.playSound((char *)"rope\0");
         //move ball in direction of surface normal
         VecScale(vert, 15.0, vert);
         VecAdd(vert, b.vel, b.vel);
