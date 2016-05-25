@@ -36,12 +36,24 @@ Sounds::Sounds()
     strcpy(wavFiles[2], "./sounds/Barrel2.wav\0");
     strcpy(wavFiles[3], "./sounds/Barrel3.wav\0");
     strcpy(wavFiles[4], "./sounds/soundtrack.wav\0");
+    strcpy(wavFiles[5], "./sounds/Cannon.wav\0");
+    strcpy(wavFiles[6], "./sounds/chest.wav\0");
+    strcpy(wavFiles[7], "./sounds/monster.wav\0");
+    strcpy(wavFiles[8], "./sounds/rope.wav\0");
+    strcpy(wavFiles[9], "./sounds/splash.wav\0");
+    strcpy(wavFiles[10], "./sounds/wheel.wav\0");
     //initialize sound names array to correspond w/ file names
     strcpy(soundNames[0], "flippers\0");
     strcpy(soundNames[1], "barrels1\0");
     strcpy(soundNames[2], "barrels2\0");
     strcpy(soundNames[3], "barrels3\0");
     strcpy(soundNames[4], "soundtrack\0");
+    strcpy(soundNames[5], "cannon\0");
+    strcpy(soundNames[6], "chest\0");
+    strcpy(soundNames[7], "monster\0");
+    strcpy(soundNames[8], "rope\0");
+    strcpy(soundNames[9], "splash\0");
+    strcpy(soundNames[10], "wheel\0");
 
 }
 //inittialize openAL 

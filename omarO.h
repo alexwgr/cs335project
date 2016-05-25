@@ -19,9 +19,9 @@ using namespace std;
 
 const int SMOKE_SPRITES = 12;
 const int FLAG_SPRITES = 6;
-const int BUFFERS = 5;
-const int NUM_WAVS = 5;
-const int NUM_SOURCES = 5;
+const int BUFFERS = 11;
+const int NUM_WAVS = 11;
+const int NUM_SOURCES = 11;
 extern GLuint smokeSpriteTexture[];
 extern GLuint flagSpriteTexture[];
 class Sounds {
